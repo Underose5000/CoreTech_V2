@@ -4,6 +4,7 @@ import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,6 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -40,9 +42,17 @@ fun HomeScreen(
     val configuration = LocalConfiguration.current
     val isLandscape =
         configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val screenWidthDp = configuration.screenWidthDp
 
-    if (isLandscape) {
-        LandscapeLayout(currentUser)
+    val isTablet = screenWidthDp >= 600
+
+
+    if (isLandscape and isTablet) {
+        LandscapeTabletLayout(currentUser)
+    } else if (!isLandscape and isTablet){
+        PortraitLayout(currentUser)
+    } else if (isLandscape and !isTablet){
+        PortraitLayout(currentUser)
     } else {
         PortraitLayout(currentUser)
     }
@@ -50,7 +60,7 @@ fun HomeScreen(
 
 
 @Composable
-fun LandscapeLayout(
+fun LandscapeTabletLayout(
     currentUser: String
 ) {
     TopBar(
@@ -95,18 +105,21 @@ fun LandscapeLayout(
                                 .weight(5f)
                                 .padding(horizontal = 10.dp),
                             shape = RoundedCornerShape(17.dp),
+                            contentPadding = PaddingValues(start = 8.dp, top = 4.dp, end = 4.dp, bottom = 4.dp),
                             onClick = {}
                         ) {
                             Image(
                                 painter = painterResource(id = R.drawable.assembly_orders_icon),
                                 contentDescription = null,
-
+                                modifier = Modifier.scale(1.2f)
+                                    .weight(30f),
                                 )
-                            Spacer(modifier = Modifier.width(5.dp))
+                            Spacer(modifier = Modifier.weight(2f))
                             Text(
                                 "Assembly Orders",
                                 fontSize = 20.sp,
                                 textAlign = TextAlign.Center,
+                                modifier = Modifier.weight(69f)
                             )
                         }
                         Button(
@@ -115,18 +128,22 @@ fun LandscapeLayout(
                                 .weight(5f)
                                 .padding(horizontal = 10.dp),
                             shape = RoundedCornerShape(17.dp),
+                            contentPadding = PaddingValues(start = 8.dp, top = 4.dp, end = 4.dp, bottom = 4.dp),
                             onClick = {}
                         ) {
                             Image(
                                 painter = painterResource(id = R.drawable.print_product_label_icon),
                                 contentDescription = null,
+                                modifier = Modifier.scale(1.2f)
+                                    .weight(30f),
 
                                 )
-                            Spacer(modifier = Modifier.width(5.dp))
+                            Spacer(modifier = Modifier.weight(2f))
                             Text(
                                 "Print Product Labels",
                                 fontSize = 20.sp,
                                 textAlign = TextAlign.Center,
+                                modifier = Modifier.weight(69f)
                             )
                         }
                     }
@@ -138,18 +155,22 @@ fun LandscapeLayout(
                                 .weight(5f)
                                 .padding(horizontal = 10.dp),
                             shape = RoundedCornerShape(17.dp),
+                            contentPadding = PaddingValues(start = 8.dp, top = 4.dp, end = 4.dp, bottom = 4.dp),
                             onClick = {}
                         ) {
                             Image(
                                 painter = painterResource(id = R.drawable.print_box_label_icon),
                                 contentDescription = null,
+                                modifier = Modifier.scale(1.2f)
+                                    .weight(30f)
 
                                 )
-                            Spacer(modifier = Modifier.width(5.dp))
+                            Spacer(modifier = Modifier.weight(8f))
                             Text(
                                 "Print Box Labels",
                                 fontSize = 20.sp,
                                 textAlign = TextAlign.Center,
+                                modifier = Modifier.weight(60f)
                             )
                         }
                         Spacer(modifier = Modifier.weight(5f))
@@ -253,45 +274,55 @@ fun LandscapeLayout(
                         textAlign = TextAlign.Center,
                     )
                     Spacer(modifier = Modifier.weight(1f))
-                    Button(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .weight(5f),
-                        shape = RoundedCornerShape(12.dp),
-                        onClick = {}
-                    ) {
-                        Text(
-                            "Purchase Orders",
-                            fontSize = 20.sp,
-                            textAlign = TextAlign.Center,
-                        )
+                    Row(modifier = Modifier.weight(5f)) {
+                        Button(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .weight(5f)
+                                .padding(horizontal = 10.dp),
+                            shape = RoundedCornerShape(17.dp),
+                            onClick = {}
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.purchase_orders_icon),
+                                contentDescription = null,
+
+                                )
+                            Spacer(modifier = Modifier.width(5.dp))
+                            Text(
+                                "Purchase Orders",
+                                fontSize = 20.sp,
+                                textAlign = TextAlign.Center,
+                            )
+                        }
+                        Button(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .weight(5f)
+                                .padding(horizontal = 10.dp),
+                            shape = RoundedCornerShape(17.dp),
+                            onClick = {}
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.receive_goods_icon),
+                                contentDescription = null,
+
+                                )
+                            Spacer(modifier = Modifier.width(5.dp))
+                            Text(
+                                "Receive Goods",
+                                fontSize = 20.sp,
+                                textAlign = TextAlign.Center,
+                            )
+                        }
                     }
                     Spacer(modifier = Modifier.weight(1f))
-                    Button(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .weight(5f),
-                        shape = RoundedCornerShape(12.dp),
-                        onClick = {}
-                    ) {
-                        Text(
-                            "Receive Goods",
-                            fontSize = 20.sp,
-                            textAlign = TextAlign.Center,
-                        )
+                    Row(modifier = Modifier.weight(5f)) {
+                        Spacer(modifier = Modifier.weight(5f))
+                        Spacer(modifier = Modifier.weight(5f))
                     }
-                    Spacer(modifier = Modifier.weight(1f))
-                    Spacer(modifier = Modifier.weight(5f))
-                    /*Button(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .weight(5f),
-                            shape = RoundedCornerShape(12.dp),
-                        onClick = {}
-                    ) { Text("TBD",
-                        fontSize = 20.sp,
-                        textAlign = TextAlign.Center,) }*/
                 }
+
                 Column(
                     modifier = Modifier
                         .weight(1f)
@@ -304,46 +335,71 @@ fun LandscapeLayout(
                         textAlign = TextAlign.Center,
                     )
                     Spacer(modifier = Modifier.weight(1f))
-                    Button(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .weight(5f),
-                        shape = RoundedCornerShape(12.dp),
-                        onClick = {}
-                    ) {
-                        Text(
-                            "Items List",
-                            fontSize = 20.sp,
-                            textAlign = TextAlign.Center,
-                        )
+                    Row(modifier = Modifier.weight(5f)) {
+                        Button(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .weight(5f)
+                                .padding(horizontal = 10.dp),
+                            shape = RoundedCornerShape(17.dp),
+                            onClick = {}
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.pack_order_icon),
+                                contentDescription = null,
+
+                                )
+                            Spacer(modifier = Modifier.width(5.dp))
+                            Text(
+                                "Items List",
+                                fontSize = 20.sp,
+                                textAlign = TextAlign.Center,
+                            )
+                        }
+                        Button(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .weight(5f)
+                                .padding(horizontal = 10.dp),
+                            shape = RoundedCornerShape(17.dp),
+                            onClick = {}
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.stocktake_icon),
+                                contentDescription = null,
+
+                                )
+                            Spacer(modifier = Modifier.width(5.dp))
+                            Text(
+                                "Stocktake",
+                                fontSize = 20.sp,
+                                textAlign = TextAlign.Center,
+                            )
+                        }
                     }
                     Spacer(modifier = Modifier.weight(1f))
-                    Button(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .weight(5f),
-                        shape = RoundedCornerShape(12.dp),
-                        onClick = {}
-                    ) {
-                        Text(
-                            "Stocktake",
-                            fontSize = 20.sp,
-                            textAlign = TextAlign.Center,
-                        )
-                    }
-                    Spacer(modifier = Modifier.weight(1f))
-                    Button(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .weight(5f),
-                        shape = RoundedCornerShape(12.dp),
-                        onClick = {}
-                    ) {
-                        Text(
-                            "Request Stock",
-                            fontSize = 20.sp,
-                            textAlign = TextAlign.Center,
-                        )
+                    Row(modifier = Modifier.weight(5f)) {
+                        Button(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .weight(5f)
+                                .padding(horizontal = 10.dp),
+                            shape = RoundedCornerShape(17.dp),
+                            onClick = {}
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.request_stock_icon),
+                                contentDescription = null,
+
+                                )
+                            Spacer(modifier = Modifier.width(5.dp))
+                            Text(
+                                "Request Stock",
+                                fontSize = 20.sp,
+                                textAlign = TextAlign.Center,
+                            )
+                        }
+                        Spacer(modifier = Modifier.weight(5f))
                     }
                 }
             }
