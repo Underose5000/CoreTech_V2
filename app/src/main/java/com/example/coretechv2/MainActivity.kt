@@ -41,7 +41,7 @@ class MainActivity : ComponentActivity() {
 
             CoreTechV2Theme {
                 Box{
-                    AppNavGraph(navController = navController, currentuser = "daniel")//currentUser.value)
+                    AppNavGraph(navController = navController, currentuser = currentUser.value)//currentUser.value)
                     if (!isLoggedIn.value){
                         isLoggedIn.value = true
                         LoginScreen(

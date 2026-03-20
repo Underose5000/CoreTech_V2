@@ -5,6 +5,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.coretechv2.ui.screen.AssemblyOrderDetails
+import com.example.coretechv2.ui.screen.AssemblyOrdersScreen
 import com.example.coretechv2.ui.screen.HomeScreen
 
 
@@ -20,5 +22,20 @@ fun AppNavGraph(navController: NavHostController = rememberNavController(),
                 currentuser
             )
         }
+        composable("assemblyorders") {
+            AssemblyOrdersScreen(
+                navController = navController,
+                currentuser
+            )
+        }
+        composable("assemblyorderdetail/{orderNumber}") { backStackEntry ->
+            val orderNumber = backStackEntry.arguments?.getString("orderNumber") ?: ""
+            AssemblyOrderDetails(
+                navController = navController,
+                currentuser,
+                orderNumber
+            )
+        }
+
     }
 }

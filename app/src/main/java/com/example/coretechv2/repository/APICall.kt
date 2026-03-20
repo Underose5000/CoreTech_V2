@@ -1,6 +1,7 @@
 package com.example.coretechv2.repository
 
 import android.content.Context
+import android.icu.text.DateFormat
 import android.util.Log
 import androidx.datastore.dataStore
 import com.example.coretechv2.MainActivity
@@ -17,11 +18,14 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
+import java.sql.Blob
 import java.sql.DriverManager.println
+import java.util.Date
 
 
 class APICall(private val dataStoreManager: DataStoreManager) {
@@ -30,20 +34,16 @@ class APICall(private val dataStoreManager: DataStoreManager) {
     }
 
     internal suspend inline fun <reified T> query(sqlsend: String): List<T>? {
-
         val apiUrl = dataStoreManager.apiUrlFlow.firstOrNull()
         val apiPort = dataStoreManager.apiPortFlow.firstOrNull()
         val apiKey = dataStoreManager.apiKeyFlow.firstOrNull()
-        Log.d("API Call", "url = $apiUrl \nport = $apiPort \nkey = $apiKey ")
         val url = "https://$apiUrl:$apiPort/sqlquery?&format=json&exesql=1&apikey=$apiKey"
-        Log.d("API Call","final url = $url")
 
-            return try {
+        return try {
             val response: HttpResponse = client.post(url){
                 contentType(ContentType.Application.Json)
                 setBody(sqlsend)
             }
-                Log.d("API Call","API returned: ${response.status}, ${response.bodyAsText()}")
             response.body()
 
 
@@ -62,6 +62,57 @@ class APICall(private val dataStoreManager: DataStoreManager) {
         val ITEMDESCRIPTION: String,
         val ITEMUNIT: String,
         val AVAILABLEQTY: Float
+    )
+
+    @Serializable
+    data class AssemblyHeader(
+        val ORDERNUMBER: String,
+        val ORDERSTATUS: String,
+        val ORDERDATE: String,
+        val ITEMCODE: String,
+        val ITEMDESCRIPTION: String,
+        val ITEMUNIT: String,
+        val REQUIREDDATE: String,
+        val ORDERQTY: Double,
+        val COMPLETEQTY : Double,
+        val REMAININGQTY: Double,
+        val ASSEMBLYVERSION: String,
+        val ADDITIONALFIELD_1: String,
+        val ADDITIONALFIELD_2: String,
+        val ADDITIONALFIELD_3: String,
+        val ADDITIONALFIELD_4: String,
+        val ADDITIONALFIELD_5: String,
+        val ADDITIONALFIELD_6: String,
+        val ADDITIONALFIELD_7: String,
+        val ADDITIONALFIELD_8: String,
+        val ADDITIONALFIELD_9: String,
+        val ADDITIONALFIELD_10: String,
+        val ADDITIONALFIELD_11: String,
+        val ADDITIONALFIELD_12: String,
+    )
+
+    @Serializable
+    data class AssemblyLines(
+        val ORDERNUMBER: String,
+        val STEPNAME: String,
+        val STEPSEQUENCE: Int,
+        val LINESTATUS: String,
+        val LINENUMBER: Int,
+        val CODETYPE: String,
+        val LINECODE: String,
+        val LINEDESCRIPTION: String,
+        val LINEUNIT : String,
+        val ORDERQTY: Double,
+        val TOTALISSUEDQTY: Double,
+        val REMAININGQTY: Double,
+        val POSITIONREFERENCE: String,
+        val LINENOTES: String,
+        val HEADERSYSUNIQUEID: Double,
+        val ADDITIONALFIELD_1: String,
+        val ADDITIONALFIELD_2: String,
+        val ADDITIONALFIELD_3: String,
+        val ADDITIONALFIELD_4: String,
+        val ADDITIONALFIELD_6: String,
     )
 
     @Serializable

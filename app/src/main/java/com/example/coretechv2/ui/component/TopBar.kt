@@ -3,6 +3,9 @@ package com.example.coretechv2.ui.component
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -13,11 +16,20 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.navigation.NavController
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopBar(title: String, backshow: Boolean = false, setshow: Boolean = false, content: @Composable (PaddingValues) -> Unit) {
+fun TopBar(navController: NavController,
+           title: String,
+           backshow: Boolean = false,
+           settingshow: Boolean = false,
+           addshow: Boolean = false,
+           pastshow: Boolean = false,
+           menushow: Boolean = false,
+           menuaction: () -> Unit = {},
+           content: @Composable (PaddingValues) -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -30,7 +42,7 @@ fun TopBar(title: String, backshow: Boolean = false, setshow: Boolean = false, c
                 },
                 navigationIcon = {
                     if (backshow){
-                        IconButton(onClick = {}){
+                        IconButton(onClick = {navController.popBackStack()}){
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back"
@@ -39,7 +51,31 @@ fun TopBar(title: String, backshow: Boolean = false, setshow: Boolean = false, c
                     }
                 },
                 actions = {
-                    if (setshow){
+                    if (pastshow){
+                        IconButton(onClick = {}){
+                            Icon(
+                                imageVector = Icons.Filled.History,
+                                contentDescription = "Add"
+                            )
+                        }
+                    }
+                    if (addshow){
+                        IconButton(onClick = {}){
+                            Icon(
+                                imageVector = Icons.Filled.Add,
+                                contentDescription = "Add"
+                            )
+                        }
+                    }
+                    if (menushow){
+                        IconButton(onClick = {}){
+                            Icon(
+                                imageVector = Icons.Filled.Menu,
+                                contentDescription = "Settings"
+                            )
+                        }
+                    }
+                    if (settingshow){
                         IconButton(onClick = {}){
                             Icon(
                                 imageVector = Icons.Filled.Settings,
@@ -47,6 +83,7 @@ fun TopBar(title: String, backshow: Boolean = false, setshow: Boolean = false, c
                             )
                         }
                     }
+
                 }
             )
         }

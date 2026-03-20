@@ -1,0 +1,51 @@
+package com.example.coretechv2.viewmodel
+
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.coretechv2.repository.APICall
+import com.example.coretechv2.repository.DataStoreManager
+import com.example.coretechv2.repository.HashPassword
+import kotlinx.coroutines.launch
+import kotlin.properties.ReadWriteProperty
+
+class AssemblyOrdersViewModel(private val dataStoreManager: DataStoreManager) : ViewModel() {
+
+    private val apiCall = APICall(dataStoreManager)
+
+    var AssemblyOrdersList by mutableStateOf<List<APICall.AssemblyHeader>>(emptyList())
+        private set
+
+    var AssemblyOrderListSearached by mutableStateOf<List<APICall.AssemblyHeader>>(emptyList())
+        private set
+
+    var selectedOrder by mutableStateOf<APICall.AssemblyHeader?>(null)
+        private set
+    var Searchfield by mutableStateOf("")
+        private set
+
+
+    fun onSerachfieldChange(newValue: String){
+        Searchfield = newValue
+        AssemblyOrderListSearached = AssemblyOrdersList.filter{ order ->
+            order.ITEMCODE.contains(Searchfield, ignoreCase = true) ||
+            order.ITEMDESCRIPTION.contains(Searchfield, ignoreCase = true)  ||
+            order.ORDERNUMBER.contains(Searchfield, ignoreCase = true)
+        }
+    }
+
+    fun getSelectedOrder(order: APICall.AssemblyHeader){
+        selectedOrder = order
+    }
+
+    fun retrieveAssemblyOrders(){
+        viewModelScope.launch {
+            val AssemblyOrdersListCall : List<APICall.AssemblyHeader>? = apiCall.query("SELECT * FROM AssemblyHeader where OrderStatus = 'Open' order by OrderNumber")
+
+            AssemblyOrdersList = AssemblyOrdersListCall ?: emptyList()
+            AssemblyOrderListSearached = AssemblyOrdersList
+        }
+    }
+}

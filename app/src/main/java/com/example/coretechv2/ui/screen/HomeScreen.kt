@@ -48,22 +48,32 @@ fun HomeScreen(
 
 
     if (isLandscape and isTablet) {
-        LandscapeTabletLayout(currentUser)
+        LandscapeTabletLayout(
+            navController = navController,
+            currentUser)
     } else if (!isLandscape and isTablet){
-        PortraitLayout(currentUser)
+        PortraitLayout(
+            navController = navController,
+            currentUser)
     } else if (isLandscape and !isTablet){
-        PortraitLayout(currentUser)
+        PortraitLayout(
+            navController = navController,
+            currentUser)
     } else {
-        PortraitLayout(currentUser)
+        PortraitLayout(
+            navController = navController,
+            currentUser)
     }
 }
 
 
 @Composable
 fun LandscapeTabletLayout(
+    navController: NavController,
     currentUser: String
 ) {
     TopBar(
+        navController = navController,
         title = "Home"
     ) { innerPadding ->
         Column(
@@ -106,7 +116,7 @@ fun LandscapeTabletLayout(
                                 .padding(horizontal = 10.dp),
                             shape = RoundedCornerShape(17.dp),
                             contentPadding = PaddingValues(start = 8.dp, top = 4.dp, end = 4.dp, bottom = 4.dp),
-                            onClick = {}
+                            onClick = {navController.navigate("assemblyorders")}
                         ) {
                             Image(
                                 painter = painterResource(id = R.drawable.assembly_orders_icon),
@@ -430,9 +440,11 @@ fun LandscapeTabletLayout(
 
 @Composable
 fun PortraitLayout(
+    navController: NavController,
     currentUser: String
 ) {
     TopBar(
+        navController = navController,
         title = "Home"
     ) { innerPadding ->
         Column(
