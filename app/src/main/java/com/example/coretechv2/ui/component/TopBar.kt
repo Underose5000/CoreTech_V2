@@ -7,6 +7,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -16,6 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavController
 
 
@@ -24,12 +26,25 @@ import androidx.navigation.NavController
 fun TopBar(navController: NavController,
            title: String,
            backshow: Boolean = false,
-           settingshow: Boolean = false,
-           addshow: Boolean = false,
-           pastshow: Boolean = false,
-           menushow: Boolean = false,
-           menuaction: () -> Unit = {},
+
+           icon1: ImageVector = Icons.Filled.Warning,
+           icon1Description: String? = null,
+           icon1action: () -> Unit = {},
+
+           icon2: ImageVector = Icons.Filled.Warning,
+           icon2Description: String? = null,
+           icon2action: () -> Unit = {},
+
+           icon3: ImageVector = Icons.Filled.Warning,
+           icon3Description: String? = null,
+           icon3action: () -> Unit = {},
+
+           icon4: ImageVector = Icons.Filled.Warning,
+           icon4Description: String? = null,
+           icon4action: () -> Unit = {},
+
            content: @Composable (PaddingValues) -> Unit) {
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -51,39 +66,38 @@ fun TopBar(navController: NavController,
                     }
                 },
                 actions = {
-                    if (pastshow){
-                        IconButton(onClick = {}){
+                    if (icon4 != Icons.Filled.Warning){
+                        IconButton(onClick = {icon4action()}){
                             Icon(
-                                imageVector = Icons.Filled.History,
-                                contentDescription = "Add"
+                                imageVector = icon4,
+                                contentDescription = icon4Description
                             )
                         }
                     }
-                    if (addshow){
-                        IconButton(onClick = {}){
+                    if (icon3 != Icons.Filled.Warning){
+                        IconButton(onClick = {icon3action()}){
                             Icon(
-                                imageVector = Icons.Filled.Add,
-                                contentDescription = "Add"
+                                imageVector = icon3,
+                                contentDescription = icon3Description
                             )
                         }
                     }
-                    if (menushow){
-                        IconButton(onClick = {}){
+                    if (icon2 != Icons.Filled.Warning){
+                        IconButton(onClick = {icon2action()}){
                             Icon(
-                                imageVector = Icons.Filled.Menu,
-                                contentDescription = "Settings"
+                                imageVector = icon2,
+                                contentDescription = icon2Description
                             )
                         }
                     }
-                    if (settingshow){
-                        IconButton(onClick = {}){
+                    if (icon1 != Icons.Filled.Warning){
+                        IconButton(onClick = {icon1action()}){
                             Icon(
-                                imageVector = Icons.Filled.Settings,
-                                contentDescription = "Settings"
+                                imageVector = icon1,
+                                contentDescription = icon1Description
                             )
                         }
                     }
-
                 }
             )
         }

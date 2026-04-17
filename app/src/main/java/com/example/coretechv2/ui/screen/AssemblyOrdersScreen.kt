@@ -10,6 +10,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Button
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DividerDefaults
@@ -48,9 +52,12 @@ fun AssemblyOrdersScreen(
         navController = navController,
         title = "Assembly Orders",
         backshow = true,
-        settingshow = true,
-        addshow = true,
-        pastshow = true,
+        icon1 = Icons.Filled.Add,
+        icon1Description = "Add",
+        icon1action = { },
+        icon2 = Icons.Filled.History,
+        icon2Description = "Past Records",
+        icon2action = { },
     ) { innerPadding ->
         Column(
             modifier = Modifier
