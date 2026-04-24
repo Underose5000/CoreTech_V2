@@ -43,7 +43,7 @@ class MainActivity : ComponentActivity() {
                 Box{
                     AppNavGraph(navController = navController, currentuser = currentUser.value)
                     if (!isLoggedIn.value){
-                        isLoggedIn.value = true
+                        //isLoggedIn.value = true
                         LoginScreen(
                             currentUser.value,
                             onLoginSuccess = { isLoggedIn.value = true },

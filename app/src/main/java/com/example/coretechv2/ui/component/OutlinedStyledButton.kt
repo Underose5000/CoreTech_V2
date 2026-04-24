@@ -26,8 +26,8 @@ fun OutlinedStyleButton(text: String, onClick: () -> Unit) {
         elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp),
         modifier = Modifier
             .padding(0.dp)
-            .width(80.dp)
-            //.height(50.dp)
+            .width(90.dp)
+            .height(45.dp)
     ) {
         Text(
             text = text,

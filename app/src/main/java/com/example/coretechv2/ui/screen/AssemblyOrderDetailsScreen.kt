@@ -25,7 +25,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.Wallpapers
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -176,26 +175,23 @@ fun AssemblyOrderDetails(
 
     if (viewModel.showMessageOne.value){
         OneButtonMessage(viewModel.message.value,
-            viewModel.messageButtonText1.value ,
+            viewModel.messageButton1Text.value ,
             onClickaction = {viewModel.hideMessage()})
     }
     if (viewModel.showMessageTwo.value){
         TwoButtonMessage(viewModel.message.value,
-            viewModel.messageButtonText1.value,
-            viewModel.messageButtonText2.value ,
-            onClickaction1 = {viewModel.hideMessage()},
-            onClickaction2 = {viewModel.hideMessage()})
+            viewModel.messageButton1Text.value,
+            viewModel.messageButton2Text.value ,
+            onClickAction1 = viewModel.messageButton1Action.value,
+            onClickAction2 = viewModel.messageButton2Action.value)
     }
 
 }
-@Preview(wallpaper = Wallpapers.NONE, backgroundColor = 0xFFFFFFFF, showBackground = true)
-@Composable
-fun AddTest(){
-}
+
 
 @Preview(device = "spec:width=1280dp,height=800dp,dpi=240")
 @Composable
 fun AssemblyOrderDetailsPreview() {
     val navController = androidx.navigation.compose.rememberNavController()
-    AssemblyOrderDetails(navController, "Daniel", "A4812")
+    AssemblyOrderDetails(navController, "Daniel", "A4956")
 }

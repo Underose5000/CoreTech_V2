@@ -25,6 +25,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.coretechv2.dataclasses.TestTypes
 import com.example.coretechv2.dataclasses.VisField
 import com.example.coretechv2.dataclasses.VisSettings
 import com.example.coretechv2.factory.AssemblyOrderDetailsViewModelFactory
@@ -207,7 +208,7 @@ fun ViscosityScreen(
                             onValueChange = { newValue -> viewModel.onVisChange(newValue, VisField.VIS60) }
                         )
                     }
-                    Column(
+                   Column(
                         modifier = Modifier.weight(1f),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Bottom
@@ -310,7 +311,7 @@ fun ViscosityScreen(
                     modifier = Modifier
                         .weight(2f)
                         .padding(horizontal = 20.dp, vertical = 40.dp),
-                    onClick = { viewModel.onVisSave() }
+                    onClick = { viewModel.onTestSave(currentUser, TestTypes.VISCOSITY) }
                 ) { Text(text = "Save") }
                 Spacer(modifier = Modifier.weight(1f))
             }

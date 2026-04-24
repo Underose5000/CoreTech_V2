@@ -1,5 +1,8 @@
 package com.example.coretechv2.dataclasses
 
+import android.util.Log
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -7,9 +10,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.vector.ImageVector
 
 data class ViscosityItem (
-    val spindle: String = "N/A",
-    val indexRange: String  = "N/A",
-    val testNumber: String = "1",
+    var spindle: String = "N/A",
+    var indexRange: String  = "N/A",
+    var testNumber: String = "1",
     val vis60: String = "",
     val vis30: String = "",
     val vis12: String = "",
@@ -42,13 +45,14 @@ fun verifyVisReading(value: String): Double? {
     return null
 }
 fun visHasValue(item: MutableState<ViscosityItem>): Boolean {
-    if (item.value.vis60.isNotBlank() and
-        item.value.vis30.isNotBlank() and
-        item.value.vis12.isNotBlank() and
-        item.value.vis06.isNotBlank() and
-        item.value.vis03.isNotBlank() and
-        item.value.vis1_5.isNotBlank() and
-        item.value.vis0_6.isNotBlank() and
+    Log.d("Vis Reading (Value Check)", item.value.vis60+item.value.vis30)
+    if (item.value.vis60.isNotBlank() or
+        item.value.vis30.isNotBlank() or
+        item.value.vis12.isNotBlank() or
+        item.value.vis06.isNotBlank() or
+        item.value.vis03.isNotBlank() or
+        item.value.vis1_5.isNotBlank() or
+        item.value.vis0_6.isNotBlank() or
         item.value.vis0_3.isNotBlank()){
         return true
     }

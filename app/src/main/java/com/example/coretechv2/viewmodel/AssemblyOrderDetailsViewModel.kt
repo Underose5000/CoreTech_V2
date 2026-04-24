@@ -1,24 +1,24 @@
 package com.example.coretechv2.viewmodel
 
-import android.R
-import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.coretechv2.dataclasses.APICallTypes
 import com.example.coretechv2.dataclasses.MenuItem
+import com.example.coretechv2.dataclasses.TestTypes
+import com.example.coretechv2.dataclasses.TestTypes.FLAME
+import com.example.coretechv2.dataclasses.TestTypes.GEL_TIME
+import com.example.coretechv2.dataclasses.TestTypes.VISCOSITY
 import com.example.coretechv2.dataclasses.VisField
 import com.example.coretechv2.dataclasses.VisSettings
 import com.example.coretechv2.dataclasses.ViscosityItem
 import com.example.coretechv2.dataclasses.visHasValue
 import com.example.coretechv2.repository.APICall
 import com.example.coretechv2.repository.DataStoreManager
-import com.example.coretechv2.repository.regex.verifyVisReading
-import com.example.coretechv2.ui.screen.assemblytests.ViscosityScreen
-import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
 import kotlin.collections.firstOrNull
 
@@ -51,6 +51,7 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
             onClick = {
                 onVisClear()
                 addListItemPressed(showViscosityScreen)
+                saveType = APICallTypes.INSERT
                       },
         ),
         MenuItem(
@@ -61,10 +62,9 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
 
     var message = mutableStateOf("")
         private set
-
-    var messageButtonText1 = mutableStateOf("")
+    var messageButton1Text = mutableStateOf("")
         private set
-    var messageButtonText2 = mutableStateOf("")
+    var messageButton2Text = mutableStateOf("")
         private set
     var messageButton1Action = mutableStateOf({})
         private set
@@ -75,7 +75,7 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
         private set
     var assemblyDetailsLines by mutableStateOf<List<APICall.AssemblyLines>>(emptyList())
         private set
-
+    var testNumbercount by mutableStateOf("")
 
 //region Popup windows Showing Variables
     var showActionMenu by mutableStateOf(false)
@@ -94,17 +94,25 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
         private set
     var showtestNumber by mutableStateOf(false)
         private set
+    var saveType by mutableStateOf(APICallTypes.INSERT)
+        private set
 //endregion
 
     fun retrieveAssemblyDetails(orderNumber: String){
         viewModelScope.launch {
             val assemblyHeaderCall : List<APICall.AssemblyHeader>? = apiCall.query("SELECT * FROM AssemblyHeader where OrderNumber = '${orderNumber}'")
-            if(assemblyHeaderCall?.first()?.ADDITIONALFIELD_9 == ""||assemblyHeaderCall?.firstOrNull()?.ADDITIONALFIELD_9 ==null){assemblyHeaderCall?.first()?.ADDITIONALFIELD_9 = "N/A" }
+            if(assemblyHeaderCall?.first()?.ADDITIONALFIELD_3 == ""||assemblyHeaderCall?.firstOrNull()?.ADDITIONALFIELD_3 ==null){assemblyHeaderCall?.first()?.ADDITIONALFIELD_3 = "N/A" }
             if(assemblyHeaderCall?.first()?.ADDITIONALFIELD_8 == ""||assemblyHeaderCall?.firstOrNull()?.ADDITIONALFIELD_8 ==null){assemblyHeaderCall?.first()?.ADDITIONALFIELD_8 = "N/A" }
             assemblyHeader = assemblyHeaderCall ?: emptyList()
+            visReading.value.spindle = assemblyHeader.firstOrNull()?.ADDITIONALFIELD_3.toString()
+            visReading.value.indexRange = assemblyHeader.firstOrNull()?.ADDITIONALFIELD_8.toString()
 
             val assemblyDetailsLinesCall : List<APICall.AssemblyLines>? = apiCall.query("SELECT * FROM AssemblyLines where OrderNumber = '${orderNumber}'")
             assemblyDetailsLines = assemblyDetailsLinesCall ?: emptyList()
+
+            val viscosityLinesCall : List<APICall.viscosityTest>? = apiCall.query("SELECT * FROM OSTDEF_VISCOSITY_TESTS where OrderNumber = '${orderNumber}'")
+            testNumbercount = (viscosityLinesCall?.count().toString())
+
         }
     }
     fun menuPressed(){
@@ -166,21 +174,40 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
         }
     }
 
-    fun onVisSave(){
-
+    fun toDatabaseValues(test: TestTypes): List<Any?>{
+        return when (test) {
+            VISCOSITY -> listOf(visReading.value.testNumber, visReading.value.spindle, visReading.value.indexRange, visReading.value.vis60, visReading.value.vis30, visReading.value.vis12, visReading.value.vis06, visReading.value.vis03, visReading.value.vis1_5, visReading.value.vis0_6, visReading.value.vis0_3)
+            GEL_TIME -> listOf("Render")
+            FLAME -> listOf("Cladding")
+        }
     }
+    fun sqlValue(value: Any?): String =
+        when (value) {
+            null -> "NULL"
+            is String -> "'${value.replace("'", "''")}'"
+            else -> value.toString()
+        }
+    fun onTestSave(currentUser: String, test: TestTypes){
+        viewModelScope.launch {
+            if(saveType == APICallTypes.INSERT){
+            val response: String? = apiCall.insertUpdateDelete("INSERT INTO ${test.toDatabaseHeadingName()} (ITEMCODE, ORDERNUMBER, ITEMDESCRIPTION, ${test.toDatabaseFieldName()}, NOTES, SYSUSERCREATED, SYSUSERMODIFIED) VALUES('${assemblyHeader.firstOrNull()?.ITEMCODE.toString()}', '${assemblyHeader.firstOrNull()?.ORDERNUMBER.toString()}', '${assemblyHeader.firstOrNull()?.ITEMDESCRIPTION.toString()}', '${toDatabaseValues(test).joinToString(", "){ sqlValue(it) }}', '${currentUser}', '${currentUser}')})")
+            }
+            if(saveType == APICallTypes.UPDATE){
+            val response: String? = apiCall.insertUpdateDelete("UPDATE ${test.toDatabaseHeadingName()} (ITEMCODE, ORDERNUMBER, ITEMDESCRIPTION, ${test.toDatabaseFieldName()}, NOTES, SYSUSERCREATED, SYSUSERMODIFIED) VALUES(${assemblyHeader.firstOrNull()?.ITEMCODE.toString()}, ${assemblyHeader.firstOrNull()?.ORDERNUMBER.toString()}, ${assemblyHeader.firstOrNull()?.ITEMDESCRIPTION.toString()}, ${toDatabaseValues(test)}, ${currentUser}, ${currentUser})})")
+            }
+        }
+    }
+
     fun onVisClear(){
-        visReading = mutableStateOf(
-            ViscosityItem(
-                spindle = assemblyHeader.first().ADDITIONALFIELD_9,
-                indexRange = assemblyHeader.first().ADDITIONALFIELD_8,
-                )
-        )
+        visReading.value = ViscosityItem()
+        visReading.value.spindle = assemblyHeader.firstOrNull()?.ADDITIONALFIELD_3.toString()
+        visReading.value.indexRange = assemblyHeader.firstOrNull()?.ADDITIONALFIELD_8.toString()
+        visReading.value.testNumber = testNumbercount
     }
     fun onCancel(){
         if (visHasValue(visReading)){
             message.value = "Test Results are not saved\nleave without saving?"
-            messageButtonText1.value = "No"
+            messageButton1Text.value = "No"
             messageButton1Action.value = {
                 showMessageTwo.value = false
             }
@@ -189,8 +216,7 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
                 showMessageTwo.value = false
                 showViscosityScreen.value = false
             }
-            messageButtonText2.value = "Yes"
-            message
+            messageButton2Text.value = "Yes"
             showMessageTwo.value = true
         } else {
             onVisClear()

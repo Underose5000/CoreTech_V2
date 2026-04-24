@@ -56,6 +56,29 @@ class APICall(private val dataStoreManager: DataStoreManager) {
         }
     }
 
+    internal suspend inline fun insertUpdateDelete(sqlsend: String): String? {
+        val apiUrl = dataStoreManager.apiUrlFlow.firstOrNull()
+        val apiPort = dataStoreManager.apiPortFlow.firstOrNull()
+        val apiKey = dataStoreManager.apiKeyFlow.firstOrNull()
+        val url = "https://$apiUrl:$apiPort/sqlquery?&format=json&exesql=1&apikey=$apiKey"
+
+        return try {
+            val response: HttpResponse = client.post(url){
+                contentType(ContentType.Application.Json)
+                setBody(sqlsend)
+            }
+            response.status.toString()
+
+
+        } catch (e: ClientRequestException) {
+            Log.d("API Call","API error: ${e.response.status}, ${e.response.bodyAsText()}")
+            null
+        } catch (e: Exception) {
+            Log.d("API Call","Unexpected error: $e")
+            null
+        }
+    }
+
     @Serializable
     data class ItemMaster(
         val ITEMCODE: String,
@@ -79,13 +102,13 @@ class APICall(private val dataStoreManager: DataStoreManager) {
         val ASSEMBLYVERSION: String,
         val ADDITIONALFIELD_1: String,
         val ADDITIONALFIELD_2: String,
-        val ADDITIONALFIELD_3: String,
+        var ADDITIONALFIELD_3: String,
         val ADDITIONALFIELD_4: String,
         val ADDITIONALFIELD_5: String,
         val ADDITIONALFIELD_6: String,
         val ADDITIONALFIELD_7: String,
         var ADDITIONALFIELD_8: String,
-        var ADDITIONALFIELD_9: String,
+        val ADDITIONALFIELD_9: String,
         val ADDITIONALFIELD_10: String,
         val ADDITIONALFIELD_11: String,
         val ADDITIONALFIELD_12: String,
@@ -115,6 +138,24 @@ class APICall(private val dataStoreManager: DataStoreManager) {
         val ADDITIONALFIELD_6: String,
     )
 
+    @Serializable
+    data class viscosityTest(
+        val ITEMCODE: String,
+        val ORDERNUMBER: String,
+        val TESTNO: Int,
+        val ITEMDESCRIPTION: String,
+        val SPINDLE: String,
+        val INDEXREADING: Double,
+        val READING60: Double,
+        val READING30: Double,
+        val READING12: Double,
+        val READING6: Double,
+        val READING3: Double,
+        val READING1_5: Double,
+        val READING0_6: Double,
+        val READING0_3: Double,
+        val NOTES: String
+    )
     @Serializable
     data class VerifyUserPassword(
         val IS_VALID: Int
