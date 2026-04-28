@@ -19,9 +19,13 @@ import androidx.compose.material3.Divider
 import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -43,14 +47,22 @@ fun AssemblyOrdersScreen(
     currentUser: String
 ) {
     val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
     val viewModel: AssemblyOrdersViewModel = viewModel(
         factory = AssemblyOrdersViewModelFactory(context)
     )
     viewModel.retrieveAssemblyOrders()
+    LaunchedEffect(Unit) {
+        viewModel.snackbarEvent.collect { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
 
     TopBar(
         navController = navController,
         title = "Assembly Orders",
+        snackbarHostState = snackbarHostState,
         backshow = true,
         icon1 = Icons.Filled.Add,
         icon1Description = "Add",

@@ -15,8 +15,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -40,6 +43,7 @@ fun HomeScreen(
     currentUser: String
 ) {
     val configuration = LocalConfiguration.current
+    val snackbarHostState = remember { SnackbarHostState() }
     val isLandscape =
         configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     val screenWidthDp = configuration.screenWidthDp
@@ -50,19 +54,23 @@ fun HomeScreen(
     if (isLandscape and isTablet) {
         LandscapeTabletLayout(
             navController = navController,
-            currentUser)
+            currentUser,
+            snackbarHostState)
     } else if (!isLandscape and isTablet){
         PortraitLayout(
             navController = navController,
-            currentUser)
+            currentUser,
+            snackbarHostState)
     } else if (isLandscape and !isTablet){
         PortraitLayout(
             navController = navController,
-            currentUser)
+            currentUser,
+            snackbarHostState)
     } else {
         PortraitLayout(
             navController = navController,
-            currentUser)
+            currentUser,
+            snackbarHostState)
     }
 }
 
@@ -70,11 +78,14 @@ fun HomeScreen(
 @Composable
 fun LandscapeTabletLayout(
     navController: NavController,
-    currentUser: String
+    currentUser: String,
+    snackbarHostState: SnackbarHostState
 ) {
     TopBar(
         navController = navController,
-        title = "Home"
+        title = "Home",
+        snackbarHostState,
+
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -441,11 +452,13 @@ fun LandscapeTabletLayout(
 @Composable
 fun PortraitLayout(
     navController: NavController,
-    currentUser: String
+    currentUser: String,
+    snackbarHostState: SnackbarHostState
 ) {
     TopBar(
         navController = navController,
-        title = "Home"
+        title = "Home",
+        snackbarHostState
     ) { innerPadding ->
         Column(
             modifier = Modifier

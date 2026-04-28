@@ -60,7 +60,7 @@ class APICall(private val dataStoreManager: DataStoreManager) {
         val apiUrl = dataStoreManager.apiUrlFlow.firstOrNull()
         val apiPort = dataStoreManager.apiPortFlow.firstOrNull()
         val apiKey = dataStoreManager.apiKeyFlow.firstOrNull()
-        val url = "https://$apiUrl:$apiPort/sqlquery?&format=json&exesql=1&apikey=$apiKey"
+        val url = "https://$apiUrl:$apiPort/executesql?&format=json&exesql=1&apikey=$apiKey"
 
         return try {
             val response: HttpResponse = client.post(url){
@@ -100,18 +100,18 @@ class APICall(private val dataStoreManager: DataStoreManager) {
         val COMPLETEQTY : Double,
         val REMAININGQTY: Double,
         val ASSEMBLYVERSION: String,
-        val ADDITIONALFIELD_1: String,
-        val ADDITIONALFIELD_2: String,
+        var ADDITIONALFIELD_1: String,
+        var ADDITIONALFIELD_2: String,
         var ADDITIONALFIELD_3: String,
-        val ADDITIONALFIELD_4: String,
-        val ADDITIONALFIELD_5: String,
-        val ADDITIONALFIELD_6: String,
-        val ADDITIONALFIELD_7: String,
+        var ADDITIONALFIELD_4: String,
+        var ADDITIONALFIELD_5: String,
+        var ADDITIONALFIELD_6: String,
+        var ADDITIONALFIELD_7: String,
         var ADDITIONALFIELD_8: String,
-        val ADDITIONALFIELD_9: String,
-        val ADDITIONALFIELD_10: String,
-        val ADDITIONALFIELD_11: String,
-        val ADDITIONALFIELD_12: String,
+        var ADDITIONALFIELD_9: String,
+        var ADDITIONALFIELD_10: String,
+        var ADDITIONALFIELD_11: String,
+        var ADDITIONALFIELD_12: String,
     )
 
     @Serializable

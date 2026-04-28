@@ -8,12 +8,16 @@ import androidx.lifecycle.viewModelScope
 import com.example.coretechv2.repository.APICall
 import com.example.coretechv2.repository.DataStoreManager
 import com.example.coretechv2.repository.HashPassword
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import kotlin.properties.ReadWriteProperty
 
 class AssemblyOrdersViewModel(private val dataStoreManager: DataStoreManager) : ViewModel() {
 
     private val apiCall = APICall(dataStoreManager)
+    private val _snackbarEvent = MutableSharedFlow<String>()
+    val snackbarEvent = _snackbarEvent.asSharedFlow()
 
     var AssemblyOrdersList by mutableStateOf<List<APICall.AssemblyHeader>>(emptyList())
         private set

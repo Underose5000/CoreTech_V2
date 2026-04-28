@@ -26,30 +26,24 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.coretechv2.dataclasses.TestTypes
-import com.example.coretechv2.dataclasses.TestTypes.VISCOSITY
 import com.example.coretechv2.dataclasses.VisField
 import com.example.coretechv2.dataclasses.VisSettings
 import com.example.coretechv2.factory.AssemblyOrderDetailsViewModelFactory
 import com.example.coretechv2.ui.component.OutlinedStyleButton
-import com.example.coretechv2.ui.component.OutlinedStyleDoubleNumberField
+import com.example.coretechv2.ui.component.OutlinedStyleIntNumberField
+import com.example.coretechv2.ui.component.OutlinedStyleNumberField
 import com.example.coretechv2.ui.component.PopupWindow
 import com.example.coretechv2.viewmodel.AssemblyOrderDetailsViewModel
 
 /**
- * Viscosity test screen
  *
- * A popup screen that allows users to either enter viscosity test results to the database or
- * edit previously entered viscosity test results.
- *
- * @param viewModel the viewModel to be used
- * @param currentUser The currently logged-in user, Used for database entries
  */
 @Composable
-fun ViscosityScreen(
+fun GelTimeScreen(
     viewModel: AssemblyOrderDetailsViewModel, currentUser: String, orderNumber: String
 ) {
     val focusManager = LocalFocusManager.current
-    PopupWindow(width = 700, height = 500) {
+    PopupWindow(width = 700, height = 250) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -81,77 +75,11 @@ fun ViscosityScreen(
                         .padding(horizontal = 20.dp, vertical = 20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(text = "Spindle")
-                    OutlinedStyleButton(
-                        text = viewModel.visReading.value.spindle,
-                        onClick = { viewModel.spindlePressed() })
-                    DropdownMenu(
-                        expanded = viewModel.showSpindleList,
-                        onDismissRequest = { viewModel.spindlePressed() }
-                    ) {
-                        DropdownMenuItem(
-                            onClick = { viewModel.onDropDownChange("1", VisSettings.SPINDLE) },
-                            text = { Text(text = "1") })
-                        DropdownMenuItem(
-                            onClick = { viewModel.onDropDownChange("2", VisSettings.SPINDLE) },
-                            text = { Text(text = "2") })
-                        DropdownMenuItem(
-                            onClick = { viewModel.onDropDownChange("3", VisSettings.SPINDLE) },
-                            text = { Text(text = "3") })
-                        DropdownMenuItem(
-                            onClick = { viewModel.onDropDownChange("4", VisSettings.SPINDLE) },
-                            text = { Text(text = "4") })
-                        DropdownMenuItem(
-                            onClick = { viewModel.onDropDownChange("A", VisSettings.SPINDLE) },
-                            text = { Text(text = "A") })
-                        DropdownMenuItem(
-                            onClick = { viewModel.onDropDownChange("B", VisSettings.SPINDLE) },
-                            text = { Text(text = "B") })
-                        DropdownMenuItem(
-                            onClick = { viewModel.onDropDownChange("C", VisSettings.SPINDLE) },
-                            text = { Text(text = "C") })
-                        DropdownMenuItem(
-                            onClick = { viewModel.onDropDownChange("D", VisSettings.SPINDLE) },
-                            text = { Text(text = "D") })
-                        DropdownMenuItem(
-                            onClick = { viewModel.onDropDownChange("E", VisSettings.SPINDLE) },
-                            text = { Text(text = "E") })
-                        DropdownMenuItem(
-                            onClick = { viewModel.onDropDownChange("F", VisSettings.SPINDLE) },
-                            text = { Text(text = "F") })
-                        DropdownMenuItem(
-                            onClick = { viewModel.onDropDownChange("G", VisSettings.SPINDLE) },
-                            text = { Text(text = "G") })
-                        /*DropdownMenuItem(
-                            onClick = {viewModel.onDropDownChange("N/A",viewModel.spindle)},
-                            text = { Text(text = "N/A") })*/
-                    }
-                }
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(horizontal = 20.dp, vertical = 20.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(text = "Index Range")
-                    OutlinedStyleButton(text = viewModel.visReading.value.indexRange, onClick = { viewModel.indexPressed() })
-                    DropdownMenu(
-                        expanded = viewModel.showindexList,
-                        onDismissRequest = { viewModel.indexPressed() }
-                    ) {
-                        DropdownMenuItem(
-                            onClick = { viewModel.onDropDownChange("6/60", VisSettings.INDEX) },
-                            text = { Text(text = "6/60") })
-                        DropdownMenuItem(
-                            onClick = { viewModel.onDropDownChange("3/30", VisSettings.INDEX) },
-                            text = { Text(text = "3/30") })
-                        DropdownMenuItem(
-                            onClick = { viewModel.onDropDownChange("0.6/6", VisSettings.INDEX) },
-                            text = { Text(text = "0.6/6") })
-                        DropdownMenuItem(
-                            onClick = { viewModel.onDropDownChange("0.3/3", VisSettings.INDEX) },
-                            text = { Text(text = "0.3/3") })
-                    }
+                    Text(text = "Catalyst %")
+                    OutlinedStyleIntNumberField(
+                        value = viewModel.visReading.value.vis12,
+                        onValueChange = { newValue -> viewModel.onVisChange(newValue, VisField.VIS12) }
+                    )
                 }
 
                 Column(
@@ -211,8 +139,8 @@ fun ViscosityScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Bottom
                     ) {
-                        Text(text = "60")
-                        OutlinedStyleDoubleNumberField(
+                        Text(text = "Hours(H)")
+                        OutlinedStyleNumberField(
                             value = viewModel.visReading.value.vis60,
                             onValueChange = { newValue -> viewModel.onVisChange(newValue, VisField.VIS60) }
                         )
@@ -222,8 +150,8 @@ fun ViscosityScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Bottom
                     ) {
-                        Text(text = "30")
-                       OutlinedStyleDoubleNumberField(
+                        Text(text = "Minutes(MM)")
+                        OutlinedStyleNumberField(
                             value = viewModel.visReading.value.vis30,
                             onValueChange = { newValue -> viewModel.onVisChange(newValue, VisField.VIS30) }
                         )
@@ -233,68 +161,10 @@ fun ViscosityScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Bottom
                     ) {
-                        Text(text = "12")
-                        OutlinedStyleDoubleNumberField(
+                        Text(text = "Seconds(SS)")
+                        OutlinedStyleNumberField(
                             value = viewModel.visReading.value.vis12,
                             onValueChange = { newValue -> viewModel.onVisChange(newValue, VisField.VIS12) }
-                        )
-                    }
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Bottom
-                    ) {
-                        Text(text = "6")
-                        OutlinedStyleDoubleNumberField(
-                            value = viewModel.visReading.value.vis06,
-                            onValueChange = { newValue -> viewModel.onVisChange(newValue, VisField.VIS06) }
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(40.dp))
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Bottom
-                    ) {
-                        Text(text = "3")
-                        OutlinedStyleDoubleNumberField(
-                            value = viewModel.visReading.value.vis03,
-                            onValueChange = { newValue -> viewModel.onVisChange(newValue, VisField.VIS03) }
-                        )
-                    }
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Bottom
-                    ) {
-                        Text(text = "1.5")
-                        OutlinedStyleDoubleNumberField(
-                            value = viewModel.visReading.value.vis1_5,
-                            onValueChange = { newValue -> viewModel.onVisChange(newValue, VisField.VIS1_5) }
-                        )
-                    }
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Bottom
-                    ) {
-                        Text(text = "0.6")
-                        OutlinedStyleDoubleNumberField(
-                            value = viewModel.visReading.value.vis0_6,
-                            onValueChange = { newValue -> viewModel.onVisChange(newValue, VisField.VIS0_6) }
-                        )
-                    }
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Bottom
-                    ) {
-                        Text(text = "0.3")
-                        OutlinedStyleDoubleNumberField(
-                            value = viewModel.visReading.value.vis0_3,
-                            onValueChange = { newValue -> viewModel.onVisChange(newValue, VisField.VIS0_3) }
                         )
                     }
                 }
@@ -314,7 +184,7 @@ fun ViscosityScreen(
                     modifier = Modifier
                         .weight(2f)
                         .padding(horizontal = 20.dp, vertical = 40.dp),
-                    onClick = { viewModel.onCancel(VISCOSITY) }
+                    onClick = { viewModel.onCancel() }
                 ) { Text(text = "Cancel") }
                 Button(
                     modifier = Modifier
@@ -331,7 +201,7 @@ fun ViscosityScreen(
 
 @Preview(device = "spec:width=700dp,height=500dp,dpi=240,orientation=portrait", showSystemUi = false, showBackground = true)
 @Composable
-fun ViscosityScreenPreview() {
+fun GelTimePreview() {
     val context = LocalContext.current
     val viewModel: AssemblyOrderDetailsViewModel = viewModel(
         factory = AssemblyOrderDetailsViewModelFactory(context)

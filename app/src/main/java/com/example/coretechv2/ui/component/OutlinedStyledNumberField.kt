@@ -30,7 +30,7 @@ import com.example.coretechv2.dataclasses.VisField
 
 
 @Composable
-fun OutlinedStyleNumberField(
+fun OutlinedStyleDoubleNumberField(
     modifier: Modifier = Modifier,
     value: String,
     onValueChange: (String) -> Unit
@@ -61,7 +61,47 @@ fun OutlinedStyleNumberField(
                 modifier = Modifier
                     .fillMaxSize()
                     .border(1.dp, Color.Gray, RoundedCornerShape(4.dp))
-                    .padding(vertical = 4.dp, horizontal = 8.dp) // 👈 FULL CONTROL
+                    .padding(vertical = 4.dp, horizontal = 8.dp)
+            ) {
+                innerTextField()
+            }
+        }
+    )
+}
+
+@Composable
+fun OutlinedStyleIntNumberField(
+    modifier: Modifier = Modifier,
+    value: String,
+    onValueChange: (String) -> Unit
+) {
+    BasicTextField(
+        value = value,
+        onValueChange = {
+            if (it.matches(Regex(("""\d*""")))) {
+                onValueChange(it)
+            }
+        },
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Number
+        ),
+        textStyle = TextStyle(
+            textAlign = TextAlign.Center,
+            color = Color.Black
+        ),
+        singleLine = true,
+        modifier = Modifier
+            .padding(horizontal = 20.dp)
+            .width(90.dp)
+            .height(45.dp)
+            .then(modifier),
+        decorationBox = { innerTextField ->
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .border(1.dp, Color.Gray, RoundedCornerShape(4.dp))
+                    .padding(vertical = 4.dp, horizontal = 8.dp)
             ) {
                 innerTextField()
             }

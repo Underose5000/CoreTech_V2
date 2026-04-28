@@ -15,11 +15,11 @@ enum class TestTypes {
             FLAME -> "Cladding"
         }
     }
-    fun toDatabaseFieldName(): String{
+    fun toDatabaseFieldName(): List<String>{
         return when (this) {
-            VISCOSITY -> "TESTNO, SPINDLE, INDEXREADING, READING60, READING30, READING12, READING6, READING3, READING1_5, READING0_6, READING0_3"
-            GEL_TIME -> "Render"
-            FLAME -> "Cladding"
+            VISCOSITY -> listOf("TESTNO", "SPINDLE", "INDEXREADING", "READING60", "READING30", "READING12", "READING6", "READING3", "READING1_5", "READING0_6", "READING0_3")
+            GEL_TIME -> listOf("Render")
+            FLAME -> listOf("Cladding")
         }
     }
 }

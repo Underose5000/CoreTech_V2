@@ -18,8 +18,12 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -43,14 +47,22 @@ fun AssemblyOrderDetails(
     navController: NavController, currentUser: String, orderNumber: String
 ) {
     val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
     val viewModel: AssemblyOrderDetailsViewModel = viewModel(
         factory = AssemblyOrderDetailsViewModelFactory(context)
     )
     viewModel.retrieveAssemblyDetails(orderNumber)
+    LaunchedEffect(Unit) {
+        viewModel.snackbarEvent.collect { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
 
     TopBar(
         navController = navController,
         title = "${viewModel.assemblyHeader.firstOrNull()?.ITEMDESCRIPTION}",
+        snackbarHostState = snackbarHostState,
         backshow = true,
         icon1 = Icons.Filled.Menu,
         icon1Description = "Menu",
