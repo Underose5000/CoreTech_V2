@@ -9,20 +9,21 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.example.coretechv2.dataclasses.PopupMessageItem
 
 @Composable
-fun TwoButtonMessage(message : String, buttonText1 : String, buttonText2 : String, onClickAction1 : () -> Unit, onClickAction2 : () -> Unit){
+fun TwoButtonMessage(pouUpMessage : PopupMessageItem){
     PopupWindow(300,400,) {
         Column(modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center) {
-            Text(message)
+            Text(pouUpMessage.message)
             Row(){
-                Button(onClick = {onClickAction1()}) {
-                    Text(buttonText1)
+                Button(onClick = {pouUpMessage.onClickAction1()}) {
+                    Text(pouUpMessage.messageButton1Text)
                 }
-                Button(onClick = {onClickAction2()}) {
-                    Text(buttonText2)
+                Button(onClick = {pouUpMessage.onClickAction2()}) {
+                    Text(pouUpMessage.messageButton2Text)
             }
         }
         }

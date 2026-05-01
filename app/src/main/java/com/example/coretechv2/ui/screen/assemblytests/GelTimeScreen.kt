@@ -31,7 +31,6 @@ import com.example.coretechv2.dataclasses.VisSettings
 import com.example.coretechv2.factory.AssemblyOrderDetailsViewModelFactory
 import com.example.coretechv2.ui.component.OutlinedStyleButton
 import com.example.coretechv2.ui.component.OutlinedStyleIntNumberField
-import com.example.coretechv2.ui.component.OutlinedStyleNumberField
 import com.example.coretechv2.ui.component.PopupWindow
 import com.example.coretechv2.viewmodel.AssemblyOrderDetailsViewModel
 
@@ -140,7 +139,7 @@ fun GelTimeScreen(
                         verticalArrangement = Arrangement.Bottom
                     ) {
                         Text(text = "Hours(H)")
-                        OutlinedStyleNumberField(
+                        OutlinedStyleIntNumberField(
                             value = viewModel.visReading.value.vis60,
                             onValueChange = { newValue -> viewModel.onVisChange(newValue, VisField.VIS60) }
                         )
@@ -151,7 +150,7 @@ fun GelTimeScreen(
                         verticalArrangement = Arrangement.Bottom
                     ) {
                         Text(text = "Minutes(MM)")
-                        OutlinedStyleNumberField(
+                       OutlinedStyleIntNumberField(
                             value = viewModel.visReading.value.vis30,
                             onValueChange = { newValue -> viewModel.onVisChange(newValue, VisField.VIS30) }
                         )
@@ -162,7 +161,7 @@ fun GelTimeScreen(
                         verticalArrangement = Arrangement.Bottom
                     ) {
                         Text(text = "Seconds(SS)")
-                        OutlinedStyleNumberField(
+                        OutlinedStyleIntNumberField(
                             value = viewModel.visReading.value.vis12,
                             onValueChange = { newValue -> viewModel.onVisChange(newValue, VisField.VIS12) }
                         )
@@ -184,7 +183,7 @@ fun GelTimeScreen(
                     modifier = Modifier
                         .weight(2f)
                         .padding(horizontal = 20.dp, vertical = 40.dp),
-                    onClick = { viewModel.onCancel() }
+                    onClick = { viewModel.onCancel(TestTypes.GEL_TIME) }
                 ) { Text(text = "Cancel") }
                 Button(
                     modifier = Modifier

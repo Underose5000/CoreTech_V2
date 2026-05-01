@@ -23,7 +23,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -37,7 +36,7 @@ import com.example.coretechv2.factory.AssemblyOrderDetailsViewModelFactory
 import com.example.coretechv2.ui.component.Menu
 import com.example.coretechv2.ui.component.OneButtonMessage
 import com.example.coretechv2.ui.component.TopBar
-import com.example.coretechv2.ui.component.TwoButtonMessage
+import com.example.coretechv2.ui.screen.assemblytests.GelTimeScreen
 import com.example.coretechv2.ui.screen.assemblytests.ViscosityScreen
 import com.example.coretechv2.ui.theme.scottBlue
 import com.example.coretechv2.viewmodel.AssemblyOrderDetailsViewModel
@@ -48,7 +47,6 @@ fun AssemblyOrderDetails(
 ) {
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
     val viewModel: AssemblyOrderDetailsViewModel = viewModel(
         factory = AssemblyOrderDetailsViewModelFactory(context)
     )
@@ -182,21 +180,18 @@ fun AssemblyOrderDetails(
             }
     }
     if (viewModel.showViscosityScreen.value){
-        ViscosityScreen(viewModel, currentUser, orderNumber)
+        ViscosityScreen(
+            currentUser = currentUser,
+            itemCode = viewModel.assemblyHeader.first().ITEMCODE,
+            orderNumber = orderNumber,
+            itemDescription = viewModel.assemblyHeader.first().ITEMDESCRIPTION,
+            spindle = viewModel.assemblyHeader.first().ADDITIONALFIELD_3,
+            index = viewModel.assemblyHeader.first().ADDITIONALFIELD_8, )
+    }
+    if (viewModel.showGelScreen.value){
+        GelTimeScreen(currentUser, viewModel.assemblyHeader.first().ITEMCODE, orderNumber, viewModel.assemblyHeader.first().ITEMDESCRIPTION)
     }
 
-    if (viewModel.showMessageOne.value){
-        OneButtonMessage(viewModel.message.value,
-            viewModel.messageButton1Text.value ,
-            onClickaction = {viewModel.hideMessage()})
-    }
-    if (viewModel.showMessageTwo.value){
-        TwoButtonMessage(viewModel.message.value,
-            viewModel.messageButton1Text.value,
-            viewModel.messageButton2Text.value ,
-            onClickAction1 = viewModel.messageButton1Action.value,
-            onClickAction2 = viewModel.messageButton2Action.value)
-    }
 
 }
 

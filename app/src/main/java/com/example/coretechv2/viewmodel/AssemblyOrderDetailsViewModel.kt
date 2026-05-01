@@ -7,18 +7,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.coretechv2.dataclasses.APICallTypes
 import com.example.coretechv2.dataclasses.GelField
 import com.example.coretechv2.dataclasses.GelTimeItem
 import com.example.coretechv2.dataclasses.MenuItem
-import com.example.coretechv2.dataclasses.TestTypes
-import com.example.coretechv2.dataclasses.TestTypes.FLAME
-import com.example.coretechv2.dataclasses.TestTypes.GEL_TIME
-import com.example.coretechv2.dataclasses.TestTypes.VISCOSITY
-import com.example.coretechv2.dataclasses.VisField
-import com.example.coretechv2.dataclasses.VisSettings
 import com.example.coretechv2.dataclasses.ViscosityItem
-import com.example.coretechv2.dataclasses.visHasValue
 import com.example.coretechv2.repository.APICall
 import com.example.coretechv2.repository.DataStoreManager
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -55,9 +47,7 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
         MenuItem(
             title = "Viscosity Test",
             onClick = {
-                onVisClear()
                 addListItemPressed(showViscosityScreen)
-                saveType = APICallTypes.INSERT
                       },
         ),
         MenuItem(
@@ -65,7 +55,6 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
             onClick = {
                 onGelClear()
                 addListItemPressed(showGelScreen)
-                saveType = APICallTypes.INSERT
             },
         ),
         MenuItem(
@@ -90,30 +79,18 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
         private set
     var assemblyDetailsLines by mutableStateOf<List<APICall.AssemblyLines>>(emptyList())
         private set
-    var visTestNumberCount by mutableStateOf("")
-    var gelTestNumberCount by mutableStateOf("")
 
-//region Popup windows Showing Variables
+
     var showActionMenu by mutableStateOf(false)
         private set
     var showAddMenu by mutableStateOf(false)
         private set
     var showViscosityScreen = mutableStateOf(false)
-        private set
     var showGelScreen = mutableStateOf(false)
         private set
     var showMessageOne = mutableStateOf(false)
         private set
-    var showMessageTwo = mutableStateOf(false)
-        private set
-    var showSpindleList by mutableStateOf(false)
-        private set
-    var showindexList by mutableStateOf(false)
-        private set
-    var showtestNumber by mutableStateOf(false)
-        private set
-    var saveType by mutableStateOf(APICallTypes.INSERT)
-        private set
+
 //endregion
 
     fun retrieveAssemblyDetails(orderNumber: String){
@@ -135,13 +112,6 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
 
             val assemblyDetailsLinesCall : List<APICall.AssemblyLines>? = apiCall.query("SELECT * FROM AssemblyLines where OrderNumber = '${orderNumber}'")
             assemblyDetailsLines = assemblyDetailsLinesCall ?: emptyList()
-
-            val viscosityLinesCall : List<APICall.viscosityTest>? = apiCall.query("SELECT * FROM OSTDEF_VISCOSITY_TESTS where OrderNumber = '${orderNumber}'")
-            visTestNumberCount = (viscosityLinesCall?.count().toString())
-
-            val gelTimeLinesCall : List<APICall.viscosityTest>? = apiCall.query("SELECT * FROM OSTDEF_GELTIME_TESTS where OrderNumber = '${orderNumber}'")
-            gelTestNumberCount = (gelTimeLinesCall?.count().toString())
-
         }
     }
     fun menuPressed(){
@@ -162,46 +132,6 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
         showMessageOne.value = false
     }
 
-
-//region Viscosity Functions
-    fun spindlePressed(){
-        showSpindleList = !showSpindleList
-    }
-    fun indexPressed(){
-        showindexList = !showindexList
-    }
-    fun testNumberPressed(){
-        showtestNumber = !showtestNumber
-    }
-    fun onDropDownChange(newValue: String, field : VisSettings){
-        visReading.value = when (field) {
-            VisSettings.SPINDLE -> visReading.value.copy(spindle = newValue)
-            VisSettings.INDEX -> visReading.value.copy(indexRange = newValue)
-            VisSettings.TESTNUMBER -> visReading.value.copy(testNumber = newValue)
-        }
-        if (field == VisSettings.SPINDLE){
-            showSpindleList = false
-        }
-        if (field == VisSettings.INDEX){
-            showindexList = false
-        }
-        if (field == VisSettings.TESTNUMBER){
-            showtestNumber = false
-        }
-    }
-
-    fun onVisChange(newValue: String, field : VisField){
-        visReading.value = when (field) {
-            VisField.VIS60 -> visReading.value.copy(vis60 = newValue)
-            VisField.VIS30 -> visReading.value.copy(vis30 = newValue)
-            VisField.VIS12 -> visReading.value.copy(vis12 = newValue)
-            VisField.VIS06  -> visReading.value.copy(vis06 = newValue)
-            VisField.VIS03  -> visReading.value.copy(vis03 = newValue)
-            VisField.VIS1_5 -> visReading.value.copy(vis1_5 = newValue)
-            VisField.VIS0_6 -> visReading.value.copy(vis0_6 = newValue)
-            VisField.VIS0_3 -> visReading.value.copy(vis0_3 = newValue)
-        }
-    }
     fun onGelChange(newValue: String, field : GelField){
         gelReading.value = when (field) {
             GelField.HOUR -> gelReading.value.copy(hour = newValue)
@@ -215,107 +145,11 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
         }
     }
 
-    fun toDatabaseValues(test: TestTypes): List<Any>{
-        var ratio = 0.0
-        if (test == VISCOSITY){
-            if (visReading.value.indexRange == "6/60"){
-                ratio = visReading.value.vis06.toDouble() / visReading.value.vis60.toDouble()
-            }
-            if (visReading.value.indexRange == "3/30"){
-                ratio = visReading.value.vis03.toDouble() / visReading.value.vis30.toDouble()
-            }
-            if (visReading.value.indexRange == "0.6/6"){
-                ratio = visReading.value.vis0_6.toDouble() / visReading.value.vis06.toDouble()
-            }
-            if (visReading.value.indexRange == "0.3/3"){
-                ratio = visReading.value.vis0_3.toDouble() / visReading.value.vis03.toDouble()
-            }
-        }
-        val indexResult = kotlin.math.round(ratio * 10 * 10) / 10
-        Log.d("Test",indexResult.toString())
-        return when (test) {
-            VISCOSITY -> listOf(visReading.value.testNumber.toDouble(), visReading.value.spindle, indexResult, visReading.value.vis60.toDouble(), visReading.value.vis30.toDouble(), visReading.value.vis12.toDouble(), visReading.value.vis06.toDouble(), visReading.value.vis03.toDouble(), visReading.value.vis1_5.toDouble(), visReading.value.vis0_6.toDouble(), visReading.value.vis0_3.toDouble())
-            GEL_TIME -> listOf("Render")
-            FLAME -> listOf("Cladding")
-        }
-    }
-    fun updateDatabaseValues(values : List<Any>, Headings: List<String>): String {
-        var call = String()
-        for(i in Headings.indices)
-            if (values[i] is Double || values[i] is Int){
-                call += "${Headings[i]} = ${values[i]}, "
-            }
-            else {
-                call += "${Headings[i]} = '${values[i]}', "
-            }
-        return call
-    }
-    fun insertDatabaseValues(values : List<Any>,): String {
-        var call = String()
-        for(i in values.indices)
-            if (values[i] is Double || values[i] is Int){
-                call += "${values[i]}, "
-            }
-            else {
-                call += "'${values[i]}', "
-            }
-        return call
-    }
-    fun onTestSave(currentUser: String, test: TestTypes, selection : MutableState<Boolean>){
-        viewModelScope.launch {
-            var call = ""
-            if(saveType == APICallTypes.INSERT){
-                call = "INSERT INTO ${test.toDatabaseHeadingName()} (ITEMCODE, ORDERNUMBER, ITEMDESCRIPTION, ${test.toDatabaseFieldName().joinToString(", ")}, SYSUSERCREATED, SYSUSERMODIFIED) VALUES('${assemblyHeader.firstOrNull()?.ITEMCODE.toString()}', '${assemblyHeader.firstOrNull()?.ORDERNUMBER.toString()}', '${assemblyHeader.firstOrNull()?.ITEMDESCRIPTION.toString()}', ${insertDatabaseValues(toDatabaseValues(test))} '${currentUser}', '${currentUser}')"
-            }
-            if(saveType == APICallTypes.UPDATE){
-                call = "UPDATE ${test.toDatabaseHeadingName()} SET  ${updateDatabaseValues(toDatabaseValues(test),test.toDatabaseFieldName())}  SYSUSERMODIFIED = ${currentUser})"
-            }
-
-            Log.d("testsave","response =" + call)
-            val response = apiCall.insertUpdateDelete(call)
-            if(response == "200 OK"){
-                selection.value = false
-                _snackbarEvent.emit("Saved successfully")
-            } else{
-                _snackbarEvent.emit("Error Saving, Please Try Again")
-            }
-        }
-    }
-    fun onVisClear(){
-        visReading.value = ViscosityItem()
-        visReading.value.spindle = assemblyHeader.firstOrNull()?.ADDITIONALFIELD_3.toString()
-        visReading.value.indexRange = assemblyHeader.firstOrNull()?.ADDITIONALFIELD_8.toString()
-        visReading.value.testNumber = visTestNumberCount
-    }
-
     fun onGelClear(){
         gelReading.value = GelTimeItem()
         gelReading.value.catPercent = assemblyHeader.firstOrNull()?.ADDITIONALFIELD_9.toString()
-        gelReading.value.testNumber = gelTestNumberCount
+       // gelReading.value.testNumber = gelTestNumberCount
     }
-    fun onCancel(test: TestTypes){
-        if(test == VISCOSITY){
-            if (visHasValue(visReading)){
-            message.value = "Test Results are not saved\nleave without saving?"
-            messageButton1Text.value = "No"
-            messageButton1Action.value = {
-                showMessageTwo.value = false
-            }
-            messageButton2Action.value = {
-                onVisClear()
-                showMessageTwo.value = false
-                showViscosityScreen.value = false
-            }
-            messageButton2Text.value = "Yes"
-            showMessageTwo.value = true
-            } else {
-                onVisClear()
-                showViscosityScreen.value = false
-            }
-        }else if(test == GEL_TIME){
 
-        }
 
-    }
-//endregion
 }

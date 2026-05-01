@@ -14,8 +14,10 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,15 +27,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.coretechv2.dataclasses.TestTypes
-import com.example.coretechv2.dataclasses.TestTypes.VISCOSITY
 import com.example.coretechv2.dataclasses.VisField
 import com.example.coretechv2.dataclasses.VisSettings
-import com.example.coretechv2.factory.AssemblyOrderDetailsViewModelFactory
+import com.example.coretechv2.factory.ViscosityViewModelFactory
 import com.example.coretechv2.ui.component.OutlinedStyleButton
 import com.example.coretechv2.ui.component.OutlinedStyleDoubleNumberField
 import com.example.coretechv2.ui.component.PopupWindow
+import com.example.coretechv2.ui.component.TwoButtonMessage
 import com.example.coretechv2.viewmodel.AssemblyOrderDetailsViewModel
+import com.example.coretechv2.viewmodel.assemblytests.ViscosityViewModel
 
 /**
  * Viscosity test screen
@@ -45,9 +47,31 @@ import com.example.coretechv2.viewmodel.AssemblyOrderDetailsViewModel
  * @param currentUser The currently logged-in user, Used for database entries
  */
 @Composable
-fun ViscosityScreen(
-    viewModel: AssemblyOrderDetailsViewModel, currentUser: String, orderNumber: String
-) {
+fun ViscosityScreen(currentUser: String, itemCode: String, orderNumber: String, itemDescription: String, spindle: String, index: String) {
+    val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    val viewModel: ViscosityViewModel = viewModel(
+        factory = ViscosityViewModelFactory(context),
+    )
+    viewModel.retrieveTestCount(orderNumber)
+    LaunchedEffect(Unit) {
+        viewModel.snackbarEvent.collect { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
+    val mainViewModel: AssemblyOrderDetailsViewModel = viewModel()
+    val visViewModel: ViscosityViewModel = viewModel()
+
+    LaunchedEffect(Unit) {
+        viewModel.defaultSpindle.value = spindle
+        viewModel.defaultIndex.value = index
+    }
+
+    LaunchedEffect(Unit) {
+        visViewModel.closeScreen.collect {
+            mainViewModel.showViscosityScreen.value = false
+        }
+    }
     val focusManager = LocalFocusManager.current
     PopupWindow(width = 700, height = 500) {
         Column(
@@ -314,16 +338,19 @@ fun ViscosityScreen(
                     modifier = Modifier
                         .weight(2f)
                         .padding(horizontal = 20.dp, vertical = 40.dp),
-                    onClick = { viewModel.onCancel(VISCOSITY) }
+                    onClick = { viewModel.onCancel() }
                 ) { Text(text = "Cancel") }
                 Button(
                     modifier = Modifier
                         .weight(2f)
                         .padding(horizontal = 20.dp, vertical = 40.dp),
-                    onClick = { viewModel.onTestSave(currentUser, TestTypes.VISCOSITY, viewModel.showViscosityScreen) }
+                    onClick = { viewModel.onTestSave(currentUser, itemCode, orderNumber, itemDescription) }
                 ) { Text(text = "Save") }
                 Spacer(modifier = Modifier.weight(1f))
             }
+        }
+        if (viewModel.showMessageTwo.value){
+            TwoButtonMessage(viewModel.popupMessage)
         }
     }
 }
@@ -333,8 +360,8 @@ fun ViscosityScreen(
 @Composable
 fun ViscosityScreenPreview() {
     val context = LocalContext.current
-    val viewModel: AssemblyOrderDetailsViewModel = viewModel(
-        factory = AssemblyOrderDetailsViewModelFactory(context)
+    val viewModel: ViscosityViewModel = viewModel(
+        factory = ViscosityViewModelFactory(context)
     )
-    ViscosityScreen(viewModel, "Daniel", "A4812")
+    ViscosityScreen("Daniel", "011001","A4812", "LSS/F6")
 }
