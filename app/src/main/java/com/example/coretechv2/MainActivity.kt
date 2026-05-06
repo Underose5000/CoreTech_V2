@@ -10,21 +10,22 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
-import com.example.coretechv2.factory.APISettingViewModelFactory
 import com.example.coretechv2.factory.MainActivityViewModelFactory
 import com.example.coretechv2.navigation.AppNavGraph
+import com.example.coretechv2.ui.component.ButtonMessage
+import com.example.coretechv2.ui.component.PopupWindow
 import com.example.coretechv2.ui.screen.APISettingsScreen
 import com.example.coretechv2.ui.screen.LoginScreen
 import com.example.coretechv2.ui.theme.CoreTechV2Theme
-import com.example.coretechv2.viewmodel.APISettingViewModel
 import com.example.coretechv2.viewmodel.MainActivityViewModel
+import com.example.coretechv2.viewmodel.SharedViewModel
 
 class MainActivity : ComponentActivity() {
 
     private var isLoggedIn = mutableStateOf(false)
     private var apiConnected = mutableStateOf(true)
-
     private var currentUser = mutableStateOf("")
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,15 +36,16 @@ class MainActivity : ComponentActivity() {
             val viewModel: MainActivityViewModel = viewModel(
                 factory = MainActivityViewModelFactory(context)
             )
+            val sharedViewModel: SharedViewModel = viewModel()
             viewModel.verifyConnection()
 
             apiConnected.value = viewModel.ConnectedSuccess
+            sharedViewModel.currentUser = currentUser
 
             CoreTechV2Theme {
                 Box{
-                    AppNavGraph(navController = navController, currentuser = currentUser.value)
+                    AppNavGraph(navController = navController, sharedViewModel = sharedViewModel)
                     if (!isLoggedIn.value){
-                        //isLoggedIn.value = true
                         LoginScreen(
                             currentUser.value,
                             onLoginSuccess = { isLoggedIn.value = true },
@@ -56,6 +58,14 @@ class MainActivity : ComponentActivity() {
                             }
                         )
 
+                    }
+                    if (sharedViewModel.showPopup.value){
+                        Log.d("popup","Popup called")
+                        PopupWindow(sharedViewModel.popupDetails)
+                    }
+                    if (sharedViewModel.showMessagePopup.value){
+                        Log.d("popup","Message called")
+                        ButtonMessage(sharedViewModel.popupMessageDetails)
                     }
 
                     if (!apiConnected.value) {

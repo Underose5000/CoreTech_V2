@@ -23,7 +23,7 @@ import com.example.coretechv2.dataclasses.MenuItem
 
 @Composable
 fun Menu(
-    menuList: List<MenuItem>
+    menuList: List<MenuItem>,
 ) {
     Column(
         modifier = Modifier
@@ -55,31 +55,3 @@ fun Menu(
 
 }
 
-@Preview
-@Composable
-fun MenuPreview(){
-    Menu(menuList)
-}
-
-val menuList = listOf(
-    MenuItem(
-        title = "Edit",
-        onClick = {},
-    ),
-    MenuItem(
-        title = "Testing",
-        onClick = {}
-    ),
-    MenuItem(
-        title = "Product Labels",
-        onClick = {}
-    ),
-    MenuItem(
-        title = "Box Labels",
-        onClick = {}
-    ),
-    MenuItem(
-        title = "Complete",
-        onClick = {}
-    ),
-)

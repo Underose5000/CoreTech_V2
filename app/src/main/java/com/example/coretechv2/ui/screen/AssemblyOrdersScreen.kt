@@ -40,11 +40,12 @@ import com.example.coretechv2.factory.LoginViewModelFactory
 import com.example.coretechv2.ui.component.TopBar
 import com.example.coretechv2.viewmodel.AssemblyOrdersViewModel
 import com.example.coretechv2.viewmodel.LoginViewModel
+import com.example.coretechv2.viewmodel.SharedViewModel
 
 @Composable
 fun AssemblyOrdersScreen(
     navController: NavController,
-    currentUser: String
+    sharedViewModel: SharedViewModel
 ) {
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
@@ -97,7 +98,8 @@ fun AssemblyOrdersScreen(
                         .fillMaxWidth()
                         .clickable {
                             viewModel.getSelectedOrder(order)
-                            navController.navigate("assemblyorderdetail/${order.ORDERNUMBER}") }
+                            sharedViewModel.currentOrderNumber.value = order.ORDERNUMBER
+                            navController.navigate("assemblyorderdetail") }
                         .padding(16.dp)) {
                         Text(
                             text = order.ITEMDESCRIPTION,

@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.coretechv2.dataclasses.APICallTables
 import com.example.coretechv2.repository.APICall
 import com.example.coretechv2.repository.DataStoreManager
 import com.example.coretechv2.repository.HashPassword
@@ -19,13 +20,13 @@ class AssemblyOrdersViewModel(private val dataStoreManager: DataStoreManager) : 
     private val _snackbarEvent = MutableSharedFlow<String>()
     val snackbarEvent = _snackbarEvent.asSharedFlow()
 
-    var AssemblyOrdersList by mutableStateOf<List<APICall.AssemblyHeader>>(emptyList())
+    var AssemblyOrdersList by mutableStateOf<List<APICallTables.AssemblyHeader>>(emptyList())
         private set
 
-    var AssemblyOrderListSearached by mutableStateOf<List<APICall.AssemblyHeader>>(emptyList())
+    var AssemblyOrderListSearached by mutableStateOf<List<APICallTables.AssemblyHeader>>(emptyList())
         private set
 
-    var selectedOrder by mutableStateOf<APICall.AssemblyHeader?>(null)
+    var selectedOrder by mutableStateOf<APICallTables.AssemblyHeader?>(null)
         private set
     var Searchfield by mutableStateOf("")
         private set
@@ -40,13 +41,13 @@ class AssemblyOrdersViewModel(private val dataStoreManager: DataStoreManager) : 
         }
     }
 
-    fun getSelectedOrder(order: APICall.AssemblyHeader){
+    fun getSelectedOrder(order: APICallTables.AssemblyHeader){
         selectedOrder = order
     }
 
     fun retrieveAssemblyOrders(){
         viewModelScope.launch {
-            val AssemblyOrdersListCall : List<APICall.AssemblyHeader>? = apiCall.query("SELECT * FROM AssemblyHeader where OrderStatus = 'Open' order by OrderNumber")
+            val AssemblyOrdersListCall : List<APICallTables.AssemblyHeader>? = apiCall.query("SELECT * FROM AssemblyHeader where OrderStatus = 'Open' order by OrderNumber")
 
             AssemblyOrdersList = AssemblyOrdersListCall ?: emptyList()
             AssemblyOrderListSearached = AssemblyOrdersList

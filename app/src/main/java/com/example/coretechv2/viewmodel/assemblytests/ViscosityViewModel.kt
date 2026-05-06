@@ -6,27 +6,24 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.coretechv2.dataclasses.APICallTables
 import com.example.coretechv2.dataclasses.APICallTypes
-import com.example.coretechv2.dataclasses.PopupMessageItem
-import com.example.coretechv2.dataclasses.TestTypes
+import com.example.coretechv2.dataclasses.MessageItems
+import com.example.coretechv2.dataclasses.SnackBarItems
 import com.example.coretechv2.dataclasses.VisField
 import com.example.coretechv2.dataclasses.VisSettings
 import com.example.coretechv2.dataclasses.ViscosityItem
 import com.example.coretechv2.dataclasses.visHasValue
 import com.example.coretechv2.repository.APICall
 import com.example.coretechv2.repository.DataStoreManager
+import com.example.coretechv2.viewmodel.SharedViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 
-class ViscosityViewModel(private val dataStoreManager: DataStoreManager) : ViewModel() {
+class ViscosityViewModel(private val dataStoreManager: DataStoreManager, var sharedViewModel: SharedViewModel) : ViewModel() {
     private val apiCall = APICall(dataStoreManager)
-    private val _snackbarEvent = MutableSharedFlow<String>()
-    val snackbarEvent = _snackbarEvent.asSharedFlow()
-
     var visReading = mutableStateOf(ViscosityItem())
-    var defaultSpindle = mutableStateOf("")
-    var defaultIndex = mutableStateOf("")
     var visTestNumberCount by mutableStateOf("")
     var showSpindleList by mutableStateOf(false)
         private set
@@ -36,15 +33,25 @@ class ViscosityViewModel(private val dataStoreManager: DataStoreManager) : ViewM
         private set
     var saveType by mutableStateOf(APICallTypes.INSERT)
         private set
-    var popupMessage = PopupMessageItem()
-    var showMessageTwo = mutableStateOf(false)
+    var popupMessage = MessageItems()
+    var snackBarDetails = SnackBarItems()
+    var closePopupMessage = mutableStateOf(false)
+        private set
+    var closeTestScreen = mutableStateOf(false)
+        private set
+    var openPopupMessage = mutableStateOf(false)
         private set
 
-    private val _closeScreen = MutableSharedFlow<Unit>()
 
-    val closeScreen = _closeScreen
-
-
+    fun closePopupMessage(){
+        closePopupMessage.value = false
+    }
+    fun closeTestScreen(){
+        closeTestScreen.value = false
+    }
+    fun openPopupMessage(){
+        openPopupMessage.value = false
+    }
     fun spindlePressed(){
         showSpindleList = !showSpindleList
     }
@@ -72,13 +79,6 @@ class ViscosityViewModel(private val dataStoreManager: DataStoreManager) : ViewM
         }
     }
 
-    fun retrieveTestCount(orderNumber: String){
-        viewModelScope.launch {
-            val viscosityLinesCall : List<APICall.viscosityTest>? = apiCall.query("SELECT * FROM OSTDEF_VISCOSITY_TESTS where OrderNumber = '${orderNumber}'")
-            visTestNumberCount = (viscosityLinesCall?.count().toString())
-        }
-    }
-
     fun onVisChange(newValue: String, field : VisField){
         visReading.value = when (field) {
             VisField.VIS60 -> visReading.value.copy(vis60 = newValue)
@@ -91,19 +91,19 @@ class ViscosityViewModel(private val dataStoreManager: DataStoreManager) : ViewM
             VisField.VIS0_3 -> visReading.value.copy(vis0_3 = newValue)
         }
     }
-    fun onTestSave(currentUser: String,itemCode: String,orderNumber: String,itemDescription: String){
+    fun onTestSave(){
         var ratio = 0.0
         if (visReading.value.indexRange == "6/60"){
-            ratio = visReading.value.vis06.toDouble() / visReading.value.vis60.toDouble()
+            ratio = (visReading.value.vis06.toDoubleOrNull() ?: 0.0) / (visReading.value.vis60.toDoubleOrNull() ?: 0.0)
         }
         if (visReading.value.indexRange == "3/30"){
-            ratio = visReading.value.vis03.toDouble() / visReading.value.vis30.toDouble()
+            ratio = (visReading.value.vis03.toDoubleOrNull() ?: 0.0) / (visReading.value.vis30.toDoubleOrNull() ?: 0.0)
         }
         if (visReading.value.indexRange == "0.6/6"){
-            ratio = visReading.value.vis0_6.toDouble() / visReading.value.vis06.toDouble()
+            ratio = (visReading.value.vis0_6.toDoubleOrNull() ?: 0.0) / (visReading.value.vis06.toDoubleOrNull() ?: 0.0)
         }
         if (visReading.value.indexRange == "0.3/3"){
-            ratio = visReading.value.vis0_3.toDouble() / visReading.value.vis03.toDouble()
+            ratio = (visReading.value.vis0_3.toDoubleOrNull() ?: 0.0) / (visReading.value.vis03.toDoubleOrNull() ?: 0.0)
         }
         val indexResult = kotlin.math.round(ratio * 10 * 10) / 10
         viewModelScope.launch {
@@ -111,40 +111,50 @@ class ViscosityViewModel(private val dataStoreManager: DataStoreManager) : ViewM
             if(saveType == APICallTypes.INSERT){
                 call = "INSERT INTO OSTDEF_VISCOSITY_TESTS " +
                         "(ITEMCODE, ORDERNUMBER, ITEMDESCRIPTION, TESTNO, SPINDLE, INDEXREADING, READING60, READING30, READING12, READING6, READING3, READING1_5, READING0_6, READING0_3, SYSUSERCREATED, SYSUSERMODIFIED) " +
-                        "VALUES('${itemCode}', '${orderNumber}', '${itemDescription}', ${visReading.value.testNumber}, '${visReading.value.spindle}', ${indexResult}, " +
-                        "${visReading.value.vis60}, ${visReading.value.vis30}, ${visReading.value.vis12}, ${visReading.value.vis06}, ${visReading.value.vis03}, ${visReading.value.vis1_5}, ${visReading.value.vis0_6},${visReading.value.vis0_3}, " +
-                        "'${currentUser}', '${currentUser}')"
+                        "VALUES('${sharedViewModel.currentAssemblyHeader?.ITEMCODE}', '${sharedViewModel.currentAssemblyHeader?.ORDERNUMBER}', '${sharedViewModel.currentAssemblyHeader?.ITEMDESCRIPTION}', ${visReading.value.testNumber}, '${visReading.value.spindle}', ${indexResult}, " +
+                        "${visReading.value.vis60.toDoubleOrNull() ?: 0.0}, ${visReading.value.vis30.toDoubleOrNull() ?: 0.0}, ${visReading.value.vis12.toDoubleOrNull() ?: 0.0}, ${visReading.value.vis06.toDoubleOrNull() ?: 0.0}, " +
+                        "${visReading.value.vis03.toDoubleOrNull() ?: 0.0}, ${visReading.value.vis1_5.toDoubleOrNull() ?: 0.0}, ${visReading.value.vis0_6.toDoubleOrNull() ?: 0.0},${visReading.value.vis0_3.toDoubleOrNull() ?: 0.0}, " +
+                        "'${sharedViewModel.currentUser.value}', '${sharedViewModel.currentUser.value}')"
             }
             if(saveType == APICallTypes.UPDATE){
                 call = "UPDATE OSTDEF_VISCOSITY_TESTS SET  " +
                         "TESTNO = ${visReading.value.testNumber}," +
                         "SPINDLE = '${visReading.value.spindle}'," +
                         "INDEXREADING = ${indexResult}," +
-                        "READING60 = ${visReading.value.vis60}" +
-                        "READING30 = ${visReading.value.vis30}" +
-                        "READING12 = ${visReading.value.vis12}" +
-                        "READING6 = ${visReading.value.vis06}" +
-                        "READING3 = ${visReading.value.vis03}" +
-                        "READING1_5 = ${visReading.value.vis1_5}" +
-                        "READING0_6 = ${visReading.value.vis0_6}" +
-                        "READING0_3 = ${visReading.value.vis0_3}" +
-                        "SYSUSERMODIFIED = ${currentUser})"
+                        "READING60 = ${visReading.value.vis60.toDoubleOrNull() ?: 0.0}," +
+                        "READING30 = ${visReading.value.vis30.toDoubleOrNull() ?: 0.0}," +
+                        "READING12 = ${visReading.value.vis12.toDoubleOrNull() ?: 0.0}," +
+                        "READING6 = ${visReading.value.vis06.toDoubleOrNull() ?: 0.0}," +
+                        "READING3 = ${visReading.value.vis03.toDoubleOrNull() ?: 0.0}," +
+                        "READING1_5 = ${visReading.value.vis1_5.toDoubleOrNull() ?: 0.0}," +
+                        "READING0_6 = ${visReading.value.vis0_6.toDoubleOrNull() ?: 0.0}," +
+                        "READING0_3 = ${visReading.value.vis0_3.toDoubleOrNull() ?: 0.0}," +
+                        "SYSUSERMODIFIED = '${sharedViewModel.currentUser.value}'"
             }
 
-            Log.d("testsave","response =" + call)
+            Log.d("Test Save","Call =" + call)
             val response = apiCall.insertUpdateDelete(call)
+
+            Log.d("Test Save","response =" + response)
             if(response == "200 OK"){
-                _snackbarEvent.emit("Viscosity Saved successfully")
+                Log.d("Test Save","If = True")
+                closeTestScreen.value = true
+                sharedViewModel.snackBarMessage("Viscosity Saved successfully")
             } else{
-                _snackbarEvent.emit("Error Saving, Please Try Again")
+                Log.d("Test Save","Else = True")
+                sharedViewModel.snackBarMessage("Error Saving, Please Try Again")
             }
         }
     }
-    fun onVisClear(){
-        visReading.value = ViscosityItem()
-        visReading.value.spindle = defaultSpindle.value
-        visReading.value.indexRange = defaultIndex.value
-        visReading.value.testNumber = visTestNumberCount
+    fun onClear(){
+        visReading.value = ViscosityItem().apply {
+            visReading.value.spindle = sharedViewModel.currentAssemblyHeader?.ADDITIONALFIELD_3 ?: "N/A"
+            visReading.value.indexRange = sharedViewModel.currentAssemblyHeader?.ADDITIONALFIELD_8 ?: "N/A"
+        }
+        viewModelScope.launch {
+            val viscosityLinesCall : List<APICallTables.Count>? = apiCall.query("SELECT COUNT(*) FROM (SELECT DISTINCT TESTNO FROM OSTDEF_VISCOSITY_TESTS WHERE OrderNumber = '${sharedViewModel.currentOrderNumber.value}')")
+            visReading.value = visReading.value.copy(testNumber = (viscosityLinesCall?.first()) + 1)
+        }
     }
 
     fun onCancel(){
@@ -152,24 +162,17 @@ class ViscosityViewModel(private val dataStoreManager: DataStoreManager) : ViewM
             popupMessage.message = "Test Results are not saved\nleave without saving?"
             popupMessage.messageButton1Text = "No"
             popupMessage.onClickAction1 = {
-                showMessageTwo.value = false
-            }
-            popupMessage.onClickAction2 = {
-                onVisClear()
-                showMessageTwo.value = false
-                onCloseRequested()
+                closePopupMessage.value = true
             }
             popupMessage.messageButton2Text = "Yes"
-            showMessageTwo.value = true
-        } else {
-            onVisClear()
-            onCloseRequested()
-        }
-    }
+            popupMessage.onClickAction2 = {
+                closePopupMessage.value = true
+                closeTestScreen.value = true
+            }
+            openPopupMessage.value = true
 
-    fun onCloseRequested() {
-        viewModelScope.launch {
-            _closeScreen.emit(Unit)
+        } else {
+            closeTestScreen.value = true
         }
     }
 }

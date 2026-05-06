@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.coretechv2.dataclasses.APICallTables
 import com.example.coretechv2.repository.APICall
 import com.example.coretechv2.repository.DataStoreManager
 import kotlinx.coroutines.flow.firstOrNull
@@ -89,7 +90,7 @@ class APISettingViewModel(private val dataStoreManager: DataStoreManager) : View
 
             dataStoreManager.saveApiSettings(newurl.trim(), newport.trim(), newkey.trim())
 
-            val connectionConfirmed : List<APICall.VerifyConnection>? = apiCall.query("SELECT * FROM VERIFY_CONNECTION")
+            val connectionConfirmed : List<APICallTables.VerifyConnection>? = apiCall.query("SELECT * FROM VERIFY_CONNECTION")
             Log.d("API Setting", "connection Confirmed = $connectionConfirmed")
             if (connectionConfirmed?.firstOrNull()?.IS_CONNECTED == 1){
                 ConnectedSuccess = true

@@ -14,36 +14,60 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.coretechv2.dataclasses.TestTypes
+import com.example.coretechv2.dataclasses.GelField
 import com.example.coretechv2.dataclasses.VisField
 import com.example.coretechv2.dataclasses.VisSettings
-import com.example.coretechv2.factory.AssemblyOrderDetailsViewModelFactory
+import com.example.coretechv2.factory.assemblytests.GelTimeViewModelFactory
 import com.example.coretechv2.ui.component.OutlinedStyleButton
+import com.example.coretechv2.ui.component.OutlinedStyleDoubleNumberField
 import com.example.coretechv2.ui.component.OutlinedStyleIntNumberField
-import com.example.coretechv2.ui.component.PopupWindow
-import com.example.coretechv2.viewmodel.AssemblyOrderDetailsViewModel
+import com.example.coretechv2.viewmodel.SharedViewModel
+import com.example.coretechv2.viewmodel.assemblytests.GelTimeViewModel
 
 /**
+ * Gel Time test screen
  *
+ * A popup screen that allows users to either enter Gel Time test results to the database or
+ * edit previously entered Gel Time test results.
+ *
+ * @param viewModel the Shared viewModel to which holds app wide data
  */
 @Composable
-fun GelTimeScreen(
-    viewModel: AssemblyOrderDetailsViewModel, currentUser: String, orderNumber: String
-) {
+fun GelTimeScreen(sharedViewModel: SharedViewModel) {
+    val context = LocalContext.current
+    val viewModel: GelTimeViewModel = viewModel(
+        factory = GelTimeViewModelFactory(context, sharedViewModel),
+    )
+    viewModel.retrieveTestCount(sharedViewModel.currentOrderNumber.value)
     val focusManager = LocalFocusManager.current
-    PopupWindow(width = 700, height = 250) {
-        Column(
+
+    if(viewModel.closePopupMessage.value){
+        sharedViewModel.closeMessagePopup()
+        viewModel.closePopupMessage()
+    }
+    if(viewModel.closeTestScreen.value){
+        sharedViewModel.closePopup()
+        viewModel.closeTestScreen()
+    }
+    if(viewModel.openPopupMessage.value){
+        sharedViewModel.popupMessageDetails = viewModel.popupMessage
+        sharedViewModel.openMessagePopup()
+        viewModel.openPopupMessage()
+    }
+
+    Column(
             modifier = Modifier
                 .fillMaxSize()
                 .clickable(
@@ -58,7 +82,7 @@ fun GelTimeScreen(
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "Viscosity",
+                    text = "Gel Time",
                     style = MaterialTheme.typography.headlineLarge,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
@@ -74,13 +98,34 @@ fun GelTimeScreen(
                         .padding(horizontal = 20.dp, vertical = 20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    Text(text = "Catalyst")
+                    OutlinedStyleButton(
+                        text = viewModel.gelReading.value.catalyst,
+                        onClick = { viewModel.catalystPressed() })
+                    DropdownMenu(
+                        expanded = viewModel.showcatalystList,
+                        onDismissRequest = { viewModel.catalystPressed() }
+                    ) {
+                        DropdownMenuItem(
+                            onClick = { viewModel.onGelChange("BPO", GelField.CATALYST) },
+                            text = { Text(text = "BPO") })
+                        DropdownMenuItem(
+                            onClick = { viewModel.onGelChange("MEKP", GelField.CATALYST) },
+                            text = { Text(text = "MEKP") })
+                    }
+                }
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 20.dp, vertical = 20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     Text(text = "Catalyst %")
-                    OutlinedStyleIntNumberField(
-                        value = viewModel.visReading.value.vis12,
-                        onValueChange = { newValue -> viewModel.onVisChange(newValue, VisField.VIS12) }
+                    OutlinedStyleDoubleNumberField(
+                        value = viewModel.gelReading.value.catPercent,
+                        onValueChange = { newValue -> viewModel.onGelChange(newValue, GelField.CATPERCENT) }
                     )
                 }
-
                 Column(
                     modifier = Modifier
                         .weight(1f)
@@ -88,42 +133,10 @@ fun GelTimeScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(text = "Test Number")
-                    OutlinedStyleButton(text = viewModel.visReading.value.testNumber, onClick = { viewModel.testNumberPressed() })
-                    DropdownMenu(
-                        expanded = viewModel.showtestNumber,
-                        onDismissRequest = { viewModel.testNumberPressed() }
-                    ) {
-                        DropdownMenuItem(
-                            onClick = { viewModel.onDropDownChange("1", VisSettings.TESTNUMBER) },
-                            text = { Text(text = "1") })
-                        DropdownMenuItem(
-                            onClick = { viewModel.onDropDownChange("2", VisSettings.TESTNUMBER) },
-                            text = { Text(text = "2") })
-                        DropdownMenuItem(
-                            onClick = { viewModel.onDropDownChange("3", VisSettings.TESTNUMBER) },
-                            text = { Text(text = "3") })
-                        DropdownMenuItem(
-                            onClick = { viewModel.onDropDownChange("4", VisSettings.TESTNUMBER) },
-                            text = { Text(text = "4") })
-                        DropdownMenuItem(
-                            onClick = { viewModel.onDropDownChange("5", VisSettings.TESTNUMBER) },
-                            text = { Text(text = "5") })
-                        DropdownMenuItem(
-                            onClick = { viewModel.onDropDownChange("6", VisSettings.TESTNUMBER) },
-                            text = { Text(text = "6") })
-                        DropdownMenuItem(
-                            onClick = { viewModel.onDropDownChange("7", VisSettings.TESTNUMBER) },
-                            text = { Text(text = "7") })
-                        DropdownMenuItem(
-                            onClick = { viewModel.onDropDownChange("8", VisSettings.TESTNUMBER) },
-                            text = { Text(text = "8") })
-                        DropdownMenuItem(
-                            onClick = { viewModel.onDropDownChange("9", VisSettings.TESTNUMBER) },
-                            text = { Text(text = "9") })
-                        DropdownMenuItem(
-                            onClick = { viewModel.onDropDownChange("10", VisSettings.TESTNUMBER) },
-                            text = { Text(text = "10") })
-                    }
+                    OutlinedStyleDoubleNumberField(
+                        value = viewModel.gelReading.value.testNumber,
+                        onValueChange = { newValue -> viewModel.onGelChange(newValue, GelField.TESTNUMBER) }
+                    )
                 }
 
             }
@@ -138,10 +151,10 @@ fun GelTimeScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Bottom
                     ) {
-                        Text(text = "Hours(H)")
+                        Text(text = "Hour")
                         OutlinedStyleIntNumberField(
-                            value = viewModel.visReading.value.vis60,
-                            onValueChange = { newValue -> viewModel.onVisChange(newValue, VisField.VIS60) }
+                            value = viewModel.gelReading.value.hour,
+                            onValueChange = { newValue -> viewModel.onGelChange(newValue, GelField.HOUR) }
                         )
                     }
                    Column(
@@ -149,10 +162,10 @@ fun GelTimeScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Bottom
                     ) {
-                        Text(text = "Minutes(MM)")
+                       Text(text = "Minute")
                        OutlinedStyleIntNumberField(
-                            value = viewModel.visReading.value.vis30,
-                            onValueChange = { newValue -> viewModel.onVisChange(newValue, VisField.VIS30) }
+                            value = viewModel.gelReading.value.minute,
+                            onValueChange = { newValue -> viewModel.onGelChange(newValue, GelField.MINUTE) }
                         )
                     }
                     Column(
@@ -160,10 +173,10 @@ fun GelTimeScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Bottom
                     ) {
-                        Text(text = "Seconds(SS)")
+                        Text(text = "Second")
                         OutlinedStyleIntNumberField(
-                            value = viewModel.visReading.value.vis12,
-                            onValueChange = { newValue -> viewModel.onVisChange(newValue, VisField.VIS12) }
+                            value = viewModel.gelReading.value.second,
+                            onValueChange = { newValue -> viewModel.onGelChange(newValue, GelField.SECOND) }
                         )
                     }
                 }
@@ -177,33 +190,21 @@ fun GelTimeScreen(
                     modifier = Modifier
                         .weight(2f)
                         .padding(horizontal = 20.dp, vertical = 40.dp),
-                    onClick = { viewModel.onVisClear() }
+                    onClick = { viewModel.onClear() }
                 ) { Text(text = "Clear") }
                 Button(
                     modifier = Modifier
                         .weight(2f)
                         .padding(horizontal = 20.dp, vertical = 40.dp),
-                    onClick = { viewModel.onCancel(TestTypes.GEL_TIME) }
+                    onClick = { viewModel.onCancel() }
                 ) { Text(text = "Cancel") }
                 Button(
                     modifier = Modifier
                         .weight(2f)
                         .padding(horizontal = 20.dp, vertical = 40.dp),
-                    onClick = { viewModel.onTestSave(currentUser, TestTypes.VISCOSITY, viewModel.showViscosityScreen) }
+                    onClick = { viewModel.onSave() }
                 ) { Text(text = "Save") }
                 Spacer(modifier = Modifier.weight(1f))
             }
         }
     }
-}
-
-
-@Preview(device = "spec:width=700dp,height=500dp,dpi=240,orientation=portrait", showSystemUi = false, showBackground = true)
-@Composable
-fun GelTimePreview() {
-    val context = LocalContext.current
-    val viewModel: AssemblyOrderDetailsViewModel = viewModel(
-        factory = AssemblyOrderDetailsViewModelFactory(context)
-    )
-    ViscosityScreen(viewModel, "Daniel", "A4812")
-}

@@ -7,9 +7,11 @@ import com.example.coretechv2.repository.DataStoreManager
 import com.example.coretechv2.viewmodel.AssemblyOrderDetailsViewModel
 import com.example.coretechv2.viewmodel.AssemblyOrdersViewModel
 import com.example.coretechv2.viewmodel.LoginViewModel
+import com.example.coretechv2.viewmodel.SharedViewModel
 
 class AssemblyOrderDetailsViewModelFactory(
-    private val context: Context
+    private val context: Context,
+    val sharedViewModel: SharedViewModel
 ) : ViewModelProvider.Factory{
 
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -17,6 +19,6 @@ class AssemblyOrderDetailsViewModelFactory(
         val dataStoreManager =
             DataStoreManager(context.applicationContext)
 
-        return AssemblyOrderDetailsViewModel(dataStoreManager) as T
+        return AssemblyOrderDetailsViewModel(dataStoreManager,sharedViewModel) as T
     }
 }

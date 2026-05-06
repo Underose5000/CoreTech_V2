@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.coretechv2.dataclasses.APICallTables
 import com.example.coretechv2.repository.APICall
 import com.example.coretechv2.repository.DataStoreManager
 import com.example.coretechv2.ui.screen.APISettingsScreen
@@ -24,7 +25,7 @@ class MainActivityViewModel(private val dataStoreManager: DataStoreManager) : Vi
 
     fun verifyConnection(){
         viewModelScope.launch {
-        val connectionConfirmed : List<APICall.VerifyConnection>? = apiCall.query("SELECT * FROM VERIFY_CONNECTION")
+        val connectionConfirmed : List<APICallTables.VerifyConnection>? = apiCall.query("SELECT * FROM VERIFY_CONNECTION")
             if (connectionConfirmed?.firstOrNull()?.IS_CONNECTED == 1){
                 ConnectedSuccess = true
             }else{

@@ -5,7 +5,7 @@ import androidx.compose.runtime.MutableState
 data class GelTimeItem (
     var catPercent: String  = "2",
     var testNumber: String = "1",
-    var catalyst : String = "",
+    var catalyst : String = "N/A",
     val hour: String = "",
     val minute: String = "",
     val second: String = "",

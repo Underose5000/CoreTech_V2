@@ -1,5 +1,7 @@
 package com.example.coretechv2.ui.screen
 
+import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -32,29 +34,47 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.example.coretechv2.dataclasses.APICallTables
 import com.example.coretechv2.factory.AssemblyOrderDetailsViewModelFactory
+import com.example.coretechv2.ui.component.ButtonMessage
 import com.example.coretechv2.ui.component.Menu
-import com.example.coretechv2.ui.component.OneButtonMessage
+import com.example.coretechv2.ui.component.PopupWindow
 import com.example.coretechv2.ui.component.TopBar
-import com.example.coretechv2.ui.screen.assemblytests.GelTimeScreen
-import com.example.coretechv2.ui.screen.assemblytests.ViscosityScreen
 import com.example.coretechv2.ui.theme.scottBlue
 import com.example.coretechv2.viewmodel.AssemblyOrderDetailsViewModel
+import com.example.coretechv2.viewmodel.SharedViewModel
 
 @Composable
 fun AssemblyOrderDetails(
-    navController: NavController, currentUser: String, orderNumber: String
+    navController: NavController, sharedViewModel: SharedViewModel
 ) {
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     val viewModel: AssemblyOrderDetailsViewModel = viewModel(
-        factory = AssemblyOrderDetailsViewModelFactory(context)
+        factory = AssemblyOrderDetailsViewModelFactory(context, sharedViewModel)
     )
-    viewModel.retrieveAssemblyDetails(orderNumber)
-    LaunchedEffect(Unit) {
-        viewModel.snackbarEvent.collect { message ->
+    viewModel.retrieveAssemblyDetails(sharedViewModel.currentOrderNumber.value)
+    sharedViewModel.currentAssemblyHeader = viewModel.assemblyHeader.firstOrNull()
+    sharedViewModel.currentAssemblyLines = viewModel.assemblyDetailsLines
+
+    LaunchedEffect(sharedViewModel) {
+        sharedViewModel.snackbarEvent.collect { message ->
             snackbarHostState.showSnackbar(message)
         }
+    }
+
+    if(viewModel.showPopupWindow.value){
+        sharedViewModel.popupDetails = viewModel.popupDetails
+        sharedViewModel.openPopup()
+        Log.d("popup","show popup called")
+        viewModel.togglePopup(viewModel.showPopupWindow)
+
+    }
+    if(viewModel.showPopupMessage.value){
+        sharedViewModel.popupMessageDetails = viewModel.popupMessageDetails
+        sharedViewModel.openMessagePopup()
+        viewModel.togglePopup(viewModel.showPopupMessage)
     }
 
     TopBar(
@@ -179,26 +199,30 @@ fun AssemblyOrderDetails(
                 }
             }
     }
-    if (viewModel.showViscosityScreen.value){
-        ViscosityScreen(
-            currentUser = currentUser,
-            itemCode = viewModel.assemblyHeader.first().ITEMCODE,
-            orderNumber = orderNumber,
-            itemDescription = viewModel.assemblyHeader.first().ITEMDESCRIPTION,
-            spindle = viewModel.assemblyHeader.first().ADDITIONALFIELD_3,
-            index = viewModel.assemblyHeader.first().ADDITIONALFIELD_8, )
-    }
-    if (viewModel.showGelScreen.value){
-        GelTimeScreen(currentUser, viewModel.assemblyHeader.first().ITEMCODE, orderNumber, viewModel.assemblyHeader.first().ITEMDESCRIPTION)
-    }
-
-
 }
 
 
+@SuppressLint("ViewModelConstructorInComposable")
 @Preview(device = "spec:width=1280dp,height=800dp,dpi=240")
 @Composable
 fun AssemblyOrderDetailsPreview() {
-    val navController = androidx.navigation.compose.rememberNavController()
-    AssemblyOrderDetails(navController, "Daniel", "A4956")
+
+    val navController = rememberNavController()
+    val sharedViewModel: SharedViewModel = viewModel()
+
+    // Mock data
+    sharedViewModel.currentOrderNumber.value = "A4975"
+    sharedViewModel.currentUser.value = "Steve"
+
+
+    Box {
+        AssemblyOrderDetails(navController, sharedViewModel)
+        if (sharedViewModel.showPopup.value) {
+            PopupWindow(sharedViewModel.popupDetails)
+        }
+
+        if (sharedViewModel.showMessagePopup.value) {
+            ButtonMessage(sharedViewModel.popupMessageDetails)
+        }
+    }
 }

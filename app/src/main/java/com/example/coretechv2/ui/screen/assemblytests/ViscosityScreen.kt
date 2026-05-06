@@ -24,17 +24,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.coretechv2.dataclasses.VisField
 import com.example.coretechv2.dataclasses.VisSettings
-import com.example.coretechv2.factory.ViscosityViewModelFactory
+import com.example.coretechv2.factory.assemblytests.ViscosityViewModelFactory
 import com.example.coretechv2.ui.component.OutlinedStyleButton
 import com.example.coretechv2.ui.component.OutlinedStyleDoubleNumberField
-import com.example.coretechv2.ui.component.PopupWindow
-import com.example.coretechv2.ui.component.TwoButtonMessage
-import com.example.coretechv2.viewmodel.AssemblyOrderDetailsViewModel
+import com.example.coretechv2.viewmodel.SharedViewModel
 import com.example.coretechv2.viewmodel.assemblytests.ViscosityViewModel
 
 /**
@@ -43,38 +40,36 @@ import com.example.coretechv2.viewmodel.assemblytests.ViscosityViewModel
  * A popup screen that allows users to either enter viscosity test results to the database or
  * edit previously entered viscosity test results.
  *
- * @param viewModel the viewModel to be used
- * @param currentUser The currently logged-in user, Used for database entries
+ * @param viewModel the Shared viewModel to which holds app wide data
  */
 @Composable
-fun ViscosityScreen(currentUser: String, itemCode: String, orderNumber: String, itemDescription: String, spindle: String, index: String) {
+fun ViscosityScreen(sharedViewModel: SharedViewModel) {
     val context = LocalContext.current
-    val snackbarHostState = remember { SnackbarHostState() }
     val viewModel: ViscosityViewModel = viewModel(
-        factory = ViscosityViewModelFactory(context),
+        factory = ViscosityViewModelFactory(context, sharedViewModel),
     )
-    viewModel.retrieveTestCount(orderNumber)
-    LaunchedEffect(Unit) {
-        viewModel.snackbarEvent.collect { message ->
-            snackbarHostState.showSnackbar(message)
-        }
-    }
-    val mainViewModel: AssemblyOrderDetailsViewModel = viewModel()
-    val visViewModel: ViscosityViewModel = viewModel()
-
-    LaunchedEffect(Unit) {
-        viewModel.defaultSpindle.value = spindle
-        viewModel.defaultIndex.value = index
+    LaunchedEffect(Unit){
+        viewModel.onClear()
     }
 
-    LaunchedEffect(Unit) {
-        visViewModel.closeScreen.collect {
-            mainViewModel.showViscosityScreen.value = false
-        }
-    }
     val focusManager = LocalFocusManager.current
-    PopupWindow(width = 700, height = 500) {
-        Column(
+
+    if(viewModel.closePopupMessage.value){
+        sharedViewModel.closeMessagePopup()
+        viewModel.closePopupMessage()
+    }
+    if(viewModel.closeTestScreen.value){
+        sharedViewModel.closePopup()
+        viewModel.closeTestScreen()
+    }
+    if(viewModel.openPopupMessage.value){
+        sharedViewModel.popupMessageDetails = viewModel.popupMessage
+        sharedViewModel.openMessagePopup()
+        viewModel.openPopupMessage()
+    }
+
+
+    Column(
             modifier = Modifier
                 .fillMaxSize()
                 .clickable(
@@ -146,9 +141,6 @@ fun ViscosityScreen(currentUser: String, itemCode: String, orderNumber: String, 
                         DropdownMenuItem(
                             onClick = { viewModel.onDropDownChange("G", VisSettings.SPINDLE) },
                             text = { Text(text = "G") })
-                        /*DropdownMenuItem(
-                            onClick = {viewModel.onDropDownChange("N/A",viewModel.spindle)},
-                            text = { Text(text = "N/A") })*/
                     }
                 }
                 Column(
@@ -185,42 +177,10 @@ fun ViscosityScreen(currentUser: String, itemCode: String, orderNumber: String, 
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(text = "Test Number")
-                    OutlinedStyleButton(text = viewModel.visReading.value.testNumber, onClick = { viewModel.testNumberPressed() })
-                    DropdownMenu(
-                        expanded = viewModel.showtestNumber,
-                        onDismissRequest = { viewModel.testNumberPressed() }
-                    ) {
-                        DropdownMenuItem(
-                            onClick = { viewModel.onDropDownChange("1", VisSettings.TESTNUMBER) },
-                            text = { Text(text = "1") })
-                        DropdownMenuItem(
-                            onClick = { viewModel.onDropDownChange("2", VisSettings.TESTNUMBER) },
-                            text = { Text(text = "2") })
-                        DropdownMenuItem(
-                            onClick = { viewModel.onDropDownChange("3", VisSettings.TESTNUMBER) },
-                            text = { Text(text = "3") })
-                        DropdownMenuItem(
-                            onClick = { viewModel.onDropDownChange("4", VisSettings.TESTNUMBER) },
-                            text = { Text(text = "4") })
-                        DropdownMenuItem(
-                            onClick = { viewModel.onDropDownChange("5", VisSettings.TESTNUMBER) },
-                            text = { Text(text = "5") })
-                        DropdownMenuItem(
-                            onClick = { viewModel.onDropDownChange("6", VisSettings.TESTNUMBER) },
-                            text = { Text(text = "6") })
-                        DropdownMenuItem(
-                            onClick = { viewModel.onDropDownChange("7", VisSettings.TESTNUMBER) },
-                            text = { Text(text = "7") })
-                        DropdownMenuItem(
-                            onClick = { viewModel.onDropDownChange("8", VisSettings.TESTNUMBER) },
-                            text = { Text(text = "8") })
-                        DropdownMenuItem(
-                            onClick = { viewModel.onDropDownChange("9", VisSettings.TESTNUMBER) },
-                            text = { Text(text = "9") })
-                        DropdownMenuItem(
-                            onClick = { viewModel.onDropDownChange("10", VisSettings.TESTNUMBER) },
-                            text = { Text(text = "10") })
-                    }
+                    OutlinedStyleDoubleNumberField(
+                        value = viewModel.visReading.value.testNumber,
+                        onValueChange = { newValue -> viewModel.onDropDownChange(newValue, VisSettings.TESTNUMBER) }
+                    )
                 }
 
             }
@@ -332,7 +292,7 @@ fun ViscosityScreen(currentUser: String, itemCode: String, orderNumber: String, 
                     modifier = Modifier
                         .weight(2f)
                         .padding(horizontal = 20.dp, vertical = 40.dp),
-                    onClick = { viewModel.onVisClear() }
+                    onClick = { viewModel.onClear() }
                 ) { Text(text = "Clear") }
                 Button(
                     modifier = Modifier
@@ -344,24 +304,9 @@ fun ViscosityScreen(currentUser: String, itemCode: String, orderNumber: String, 
                     modifier = Modifier
                         .weight(2f)
                         .padding(horizontal = 20.dp, vertical = 40.dp),
-                    onClick = { viewModel.onTestSave(currentUser, itemCode, orderNumber, itemDescription) }
+                    onClick = { viewModel.onTestSave() }
                 ) { Text(text = "Save") }
                 Spacer(modifier = Modifier.weight(1f))
             }
         }
-        if (viewModel.showMessageTwo.value){
-            TwoButtonMessage(viewModel.popupMessage)
-        }
     }
-}
-
-
-@Preview(device = "spec:width=700dp,height=500dp,dpi=240,orientation=portrait", showSystemUi = false, showBackground = true)
-@Composable
-fun ViscosityScreenPreview() {
-    val context = LocalContext.current
-    val viewModel: ViscosityViewModel = viewModel(
-        factory = ViscosityViewModelFactory(context)
-    )
-    ViscosityScreen("Daniel", "011001","A4812", "LSS/F6")
-}

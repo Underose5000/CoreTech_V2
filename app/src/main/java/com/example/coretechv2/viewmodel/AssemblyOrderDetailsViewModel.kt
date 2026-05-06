@@ -7,20 +7,33 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.coretechv2.dataclasses.APICallTables
 import com.example.coretechv2.dataclasses.GelField
 import com.example.coretechv2.dataclasses.GelTimeItem
 import com.example.coretechv2.dataclasses.MenuItem
-import com.example.coretechv2.dataclasses.ViscosityItem
+import com.example.coretechv2.dataclasses.MessageItems
+import com.example.coretechv2.dataclasses.PopupItems
 import com.example.coretechv2.repository.APICall
 import com.example.coretechv2.repository.DataStoreManager
+import com.example.coretechv2.ui.screen.assemblytests.GelTimeScreen
+import com.example.coretechv2.ui.screen.assemblytests.ViscosityScreen
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import kotlin.collections.firstOrNull
 
-class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManager) : ViewModel() {
+class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManager, var sharedViewModel: SharedViewModel) : ViewModel() {
 
     private val apiCall = APICall(dataStoreManager)
+    var popupDetails = PopupItems()
+    var popupMessageDetails = MessageItems()
+    var showPopupWindow = mutableStateOf(false)
+        private set
+    fun togglePopup(window: MutableState<Boolean>){
+        window.value = !window.value
+    }
+    var showPopupMessage = mutableStateOf(false)
+        private set
     private val _snackbarEvent = MutableSharedFlow<String>()
     val snackbarEvent = _snackbarEvent.asSharedFlow()
 
@@ -47,14 +60,21 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
         MenuItem(
             title = "Viscosity Test",
             onClick = {
-                addListItemPressed(showViscosityScreen)
+                popupDetails.width = 700
+                popupDetails.height = 500
+                popupDetails.content = {ViscosityScreen(sharedViewModel)}
+                showPopupWindow.value = true
+                showAddMenu = false
                       },
         ),
         MenuItem(
             title = "Gel Time Test",
             onClick = {
-                onGelClear()
-                addListItemPressed(showGelScreen)
+                popupDetails.width = 700
+                popupDetails.height = 500
+                popupDetails.content = { GelTimeScreen(sharedViewModel) }
+                showPopupWindow.value = true
+                showAddMenu = false
             },
         ),
         MenuItem(
@@ -65,19 +85,11 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
 
     var message = mutableStateOf("")
         private set
-    var messageButton1Text = mutableStateOf("")
-        private set
-    var messageButton2Text = mutableStateOf("")
-        private set
-    var messageButton1Action = mutableStateOf({})
-        private set
-    var messageButton2Action = mutableStateOf({})
-        private set
-    var visReading = mutableStateOf(ViscosityItem())
+
     var gelReading = mutableStateOf(GelTimeItem())
-    var assemblyHeader by mutableStateOf<List<APICall.AssemblyHeader>>(emptyList())
+    var assemblyHeader by mutableStateOf<List<APICallTables.AssemblyHeader>>(emptyList())
         private set
-    var assemblyDetailsLines by mutableStateOf<List<APICall.AssemblyLines>>(emptyList())
+    var assemblyDetailsLines by mutableStateOf<List<APICallTables.AssemblyLines>>(emptyList())
         private set
 
 
@@ -85,7 +97,6 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
         private set
     var showAddMenu by mutableStateOf(false)
         private set
-    var showViscosityScreen = mutableStateOf(false)
     var showGelScreen = mutableStateOf(false)
         private set
     var showMessageOne = mutableStateOf(false)
@@ -95,7 +106,7 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
 
     fun retrieveAssemblyDetails(orderNumber: String){
         viewModelScope.launch {
-            val assemblyHeaderCall : List<APICall.AssemblyHeader>? = apiCall.query("SELECT * FROM AssemblyHeader where OrderNumber = '${orderNumber}'")
+            val assemblyHeaderCall : List<APICallTables.AssemblyHeader>? = apiCall.query("SELECT * FROM AssemblyHeader where OrderNumber = '${orderNumber}'")
             if(assemblyHeaderCall?.first()?.ADDITIONALFIELD_1 == ""||assemblyHeaderCall?.firstOrNull()?.ADDITIONALFIELD_1 ==null){assemblyHeaderCall?.first()?.ADDITIONALFIELD_1 = "N/A" }
             if(assemblyHeaderCall?.first()?.ADDITIONALFIELD_2 == ""||assemblyHeaderCall?.firstOrNull()?.ADDITIONALFIELD_2 ==null){assemblyHeaderCall?.first()?.ADDITIONALFIELD_2 = "N/A" }
             if(assemblyHeaderCall?.first()?.ADDITIONALFIELD_3 == ""||assemblyHeaderCall?.firstOrNull()?.ADDITIONALFIELD_3 ==null){assemblyHeaderCall?.first()?.ADDITIONALFIELD_3 = "N/A" }
@@ -110,9 +121,11 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
             if(assemblyHeaderCall?.first()?.ADDITIONALFIELD_12 == ""||assemblyHeaderCall?.firstOrNull()?.ADDITIONALFIELD_12 ==null){assemblyHeaderCall?.first()?.ADDITIONALFIELD_12 = "N/A" }
             assemblyHeader = assemblyHeaderCall ?: emptyList()
 
-            val assemblyDetailsLinesCall : List<APICall.AssemblyLines>? = apiCall.query("SELECT * FROM AssemblyLines where OrderNumber = '${orderNumber}'")
+
+            val assemblyDetailsLinesCall : List<APICallTables.AssemblyLines>? = apiCall.query("SELECT * FROM AssemblyLines where OrderNumber = '${orderNumber}'")
             assemblyDetailsLines = assemblyDetailsLinesCall ?: emptyList()
         }
+
     }
     fun menuPressed(){
         showAddMenu = false

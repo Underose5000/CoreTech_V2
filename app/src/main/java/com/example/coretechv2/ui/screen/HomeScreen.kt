@@ -34,13 +34,14 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.coretechv2.R
 import com.example.coretechv2.ui.component.TopBar
+import com.example.coretechv2.viewmodel.SharedViewModel
 import java.util.Locale
 import java.util.Locale.getDefault
 
 @Composable
 fun HomeScreen(
     navController: NavController,
-    currentUser: String
+    sharedViewModel: SharedViewModel
 ) {
     val configuration = LocalConfiguration.current
     val snackbarHostState = remember { SnackbarHostState() }
@@ -54,22 +55,22 @@ fun HomeScreen(
     if (isLandscape and isTablet) {
         LandscapeTabletLayout(
             navController = navController,
-            currentUser,
+            sharedViewModel.currentUser.value,
             snackbarHostState)
     } else if (!isLandscape and isTablet){
         PortraitLayout(
             navController = navController,
-            currentUser,
+            sharedViewModel.currentUser.value,
             snackbarHostState)
     } else if (isLandscape and !isTablet){
         PortraitLayout(
             navController = navController,
-            currentUser,
+            sharedViewModel.currentUser.value,
             snackbarHostState)
     } else {
         PortraitLayout(
             navController = navController,
-            currentUser,
+            sharedViewModel.currentUser.value,
             snackbarHostState)
     }
 }

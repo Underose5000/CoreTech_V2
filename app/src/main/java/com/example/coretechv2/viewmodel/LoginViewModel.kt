@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.coretechv2.dataclasses.APICallTables
 import com.example.coretechv2.repository.APICall
 import com.example.coretechv2.repository.DataStoreManager
 import com.example.coretechv2.repository.HashPassword
@@ -52,7 +53,7 @@ class LoginViewModel(private val dataStoreManager: DataStoreManager) : ViewModel
         val hashedPassword = HashPassword(password)
         val lowercaseUsername = username.lowercase().trim()
         viewModelScope.launch {
-            val passwordConfirmed : List<APICall.VerifyUserPassword>? = apiCall.query("SELECT * FROM VERIFY_USER_PASSWORD('$lowercaseUsername','$hashedPassword')")
+            val passwordConfirmed : List<APICallTables.VerifyUserPassword>? = apiCall.query("SELECT * FROM VERIFY_USER_PASSWORD('$lowercaseUsername','$hashedPassword')")
 
             if (passwordConfirmed?.firstOrNull()?.IS_VALID == 1){
                 loginSuccess = true
