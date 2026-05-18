@@ -10,6 +10,22 @@ import kotlinx.coroutines.flow.map
 
 val Context.dataStore by preferencesDataStore(name = "app_preferences")
 
+/**
+ * DataStore-based persistence layer for storing and retrieving
+ * application API configuration settings.
+ *
+ * This class is responsible for:
+ * - Saving API configuration (URL, port, API key)
+ * - Providing reactive access to stored values via Kotlin Flow
+ * - Persisting settings across app launches using Jetpack DataStore
+ *
+ * Stored values:
+ * - apiUrl: Base API URL for backend communication
+ * - apiPort: API server port
+ * - apiKey: Authentication key for API requests
+ *
+ * @property context Application context used to access DataStore instance.
+ */
 class DataStoreManager(private val context: Context) {
 
     private val API_URL_KEY = stringPreferencesKey("apiUrl")
@@ -17,6 +33,20 @@ class DataStoreManager(private val context: Context) {
     private val API_KEY_KEY = stringPreferencesKey("apiKey")
 
 
+    /**
+     * Saves API configuration settings into DataStore.
+     *
+     * This function persists:
+     * - API URL
+     * - API Port
+     * - API Key
+     *
+     * Values are stored asynchronously and survive app restarts.
+     *
+     * @param apiUrl Base URL of the API server.
+     * @param apiPort Port number used by the API server.
+     * @param apiKey Authentication key for API access.
+     */
     suspend fun saveApiSettings(apiUrl: String, apiPort: String, apiKey: String) {
         context.dataStore.edit { preferences ->
             preferences[API_URL_KEY] = apiUrl
@@ -29,16 +59,31 @@ class DataStoreManager(private val context: Context) {
         }
     }
 
+    /**
+     * Reactive stream of the stored API URL.
+     *
+     * Emits updates whenever the value changes in DataStore.
+     */
     val apiUrlFlow: Flow<String?> = context.dataStore.data
         .map { preferences ->
             preferences[API_URL_KEY]
         }
 
+    /**
+     * Reactive stream of the stored API port.
+     *
+     * Emits updates whenever the value changes in DataStore.
+     */
     val apiPortFlow: Flow<String?> = context.dataStore.data
         .map { preferences ->
             preferences[API_PORT_KEY]
         }
 
+    /**
+     * Reactive stream of the stored API key.
+     *
+     * Emits updates whenever the value changes in DataStore.
+     */
     val apiKeyFlow: Flow<String?> = context.dataStore.data
         .map { preferences ->
             preferences[API_KEY_KEY]

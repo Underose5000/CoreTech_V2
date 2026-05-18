@@ -1,7 +1,7 @@
 package com.example.coretechv2.ui.screen
 
 import android.annotation.SuppressLint
-import android.util.Log
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -9,24 +9,31 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material3.Button
 import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -36,11 +43,19 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.coretechv2.dataclasses.APICallTables
+import com.example.coretechv2.dataclasses.APICallTypes
 import com.example.coretechv2.factory.AssemblyOrderDetailsViewModelFactory
+import com.example.coretechv2.ui.component.AdjustmentCard
 import com.example.coretechv2.ui.component.ButtonMessage
+import com.example.coretechv2.ui.component.GelTimeCard
 import com.example.coretechv2.ui.component.Menu
 import com.example.coretechv2.ui.component.PopupWindow
 import com.example.coretechv2.ui.component.TopBar
+import com.example.coretechv2.ui.component.ViscosityCard
+import com.example.coretechv2.ui.screen.assemblytestsandadjustments.GelTimeScreen
+import com.example.coretechv2.ui.screen.assemblytestsandadjustments.ViscosityScreen
+import com.example.coretechv2.ui.theme.lightBlue
+import com.example.coretechv2.ui.theme.midLightBlue
 import com.example.coretechv2.ui.theme.scottBlue
 import com.example.coretechv2.viewmodel.AssemblyOrderDetailsViewModel
 import com.example.coretechv2.viewmodel.SharedViewModel
@@ -54,9 +69,12 @@ fun AssemblyOrderDetails(
     val viewModel: AssemblyOrderDetailsViewModel = viewModel(
         factory = AssemblyOrderDetailsViewModelFactory(context, sharedViewModel)
     )
-    viewModel.retrieveAssemblyDetails(sharedViewModel.currentOrderNumber.value)
-    sharedViewModel.currentAssemblyHeader = viewModel.assemblyHeader.firstOrNull()
-    sharedViewModel.currentAssemblyLines = viewModel.assemblyDetailsLines
+
+    LaunchedEffect(sharedViewModel.showPopup.value){
+        if (!sharedViewModel.showPopup.value){
+            viewModel.reload()
+        }
+    }
 
     LaunchedEffect(sharedViewModel) {
         sharedViewModel.snackbarEvent.collect { message ->
@@ -67,7 +85,6 @@ fun AssemblyOrderDetails(
     if(viewModel.showPopupWindow.value){
         sharedViewModel.popupDetails = viewModel.popupDetails
         sharedViewModel.openPopup()
-        Log.d("popup","show popup called")
         viewModel.togglePopup(viewModel.showPopupWindow)
 
     }
@@ -126,9 +143,6 @@ fun AssemblyOrderDetails(
                 Column(
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text(
-                        text = "Assembly"
-                    )
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -165,14 +179,106 @@ fun AssemblyOrderDetails(
                         }
                     }
                 }
+                VerticalDivider(modifier = Modifier.fillMaxHeight())
                 Column(
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text(
-                        text = "Tests and Adjustments"
-                    )
+                    Row(modifier = Modifier.fillMaxWidth()){
+                        Button(
+                            modifier = Modifier.weight(1f)
+                                .padding(horizontal = 5.dp),
+                            shape = RoundedCornerShape(4.dp), // match OutlinedTextField corners
+                            border = BorderStroke(1.dp, Color.Gray),
+                            onClick = {}
+                        ){
+                            Text(text = "Tests and Adjustments")
+                        }
+                        Button(
+                            modifier = Modifier.weight(1f)
+                                .padding(horizontal = 5.dp),
+                            shape = RoundedCornerShape(4.dp), // match OutlinedTextField corners
+                            border = BorderStroke(1.dp, Color.Gray),
+                            onClick = {}
+                        ){
+                            Text(text = "Notes")
+                        }
+                        Button(
+                            modifier = Modifier.weight(1f)
+                                .padding(horizontal = 5.dp),
+                            shape = RoundedCornerShape(4.dp), // match OutlinedTextField corners
+                            border = BorderStroke(1.dp, Color.Gray),
+                            onClick = {}
+                        ){
+                            Text(text = "Instructions")
+                        }
+                    }
+
                     LazyColumn() {
-                        items(viewModel.assemblyDetailsLines) { tests ->
+                        var testnumber = 1
+                        items(viewModel.testAndAdjustments) { values ->
+
+                            val tests = values[0] as SnapshotStateList<*>
+                            val adjustments = values[1] as SnapshotStateList<*>
+
+                            if (!tests.isEmpty()){
+                                Row(modifier = Modifier.fillMaxWidth().background(lightBlue)) {
+                                    Text("Test " + testnumber, Modifier.padding(vertical = 2.dp, horizontal = 5.dp), style = MaterialTheme.typography.titleSmall)
+                                }
+                                Spacer(modifier = Modifier.height(1.dp))
+                                for (test in tests){
+                                    Row(modifier = Modifier.clickable {
+                                        when (test) {
+                                            is APICallTables.viscosityTest -> {
+                                                sharedViewModel.updateSaveType(APICallTypes.UPDATE)
+                                                viewModel.popupDetails.width = 700
+                                                viewModel.popupDetails.height = 500
+                                                viewModel.popupDetails.content = {
+                                                    ViscosityScreen(sharedViewModel,test)
+                                                }
+                                                viewModel.showPopupWindow.value = true
+                                            }
+                                            is APICallTables.gelTimeTest -> {
+                                                sharedViewModel.updateSaveType(APICallTypes.UPDATE)
+                                                viewModel.popupDetails.width = 700
+                                                viewModel.popupDetails.height = 500
+                                                viewModel.popupDetails.content = {
+                                                    GelTimeScreen(sharedViewModel,test)
+                                                }
+                                                viewModel.showPopupWindow.value = true
+                                            }
+                                        }
+                                    }
+                                    )
+                                    {
+                                        when (test) {
+                                            is APICallTables.viscosityTest -> {
+                                                ViscosityCard(test)
+                                            }
+                                            is APICallTables.gelTimeTest -> {
+                                                GelTimeCard(test)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            if (!adjustments.isEmpty()){
+                                Row(modifier = Modifier.fillMaxWidth().background(midLightBlue)) {
+                                Text("Adjustment " + testnumber, Modifier.padding(vertical = 2.dp, horizontal = 5.dp), style = MaterialTheme.typography.titleSmall)
+                                }
+                                Spacer(modifier = Modifier.height(5.dp))
+                                for (adjust in adjustments){
+                                    Row() {
+                                        when (adjust) {
+                                            is APICallTables.assemblyAdjustment -> {
+                                                AdjustmentCard(adjust)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            testnumber += 1
+                            Spacer(modifier = Modifier.height(10.dp))
+
                         }
                     }
                 }
@@ -210,8 +316,8 @@ fun AssemblyOrderDetailsPreview() {
     val navController = rememberNavController()
     val sharedViewModel: SharedViewModel = viewModel()
 
-    // Mock data
-    sharedViewModel.currentOrderNumber.value = "A4975"
+
+    sharedViewModel.currentOrderNumber.value = "A4797"//"A4975"
     sharedViewModel.currentUser.value = "Steve"
 
 

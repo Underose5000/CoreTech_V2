@@ -27,6 +27,30 @@ import com.example.coretechv2.R
 import com.example.coretechv2.factory.APISettingViewModelFactory
 import com.example.coretechv2.viewmodel.APISettingViewModel
 
+/**
+ * API Settings screen used to configure backend connection details.
+ *
+ * This screen allows the user to input and save:
+ * - Server URL
+ * - Server Port
+ * - API Key
+ *
+ * It is typically shown on first app launch or when connection
+ * settings are invalid or missing.
+ *
+ * Features:
+ * - Displays company logo at the top
+ * - Input fields for API configuration
+ * - Error message display for failed connections
+ * - Connect button to validate and save settings
+ * - Automatic navigation trigger when connection succeeds
+ *
+ * Navigation:
+ * - Calls [onConnectedSuccess] when API connection is validated successfully
+ *
+ * @param onConnectedSuccess Callback triggered when connection succeeds
+ * and the app should navigate away from the settings screen.
+ */
 @Composable
 fun APISettingsScreen(
     onConnectedSuccess: () -> Unit

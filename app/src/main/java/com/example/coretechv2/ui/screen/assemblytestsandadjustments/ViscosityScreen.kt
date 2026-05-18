@@ -1,4 +1,4 @@
-package com.example.coretechv2.ui.screen.assemblytests
+package com.example.coretechv2.ui.screen.assemblytestsandadjustments
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -14,7 +14,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -26,8 +25,9 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.coretechv2.dataclasses.VisField
-import com.example.coretechv2.dataclasses.VisSettings
+import com.example.coretechv2.dataclasses.APICallTables
+import com.example.coretechv2.dataclasses.assemblytests.VisField
+import com.example.coretechv2.dataclasses.assemblytests.VisSettings
 import com.example.coretechv2.factory.assemblytests.ViscosityViewModelFactory
 import com.example.coretechv2.ui.component.OutlinedStyleButton
 import com.example.coretechv2.ui.component.OutlinedStyleDoubleNumberField
@@ -43,13 +43,13 @@ import com.example.coretechv2.viewmodel.assemblytests.ViscosityViewModel
  * @param viewModel the Shared viewModel to which holds app wide data
  */
 @Composable
-fun ViscosityScreen(sharedViewModel: SharedViewModel) {
+fun ViscosityScreen(sharedViewModel: SharedViewModel, test: APICallTables.viscosityTest? = null) {
     val context = LocalContext.current
     val viewModel: ViscosityViewModel = viewModel(
         factory = ViscosityViewModelFactory(context, sharedViewModel),
     )
     LaunchedEffect(Unit){
-        viewModel.onClear()
+        viewModel.onClear(test)
     }
 
     val focusManager = LocalFocusManager.current
@@ -195,7 +195,7 @@ fun ViscosityScreen(sharedViewModel: SharedViewModel) {
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Bottom
                     ) {
-                        Text(text = "60")
+                        Text(text = if(viewModel.visReading.value.spindle in listOf("A","B","C","D","E","F","G")){"100"}else{"60"})
                         OutlinedStyleDoubleNumberField(
                             value = viewModel.visReading.value.vis60,
                             onValueChange = { newValue -> viewModel.onVisChange(newValue, VisField.VIS60) }
@@ -206,7 +206,7 @@ fun ViscosityScreen(sharedViewModel: SharedViewModel) {
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Bottom
                     ) {
-                        Text(text = "30")
+                        Text(text = if(viewModel.visReading.value.spindle in listOf("A","B","C","D","E","F","G")){"50"}else{"30"})
                        OutlinedStyleDoubleNumberField(
                             value = viewModel.visReading.value.vis30,
                             onValueChange = { newValue -> viewModel.onVisChange(newValue, VisField.VIS30) }
@@ -217,7 +217,7 @@ fun ViscosityScreen(sharedViewModel: SharedViewModel) {
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Bottom
                     ) {
-                        Text(text = "12")
+                        Text(text = if(viewModel.visReading.value.spindle in listOf("A","B","C","D","E","F","G")){"20"}else{"12"})
                         OutlinedStyleDoubleNumberField(
                             value = viewModel.visReading.value.vis12,
                             onValueChange = { newValue -> viewModel.onVisChange(newValue, VisField.VIS12) }
@@ -228,7 +228,7 @@ fun ViscosityScreen(sharedViewModel: SharedViewModel) {
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Bottom
                     ) {
-                        Text(text = "6")
+                        Text(text = if(viewModel.visReading.value.spindle in listOf("A","B","C","D","E","F","G")){"10"}else{"6"})
                         OutlinedStyleDoubleNumberField(
                             value = viewModel.visReading.value.vis06,
                             onValueChange = { newValue -> viewModel.onVisChange(newValue, VisField.VIS06) }
@@ -242,7 +242,7 @@ fun ViscosityScreen(sharedViewModel: SharedViewModel) {
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Bottom
                     ) {
-                        Text(text = "3")
+                        Text(text = if(viewModel.visReading.value.spindle in listOf("A","B","C","D","E","F","G")){"5"}else{"3"})
                         OutlinedStyleDoubleNumberField(
                             value = viewModel.visReading.value.vis03,
                             onValueChange = { newValue -> viewModel.onVisChange(newValue, VisField.VIS03) }
@@ -253,7 +253,7 @@ fun ViscosityScreen(sharedViewModel: SharedViewModel) {
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Bottom
                     ) {
-                        Text(text = "1.5")
+                        Text(text = if(viewModel.visReading.value.spindle in listOf("A","B","C","D","E","F","G")){"2.5"}else{"1.5"})
                         OutlinedStyleDoubleNumberField(
                             value = viewModel.visReading.value.vis1_5,
                             onValueChange = { newValue -> viewModel.onVisChange(newValue, VisField.VIS1_5) }
@@ -264,7 +264,7 @@ fun ViscosityScreen(sharedViewModel: SharedViewModel) {
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Bottom
                     ) {
-                        Text(text = "0.6")
+                        Text(text = if(viewModel.visReading.value.spindle in listOf("A","B","C","D","E","F","G")){"1"}else{"0.6"})
                         OutlinedStyleDoubleNumberField(
                             value = viewModel.visReading.value.vis0_6,
                             onValueChange = { newValue -> viewModel.onVisChange(newValue, VisField.VIS0_6) }
@@ -275,7 +275,7 @@ fun ViscosityScreen(sharedViewModel: SharedViewModel) {
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Bottom
                     ) {
-                        Text(text = "0.3")
+                        Text(text = if(viewModel.visReading.value.spindle in listOf("A","B","C","D","E","F","G")){"0.5"}else{"0.3"})
                         OutlinedStyleDoubleNumberField(
                             value = viewModel.visReading.value.vis0_3,
                             onValueChange = { newValue -> viewModel.onVisChange(newValue, VisField.VIS0_3) }
@@ -292,7 +292,7 @@ fun ViscosityScreen(sharedViewModel: SharedViewModel) {
                     modifier = Modifier
                         .weight(2f)
                         .padding(horizontal = 20.dp, vertical = 40.dp),
-                    onClick = { viewModel.onClear() }
+                    onClick = { viewModel.onClear(test) }
                 ) { Text(text = "Clear") }
                 Button(
                     modifier = Modifier

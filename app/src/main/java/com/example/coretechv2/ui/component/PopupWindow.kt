@@ -14,6 +14,27 @@ import androidx.compose.ui.unit.dp
 import com.example.coretechv2.dataclasses.MenuItem
 import com.example.coretechv2.dataclasses.PopupItems
 
+/**
+ * A reusable full-screen popup container that displays custom composable content.
+ *
+ * This component renders a centered modal window over the entire screen
+ * and displays content provided via [PopupItems].
+ *
+ * Features:
+ * - Full-screen overlay container
+ * - Centered popup window
+ * - Configurable width and height
+ * - Fully custom composable content slot
+ *
+ * Typical usage:
+ * - Forms (test entry screens)
+ * - Dialog-style workflows
+ * - Custom UI popups (menus, editors, confirmations)
+ *
+ * @param item Configuration object containing:
+ * - popup dimensions (width/height)
+ * - composable content to render inside the popup
+ */
 @Composable
 fun PopupWindow(item : PopupItems) {
     Box(

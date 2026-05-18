@@ -1,5 +1,6 @@
-package com.example.coretechv2.ui.screen.assemblytests
+package com.example.coretechv2.ui.screen.assemblytestsandadjustments
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -8,13 +9,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -26,9 +25,8 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.coretechv2.dataclasses.GelField
-import com.example.coretechv2.dataclasses.VisField
-import com.example.coretechv2.dataclasses.VisSettings
+import com.example.coretechv2.dataclasses.APICallTables
+import com.example.coretechv2.dataclasses.assemblytests.GelField
 import com.example.coretechv2.factory.assemblytests.GelTimeViewModelFactory
 import com.example.coretechv2.ui.component.OutlinedStyleButton
 import com.example.coretechv2.ui.component.OutlinedStyleDoubleNumberField
@@ -45,12 +43,14 @@ import com.example.coretechv2.viewmodel.assemblytests.GelTimeViewModel
  * @param viewModel the Shared viewModel to which holds app wide data
  */
 @Composable
-fun GelTimeScreen(sharedViewModel: SharedViewModel) {
+fun GelTimeScreen(sharedViewModel: SharedViewModel, test: APICallTables.gelTimeTest? = null) {
     val context = LocalContext.current
     val viewModel: GelTimeViewModel = viewModel(
         factory = GelTimeViewModelFactory(context, sharedViewModel),
     )
-    viewModel.retrieveTestCount(sharedViewModel.currentOrderNumber.value)
+    LaunchedEffect(Unit){
+        viewModel.onClear(test)
+    }
     val focusManager = LocalFocusManager.current
 
     if(viewModel.closePopupMessage.value){
@@ -190,7 +190,7 @@ fun GelTimeScreen(sharedViewModel: SharedViewModel) {
                     modifier = Modifier
                         .weight(2f)
                         .padding(horizontal = 20.dp, vertical = 40.dp),
-                    onClick = { viewModel.onClear() }
+                    onClick = { viewModel.onClear(test) }
                 ) { Text(text = "Clear") }
                 Button(
                     modifier = Modifier

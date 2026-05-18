@@ -25,7 +25,51 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavController
 import kotlinx.coroutines.launch
 
-
+/**
+ * A reusable top-level app scaffold that provides:
+ * - Top app bar with optional back navigation
+ * - Up to four configurable action icons
+ * - Snackbar host support
+ * - Content container with proper padding handling
+ *
+ * This component wraps [Scaffold] and is used as the main layout
+ * structure for most screens in the application.
+ *
+ * Features:
+ * - Dynamic title display
+ * - Optional back button navigation
+ * - Up to 4 action icons (conditionally shown)
+ * - Integrated [SnackbarHost] support
+ * - Proper insets handling via [PaddingValues]
+ *
+ * Icon behavior:
+ * - Icons default to [Icons.Filled.Warning]
+ * - Only displayed if overridden from default
+ * - Each icon has its own click action and description
+ *
+ * @param navController Navigation controller used for back navigation.
+ * @param title Title displayed in the top app bar.
+ * @param snackbarHostState Snackbar host state for showing messages.
+ * @param backshow Enables back navigation button when true.
+ *
+ * @param icon1 First action icon (default hidden unless overridden).
+ * @param icon1Description Content description for accessibility.
+ * @param icon1action Click action for icon1.
+ *
+ * @param icon2 Second action icon.
+ * @param icon2Description Content description for accessibility.
+ * @param icon2action Click action for icon2.
+ *
+ * @param icon3 Third action icon.
+ * @param icon3Description Content description for accessibility.
+ * @param icon3action Click action for icon3.
+ *
+ * @param icon4 Fourth action icon.
+ * @param icon4Description Content description for accessibility.
+ * @param icon4action Click action for icon4.
+ *
+ * @param content Main screen content displayed below the top bar.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopBar(navController: NavController,

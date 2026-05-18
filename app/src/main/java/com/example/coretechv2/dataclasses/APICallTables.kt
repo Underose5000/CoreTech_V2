@@ -2,6 +2,21 @@ package com.example.coretechv2.dataclasses
 
 import kotlinx.serialization.Serializable
 
+/**
+ * Data Transfer Objects (DTOs) used for API communication between the app and backend.
+ *
+ * This file contains all database-mapped structures used for:
+ * - Assembly management (headers, lines, adjustments)
+ * - Testing modules (viscosity, gel time)
+ * - Item master data
+ * - Utility responses (validation, counts, connection checks)
+ *
+ * All models are marked with [kotlinx.serialization.Serializable]
+ * to allow JSON parsing between API requests and responses.
+ *
+ * These classes directly map to database tables or query results
+ * and are used primarily by the repository layer and ViewModels.
+ */
 class APICallTables {
 
     @Serializable
@@ -12,6 +27,23 @@ class APICallTables {
         val AVAILABLEQTY: Float
     )
 
+
+    @Serializable
+    data class ItemDescriptor(
+        val CODE: String,
+        val DESCRIPTION: String,
+        val UNIT: String,
+        val STATUS: String,
+        val BARCODE: String,
+        val CATEGORY: String,
+        val ONHANDQTY: Double,
+        val SUPPLYQTY: Double,
+        val DEMANDQTY: Double,
+        val AVAILABLEQTY: Double,
+        val FREEQTY: Double,
+        val TYPE: String,
+        val SYSUNIQUEID: Int
+    )
 
     @Serializable
     data class AssemblyHeader(
@@ -97,6 +129,21 @@ class APICallTables {
         val GELCAT: String,
         val GELCATPERCENT: String,
     )
+
+
+    @Serializable
+    data class assemblyAdjustment(
+        val SYSUNIQUEID: Double,
+        val ORDERNUMBER: String,
+        val LINENUMBER: Int,
+        val CODETYPE: String,
+        val LINECODE: String,
+        val ADJUSTQTY: Double,
+        val ADJUSTNO: Int,
+        val LINEDESCRIPTION: String,
+        val LINEUNIT: String,
+    )
+
 
     @Serializable
     data class VerifyUserPassword(

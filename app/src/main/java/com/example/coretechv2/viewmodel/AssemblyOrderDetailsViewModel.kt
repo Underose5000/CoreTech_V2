@@ -1,41 +1,35 @@
 package com.example.coretechv2.viewmodel
 
-import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.coretechv2.dataclasses.APICallTables
-import com.example.coretechv2.dataclasses.GelField
-import com.example.coretechv2.dataclasses.GelTimeItem
+import com.example.coretechv2.dataclasses.APICallTypes
 import com.example.coretechv2.dataclasses.MenuItem
 import com.example.coretechv2.dataclasses.MessageItems
 import com.example.coretechv2.dataclasses.PopupItems
 import com.example.coretechv2.repository.APICall
 import com.example.coretechv2.repository.DataStoreManager
-import com.example.coretechv2.ui.screen.assemblytests.GelTimeScreen
-import com.example.coretechv2.ui.screen.assemblytests.ViscosityScreen
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
+import com.example.coretechv2.ui.screen.assemblytestsandadjustments.AdjustmentsScreen
+import com.example.coretechv2.ui.screen.assemblytestsandadjustments.GelTimeScreen
+import com.example.coretechv2.ui.screen.assemblytestsandadjustments.ViscosityScreen
 import kotlinx.coroutines.launch
 import kotlin.collections.firstOrNull
 
 class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManager, var sharedViewModel: SharedViewModel) : ViewModel() {
 
     private val apiCall = APICall(dataStoreManager)
-    var popupDetails = PopupItems()
+    var popupDetails = PopupItems().copy()
     var popupMessageDetails = MessageItems()
     var showPopupWindow = mutableStateOf(false)
         private set
-    fun togglePopup(window: MutableState<Boolean>){
-        window.value = !window.value
-    }
     var showPopupMessage = mutableStateOf(false)
         private set
-    private val _snackbarEvent = MutableSharedFlow<String>()
-    val snackbarEvent = _snackbarEvent.asSharedFlow()
 
     val actionMenuList = listOf(
         MenuItem(
@@ -62,7 +56,10 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
             onClick = {
                 popupDetails.width = 700
                 popupDetails.height = 500
-                popupDetails.content = {ViscosityScreen(sharedViewModel)}
+                popupDetails.content = {
+                    sharedViewModel.updateSaveType(APICallTypes.INSERT)
+                    ViscosityScreen(sharedViewModel)
+                }
                 showPopupWindow.value = true
                 showAddMenu = false
                       },
@@ -72,61 +69,96 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
             onClick = {
                 popupDetails.width = 700
                 popupDetails.height = 500
-                popupDetails.content = { GelTimeScreen(sharedViewModel) }
+                popupDetails.content = {
+                    sharedViewModel.updateSaveType(APICallTypes.INSERT)
+                    GelTimeScreen(sharedViewModel)
+                }
                 showPopupWindow.value = true
                 showAddMenu = false
             },
         ),
         MenuItem(
             title = "Adjustment",
-            onClick = {}
+            onClick = {
+                popupDetails.width = 700
+                popupDetails.height = 500
+                popupDetails.content = {
+                    sharedViewModel.updateSaveType(APICallTypes.INSERT)
+                    AdjustmentsScreen(sharedViewModel)
+                }
+                showPopupWindow.value = true
+                showAddMenu = false
+            }
         ),
     )
-
-    var message = mutableStateOf("")
-        private set
-
-    var gelReading = mutableStateOf(GelTimeItem())
     var assemblyHeader by mutableStateOf<List<APICallTables.AssemblyHeader>>(emptyList())
         private set
     var assemblyDetailsLines by mutableStateOf<List<APICallTables.AssemblyLines>>(emptyList())
         private set
-
-
+    val testAndAdjustments = mutableStateListOf<SnapshotStateList<Any>>()
     var showActionMenu by mutableStateOf(false)
         private set
     var showAddMenu by mutableStateOf(false)
         private set
-    var showGelScreen = mutableStateOf(false)
-        private set
-    var showMessageOne = mutableStateOf(false)
-        private set
 
-//endregion
 
-    fun retrieveAssemblyDetails(orderNumber: String){
+    fun togglePopup(window: MutableState<Boolean>){
+        window.value = !window.value
+    }
+    fun retrieveAssemblyDetails(){
         viewModelScope.launch {
-            val assemblyHeaderCall : List<APICallTables.AssemblyHeader>? = apiCall.query("SELECT * FROM AssemblyHeader where OrderNumber = '${orderNumber}'")
-            if(assemblyHeaderCall?.first()?.ADDITIONALFIELD_1 == ""||assemblyHeaderCall?.firstOrNull()?.ADDITIONALFIELD_1 ==null){assemblyHeaderCall?.first()?.ADDITIONALFIELD_1 = "N/A" }
-            if(assemblyHeaderCall?.first()?.ADDITIONALFIELD_2 == ""||assemblyHeaderCall?.firstOrNull()?.ADDITIONALFIELD_2 ==null){assemblyHeaderCall?.first()?.ADDITIONALFIELD_2 = "N/A" }
-            if(assemblyHeaderCall?.first()?.ADDITIONALFIELD_3 == ""||assemblyHeaderCall?.firstOrNull()?.ADDITIONALFIELD_3 ==null){assemblyHeaderCall?.first()?.ADDITIONALFIELD_3 = "N/A" }
-            if(assemblyHeaderCall?.first()?.ADDITIONALFIELD_4 == ""||assemblyHeaderCall?.firstOrNull()?.ADDITIONALFIELD_4 ==null){assemblyHeaderCall?.first()?.ADDITIONALFIELD_4 = "N/A" }
-            if(assemblyHeaderCall?.first()?.ADDITIONALFIELD_5 == ""||assemblyHeaderCall?.firstOrNull()?.ADDITIONALFIELD_5 ==null){assemblyHeaderCall?.first()?.ADDITIONALFIELD_5 = "N/A" }
-            if(assemblyHeaderCall?.first()?.ADDITIONALFIELD_6 == ""||assemblyHeaderCall?.firstOrNull()?.ADDITIONALFIELD_6 ==null){assemblyHeaderCall?.first()?.ADDITIONALFIELD_6 = "N/A" }
-            if(assemblyHeaderCall?.first()?.ADDITIONALFIELD_7 == ""||assemblyHeaderCall?.firstOrNull()?.ADDITIONALFIELD_7 ==null){assemblyHeaderCall?.first()?.ADDITIONALFIELD_7 = "N/A" }
-            if(assemblyHeaderCall?.first()?.ADDITIONALFIELD_8 == ""||assemblyHeaderCall?.firstOrNull()?.ADDITIONALFIELD_8 ==null){assemblyHeaderCall?.first()?.ADDITIONALFIELD_8 = "N/A" }
-            if(assemblyHeaderCall?.first()?.ADDITIONALFIELD_9 == ""||assemblyHeaderCall?.firstOrNull()?.ADDITIONALFIELD_9 ==null){assemblyHeaderCall?.first()?.ADDITIONALFIELD_9 = "N/A" }
-            if(assemblyHeaderCall?.first()?.ADDITIONALFIELD_10 == ""||assemblyHeaderCall?.firstOrNull()?.ADDITIONALFIELD_10 ==null){assemblyHeaderCall?.first()?.ADDITIONALFIELD_10 = "N/A" }
-            if(assemblyHeaderCall?.first()?.ADDITIONALFIELD_11 == ""||assemblyHeaderCall?.firstOrNull()?.ADDITIONALFIELD_11 ==null){assemblyHeaderCall?.first()?.ADDITIONALFIELD_11 = "N/A" }
-            if(assemblyHeaderCall?.first()?.ADDITIONALFIELD_12 == ""||assemblyHeaderCall?.firstOrNull()?.ADDITIONALFIELD_12 ==null){assemblyHeaderCall?.first()?.ADDITIONALFIELD_12 = "N/A" }
+            val assemblyHeaderCall : List<APICallTables.AssemblyHeader>? = apiCall.query("SELECT * FROM AssemblyHeader where OrderNumber = '${sharedViewModel.currentOrderNumber.value}'")
             assemblyHeader = assemblyHeaderCall ?: emptyList()
 
-
-            val assemblyDetailsLinesCall : List<APICallTables.AssemblyLines>? = apiCall.query("SELECT * FROM AssemblyLines where OrderNumber = '${orderNumber}'")
+            val assemblyDetailsLinesCall : List<APICallTables.AssemblyLines>? = apiCall.query("SELECT * FROM AssemblyLines where OrderNumber = '${sharedViewModel.currentOrderNumber.value}'")
             assemblyDetailsLines = assemblyDetailsLinesCall ?: emptyList()
+            sharedViewModel.currentAssemblyHeader = assemblyHeader.firstOrNull()
+            sharedViewModel.currentAssemblyLines = assemblyDetailsLines
         }
-
     }
+
+    fun retrieveTestDetails(){
+        testAndAdjustments.clear()
+        val testCount = mutableListOf<Int>()
+        viewModelScope.launch {
+            val viscosityTests : List<APICallTables.viscosityTest>? = apiCall.query("SELECT * FROM OSTDEF_VISCOSITY_TESTS where OrderNumber = '${sharedViewModel.currentOrderNumber.value}'")
+            testCount.addAll(viscosityTests?.map { it.TESTNO } ?: emptyList())
+            val gelTimeTests : List<APICallTables.gelTimeTest>? = apiCall.query("SELECT * FROM OSTDEF_GELTIME_TESTS where OrderNumber = '${sharedViewModel.currentOrderNumber.value}'")
+            testCount.addAll(gelTimeTests?.map { it.TESTNO } ?: emptyList())
+
+            testCount.sortDescending()
+            sharedViewModel.testCount.value = testCount.first()
+
+            val adjustmentLines : List<APICallTables.assemblyAdjustment>? = apiCall.query("SELECT * FROM OSTDEF_ADJUSTMENTS where OrderNumber = '${sharedViewModel.currentOrderNumber.value}'")
+            testCount.addAll(adjustmentLines?.map { it.ADJUSTNO } ?: emptyList())
+
+            val testAndAdjustmentsCount = testCount.toMutableList()
+            testAndAdjustmentsCount.sortDescending()
+
+            for (testValue in 0 until testAndAdjustmentsCount.first()) {
+                val testAndAdjustment = mutableStateListOf<Any>()
+                val test = mutableStateListOf<Any>()
+                val adjust = mutableStateListOf<Any>()
+                for (tn in 0 until (viscosityTests?.size ?: 0)) {
+                    if (viscosityTests?.get(tn)?.TESTNO == testValue + 1) test.add(viscosityTests[tn])
+                }
+                for (tn in 0 until (gelTimeTests?.size ?: 0)) {
+                    if (gelTimeTests?.get(tn)?.TESTNO == testValue + 1) test.add(gelTimeTests[tn])
+                }
+                for (tn in 0 until (adjustmentLines?.size ?: 0)) {
+                    if (adjustmentLines?.get(tn)?.ADJUSTNO == testValue + 1) adjust.add(adjustmentLines[tn])
+                }
+
+                testAndAdjustment.add(test)
+                testAndAdjustment.add(adjust)
+
+                testAndAdjustments.add(testAndAdjustment)
+            }
+
+
+        }
+    }
+
     fun menuPressed(){
         showAddMenu = false
         showActionMenu = !showActionMenu
@@ -141,28 +173,8 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
         selection.value = true
         showAddMenu = false
     }
-    fun hideMessage(){
-        showMessageOne.value = false
+    fun reload(){
+        retrieveAssemblyDetails()
+        retrieveTestDetails()
     }
-
-    fun onGelChange(newValue: String, field : GelField){
-        gelReading.value = when (field) {
-            GelField.HOUR -> gelReading.value.copy(hour = newValue)
-            GelField.MINUTE -> gelReading.value.copy(minute = newValue)
-            GelField.SECOND -> gelReading.value.copy(second = newValue)
-            GelField.CATPERCENT -> gelReading.value.copy(catPercent = newValue)
-            GelField.CATALYST -> gelReading.value.copy(catalyst = newValue)
-            GelField.TESTNUMBER -> gelReading.value.copy(testNumber = newValue)
-
-
-        }
-    }
-
-    fun onGelClear(){
-        gelReading.value = GelTimeItem()
-        gelReading.value.catPercent = assemblyHeader.firstOrNull()?.ADDITIONALFIELD_9.toString()
-       // gelReading.value.testNumber = gelTestNumberCount
-    }
-
-
 }

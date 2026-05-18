@@ -8,6 +8,7 @@ val Pink80 = Color(0xFFEFB8C8)
 
 val scottBlue = Color(0xFF77D8FF)
 val lightBlue = Color(0xFFD5EEFF)
+val midLightBlue = Color(0xFFD5E0FF)
 val darkBlue = Color(0xFF3DB8FD)
 
 val resinBlue = Color(0xFF0CC3F1)

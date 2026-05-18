@@ -24,6 +24,31 @@ import com.example.coretechv2.dataclasses.MessageItems
 import com.example.coretechv2.dataclasses.PopupItems
 import com.example.coretechv2.ui.theme.lightBlue
 
+/**
+ * A reusable popup dialog component that displays a message with
+ * one or two action buttons.
+ *
+ * This composable is driven by [MessageItems] and is used for:
+ * - Confirmation dialogs (Yes/No)
+ * - Alerts and warnings
+ * - Simple user prompts
+ *
+ * Layout behaviour:
+ * - Centered on screen using a full-screen overlay
+ * - Fixed width and height based on [MessageItems]
+ * - Light blue background with a black border
+ * - Dynamically shows either one or two buttons
+ *
+ * Button logic:
+ * - If only button 1 is configured, a single centered button is shown
+ * - If both buttons are configured, they are shown side-by-side
+ *
+ * @param popUpMessage Configuration object containing:
+ * - message text
+ * - button labels
+ * - click actions
+ * - dialog sizing
+ */
 @Composable
 fun ButtonMessage(popUpMessage: MessageItems) {
     Box(

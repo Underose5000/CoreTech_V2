@@ -21,6 +21,28 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.coretechv2.dataclasses.MenuItem
 
+/**
+ * A simple vertical menu component built using a LazyColumn.
+ *
+ * This composable renders a list of clickable menu items provided
+ * by [MenuItem].
+ *
+ * Features:
+ * - Fixed width menu container
+ * - Optional leading icon for each item
+ * - Clickable rows triggering item actions
+ * - Dividers between items (except after the last item)
+ *
+ * Common usage:
+ * - Side navigation menus
+ * - Popup action menus
+ * - Drawer-style option lists
+ *
+ * @param menuList List of [MenuItem] objects defining:
+ * - title text
+ * - optional icon
+ * - click behaviour
+ */
 @Composable
 fun Menu(
     menuList: List<MenuItem>,
