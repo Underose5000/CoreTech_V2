@@ -26,6 +26,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.coretechv2.dataclasses.APICallTables
 import com.example.coretechv2.factory.assemblytests.AdjustmentsViewModelFactory
 import com.example.coretechv2.ui.component.OutlinedStyleDoubleNumberField
 import com.example.coretechv2.ui.component.OutlinedStyleTextAndButtonField
@@ -35,7 +36,7 @@ import com.example.coretechv2.viewmodel.SharedViewModel
 import com.example.coretechv2.viewmodel.assemblytests.AdjustmentsViewModel
 
 @Composable
-fun AdjustmentsScreen(sharedViewModel: SharedViewModel) {
+fun AdjustmentsScreen(sharedViewModel: SharedViewModel, adjustment: APICallTables.assemblyAdjustment? = null) {
     val context = LocalContext.current
     val viewModel: AdjustmentsViewModel = viewModel(
         factory = AdjustmentsViewModelFactory(context, sharedViewModel),
