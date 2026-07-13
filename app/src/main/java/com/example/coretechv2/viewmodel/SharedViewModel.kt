@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.coretechv2.dataclasses.APICallTables
 import com.example.coretechv2.dataclasses.APICallTypes
 import com.example.coretechv2.dataclasses.ItemDescriptorItem
+import com.example.coretechv2.dataclasses.LabelElements
 import com.example.coretechv2.dataclasses.MessageItems
 import com.example.coretechv2.dataclasses.PopupItems
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -27,7 +28,7 @@ class SharedViewModel() : ViewModel(){
         private set
 
     var popupDetails = PopupItems().copy()
-    var popupMessageDetails = MessageItems()
+    var popupMessageDetails = MessageItems().copy()
     var currentAssemblyHeader: APICallTables.AssemblyHeader? = null
     var currentAssemblyLines: List<APICallTables.AssemblyLines>? = null
 
@@ -44,6 +45,8 @@ class SharedViewModel() : ViewModel(){
     var showPopup = mutableStateOf(false)
     var showMessagePopup = mutableStateOf(false)
 
+    var showLabelPreview = mutableStateOf(false)
+
     var saveType by mutableStateOf(APICallTypes.INSERT)
         private set
     var testCount = mutableStateOf(0)
@@ -56,15 +59,22 @@ class SharedViewModel() : ViewModel(){
     }
     fun closePopup(){
         showPopup.value = false
-        popupDetails = PopupItems()
+        popupDetails = PopupItems().copy()
     }
     fun openMessagePopup(){
         showMessagePopup.value = true
     }
     fun closeMessagePopup(){
         showMessagePopup.value = false
-        popupMessageDetails = MessageItems()
+        popupMessageDetails = MessageItems().copy()
     }
+    fun openLabelPreview(){
+        showLabelPreview.value = true
+    }
+    fun closeLabelPreview(){
+        showLabelPreview.value = false
+    }
+
     fun snackBarMessage(message: String) {
         viewModelScope.launch {
             _snackbarEvent.emit(message)

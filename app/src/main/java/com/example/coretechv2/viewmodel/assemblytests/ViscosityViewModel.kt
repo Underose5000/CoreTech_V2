@@ -9,10 +9,10 @@ import androidx.lifecycle.viewModelScope
 import com.example.coretechv2.dataclasses.APICallTables
 import com.example.coretechv2.dataclasses.APICallTypes
 import com.example.coretechv2.dataclasses.MessageItems
-import com.example.coretechv2.dataclasses.assemblytests.VisField
-import com.example.coretechv2.dataclasses.assemblytests.VisSettings
-import com.example.coretechv2.dataclasses.assemblytests.ViscosityItem
-import com.example.coretechv2.dataclasses.assemblytests.visHasValue
+import com.example.coretechv2.dataclasses.assemblydataclasses.VisField
+import com.example.coretechv2.dataclasses.assemblydataclasses.VisSettings
+import com.example.coretechv2.dataclasses.assemblydataclasses.ViscosityItem
+import com.example.coretechv2.dataclasses.assemblydataclasses.visHasValue
 import com.example.coretechv2.repository.APICall
 import com.example.coretechv2.repository.DataStoreManager
 import com.example.coretechv2.viewmodel.SharedViewModel

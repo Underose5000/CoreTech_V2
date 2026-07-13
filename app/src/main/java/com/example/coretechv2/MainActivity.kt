@@ -29,6 +29,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Log.d("Lifecycle", "onCreate")
         enableEdgeToEdge()
         setContent {
             val context = LocalContext.current
@@ -78,6 +79,25 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         isLoggedIn.value = false
+        Log.d("Lifecycle", "onResume")
+    }
+    override fun onStart() {
+        super.onStart()
+        Log.d("Lifecycle", "onStart")
     }
 
+    override fun onPause() {
+        super.onPause()
+        Log.d("Lifecycle", "onPause")
+    }
+
+    override fun onStop() {
+        super.onStop()
+        Log.d("Lifecycle", "onStop")
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.d("Lifecycle", "onDestroy changingConfig=$isChangingConfigurations")
+    }
 }

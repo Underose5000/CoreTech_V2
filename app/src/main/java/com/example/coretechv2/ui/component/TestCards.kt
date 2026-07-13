@@ -174,6 +174,7 @@ fun AdjustmentCard(results : APICallTables.assemblyAdjustment){
         Column(modifier = Modifier.width(210.dp).fillMaxHeight(), verticalArrangement = Arrangement.Center) {
             Text(results.LINEDESCRIPTION, style = MaterialTheme.typography.titleSmall)
             Text(results.LINECODE, style = MaterialTheme.typography.labelSmall)
+            Text(results.LINENUMBER.toString(), style = MaterialTheme.typography.labelSmall)
         }
         Column(modifier = Modifier.width(80.dp).fillMaxHeight(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.End) {
             Text("%.3f".format(results.ADJUSTQTY) + results.LINEUNIT)

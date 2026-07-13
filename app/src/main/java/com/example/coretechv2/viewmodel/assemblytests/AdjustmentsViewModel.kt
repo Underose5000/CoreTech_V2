@@ -10,19 +10,13 @@ import androidx.lifecycle.viewModelScope
 import com.example.coretechv2.dataclasses.APICallTables
 import com.example.coretechv2.dataclasses.APICallTypes
 import com.example.coretechv2.dataclasses.ItemDescriptorItem
-import com.example.coretechv2.dataclasses.assemblytests.GelField
-import com.example.coretechv2.dataclasses.assemblytests.GelTimeItem
 import com.example.coretechv2.dataclasses.MessageItems
 import com.example.coretechv2.dataclasses.PopupItems
-import com.example.coretechv2.dataclasses.assemblytests.AdjustmentItem
-import com.example.coretechv2.dataclasses.assemblytests.adjustmentHasValue
-import com.example.coretechv2.dataclasses.assemblytests.gelHasValue
+import com.example.coretechv2.dataclasses.assemblydataclasses.AdjustmentItem
+import com.example.coretechv2.dataclasses.assemblydataclasses.adjustmentHasValue
 import com.example.coretechv2.repository.APICall
 import com.example.coretechv2.repository.DataStoreManager
-import com.example.coretechv2.repository.fromTimeFormatHMMSS
-import com.example.coretechv2.repository.toTimeFormatHMMSS
 import com.example.coretechv2.ui.screen.ItemLookUpScreen
-import com.example.coretechv2.ui.screen.assemblytestsandadjustments.ViscosityScreen
 import com.example.coretechv2.viewmodel.SharedViewModel
 import kotlinx.coroutines.launch
 
@@ -66,6 +60,8 @@ class AdjustmentsViewModel(private val dataStoreManager: DataStoreManager, var s
         private set
     var adjustmentRecord = mutableStateOf(AdjustmentItem())
 
+    var currentQty by mutableStateOf(0.0)
+
     /**
      * Resets the popup message visibility state.
      */
@@ -80,6 +76,10 @@ class AdjustmentsViewModel(private val dataStoreManager: DataStoreManager, var s
             ItemLookUpScreen(sharedViewModel)
         }
         openItemList.value = true
+    }
+
+    fun closeTestScreen(){
+        closeTestScreen.value = false
     }
 
     /**
@@ -104,10 +104,10 @@ class AdjustmentsViewModel(private val dataStoreManager: DataStoreManager, var s
     fun retrieveItems() {
         viewModelScope.launch {
             val call = "SELECT ITEMCODE AS CODE, ITEMDESCRIPTION AS DESCRIPTION, ITEMUNIT AS UNIT, ITEMSTATUS AS STATUS, ITEMBARCODE AS BARCODE, ITEMCATEGORY AS CATEGORY, " +
-                    "ONHANDQTY, SUPPLYQTY, DEMANDQTY, AVAILABLEQTY, FREEQTY, 'Item' AS TYPE, SYSUNIQUEID FROM ITEMMASTER where ITEMSTATUS <> 'Obsolete' " +
+                    "ONHANDQTY, SUPPLYQTY, DEMANDQTY, AVAILABLEQTY, FREEQTY, 'Item Code' AS TYPE, SYSUNIQUEID FROM ITEMMASTER where ITEMSTATUS <> 'Obsolete' " +
                     "UNION ALL " +
                     "SELECT DESCRIPTORCODE AS CODE, DESCRIPTORDESCRIPTION AS DESCRIPTION, DESCRIPTORUNIT AS UNIT, DESCRIPTORSTATUS AS STATUS, DESCRIPTORBARCODE AS BARCODE, DESCRIPTORCATEGORY AS CATEGORY, " +
-                    "NULL AS ONHANDQTY, NULL AS SUPPLYQTY, NULL AS DEMANDQTY, NULL AS AVAILABLEQTY, NULL AS FREEQTY, 'Descriptor' AS TYPE, SYSUNIQUEID FROM DESCRIPTORMASTER where DESCRIPTORSTATUS <> 'Obsolete'"
+                    "NULL AS ONHANDQTY, NULL AS SUPPLYQTY, NULL AS DEMANDQTY, NULL AS AVAILABLEQTY, NULL AS FREEQTY, 'Descriptor Code' AS TYPE, SYSUNIQUEID FROM DESCRIPTORMASTER where DESCRIPTORSTATUS <> 'Obsolete'"
 
             val itemscall: List<APICallTables.ItemDescriptor>? = apiCall.query(call)
 
@@ -121,11 +121,11 @@ class AdjustmentsViewModel(private val dataStoreManager: DataStoreManager, var s
     }
 
     fun onAdjustmentNumber(newValue: String) {
-        adjustmentRecord.value.adjustmentNumber = newValue
+        adjustmentRecord.value = adjustmentRecord.value.copy(adjustmentNumber = newValue)
     }
 
     fun onAdjustmentqty(newValue: String) {
-        adjustmentRecord.value.qty = newValue
+        adjustmentRecord.value = adjustmentRecord.value.copy(qty = newValue)
     }
 
     fun onSearchFieldChange(newValue: String) {
@@ -178,6 +178,15 @@ class AdjustmentsViewModel(private val dataStoreManager: DataStoreManager, var s
 
     }
 
+    fun currentLineNumbers(code: String):  List<APICallTables.AssemblyLines> {
+        val lines = mutableStateListOf<APICallTables.AssemblyLines>()
+
+        for (i in 0 until (sharedViewModel.currentAssemblyLines?.size ?: 1)){
+            if(sharedViewModel.currentAssemblyLines?.get(i)?.LINECODE == code) lines.add(sharedViewModel.currentAssemblyLines!![i])
+        }
+        return lines
+    }
+
     /**
      * Saves the current Gel Time test to the database.
      *
@@ -194,36 +203,72 @@ class AdjustmentsViewModel(private val dataStoreManager: DataStoreManager, var s
      * On failure:
      * - Shows error snackbar message
      */
-    fun onSave() {
-        /*viewModelScope.launch {
-            val gelTimeFormatted = toTimeFormatHMMSS(gelReading.value.hour, gelReading.value.minute, gelReading.value.second)
-            Log.d("GelTime", "Formated = " + gelTimeFormatted + ", hour = "+ gelReading.value.hour+ ", minute = "+ gelReading.value.minute+ ", second = " + gelReading.value.second)
-            var call = ""
-            if(sharedViewModel.saveType == APICallTypes.INSERT){
-                call = "INSERT INTO OSTDEF_GELTIME_TESTS " +
-                        "(ITEMCODE, ORDERNUMBER, ITEMDESCRIPTION, TESTNO, GELTIME, GELCAT, GELCATPERCENT, SYSUSERCREATED, SYSUSERMODIFIED) " +
-                        "VALUES('${sharedViewModel.currentAssemblyHeader?.ITEMCODE}', '${sharedViewModel.currentAssemblyHeader?.ORDERNUMBER}', '${sharedViewModel.currentAssemblyHeader?.ITEMDESCRIPTION}', ${gelReading.value.testNumber}, " +
-                        "'${gelTimeFormatted}', '${gelReading.value.catalyst}', '${gelReading.value.catPercent}', '${sharedViewModel.currentUser.value}', '${sharedViewModel.currentUser.value}')"
+    fun onSave(adjustment: APICallTables.assemblyAdjustment?) {
+        var lineNumber = 0
+        var assemblyLinesInsert: String? = ""
+        val currentLines = currentLineNumbers(sharedViewModel.currentItem.value.code)
+        viewModelScope.launch {
+        if (sharedViewModel.saveType == APICallTypes.INSERT) {
+            if (currentLines.isEmpty()) {
+                lineNumber = (sharedViewModel.currentAssemblyLines?.size?.plus(1)?.times(10)!!)
+                    val assemblyLinesCall = "INSERT INTO ASSEMBLYLINES " +
+                            "(ORDERNUMBER, LINECODE, LINEDESCRIPTION, LINENUMBER, LINEUNIT, CODETYPE, STEPNAME, ORDERQTY, SYSUSERCREATED, SYSUSERMODIFIED) " +
+                            "VALUES('${sharedViewModel.currentAssemblyHeader?.ORDERNUMBER}', '${sharedViewModel.currentItem.value.code}', '${sharedViewModel.currentItem.value.description}'," +
+                            "${lineNumber}, " +
+                            "'${sharedViewModel.currentItem.value.unit}', '${sharedViewModel.currentItem.value.type}', '${sharedViewModel.currentAssemblyLines?.first()?.STEPNAME}', '0','${sharedViewModel.currentUser.value}', '${sharedViewModel.currentUser.value}')"
+
+                    assemblyLinesInsert = apiCall.insertUpdateDelete(assemblyLinesCall)
+                    Log.d("onSave", assemblyLinesCall)
+
             }
-            if(sharedViewModel.saveType == APICallTypes.UPDATE){
-                call = "UPDATE OSTDEF_GELTIME_TESTS SET  " +
-                        "TESTNO = ${gelReading.value.testNumber}," +
-                        "GELTIME = '${gelTimeFormatted}'," +
-                        "GELCAT = '${gelReading.value.catalyst}'," +
-                        "GELCATPERCENT = '${gelReading.value.catPercent}'," +
+            else if (currentLines.size > 1) {
+                lineNumber = currentLines.last().LINENUMBER
+            }
+            else{
+                lineNumber = currentLines.first().LINENUMBER
+            }
+        }
+            var call = ""
+            var assemblyLinesCall = ""
+            if (sharedViewModel.saveType == APICallTypes.INSERT) {
+                call = "INSERT INTO OSTDEF_ADJUSTMENTS " +
+                        "(ORDERNUMBER, LINECODE, LINEDESCRIPTION, LINENUMBER, LINEUNIT, CODETYPE, ADJUSTNO, ADJUSTQTY, SYSUSERCREATED, SYSUSERMODIFIED) " +
+                        "VALUES('${sharedViewModel.currentAssemblyHeader?.ORDERNUMBER}', '${sharedViewModel.currentItem.value.code}', '${sharedViewModel.currentItem.value.description}', ${lineNumber}, " +
+                        "'${sharedViewModel.currentItem.value.unit}', '${sharedViewModel.currentItem.value.type}', ${adjustmentRecord.value.adjustmentNumber}, ${adjustmentRecord.value.qty}, '${sharedViewModel.currentUser.value}', '${sharedViewModel.currentUser.value}')"
+
+                assemblyLinesCall = "UPDATE ASSEMBLYLINES " +
+                        "SET ORDERQTY = ORDERQTY + ${adjustmentRecord.value.qty} " +
+                        "WHERE ORDERNUMBER = '${sharedViewModel.currentAssemblyHeader?.ORDERNUMBER}' AND LINECODE = '${sharedViewModel.currentItem.value.code}' and LINENUMBER = '$lineNumber'"
+            }
+
+            if (sharedViewModel.saveType == APICallTypes.UPDATE) {
+                Log.d("onSave", adjustmentRecord.value.qty)
+
+                call = "UPDATE OSTDEF_ADJUSTMENTS SET  " +
+                        "ADJUSTNO = ${adjustmentRecord.value.adjustmentNumber}," +
+                        "ADJUSTQTY = '${adjustmentRecord.value.qty}'," +
                         "SYSUSERMODIFIED = '${sharedViewModel.currentUser.value}'" +
-                        "WHERE SYSUNIQUEID = ${gelReading.value.sysID}"
+                        "WHERE SYSUNIQUEID = ${adjustmentRecord.value.sysID}"
+
+                assemblyLinesCall = "UPDATE ASSEMBLYLINES " +
+                        "SET ORDERQTY = ORDERQTY - ${currentQty} + ${adjustmentRecord.value.qty} " +
+                        "WHERE ORDERNUMBER = '${sharedViewModel.currentAssemblyHeader?.ORDERNUMBER}' AND LINECODE = '${sharedViewModel.currentItem.value.code}' and LINENUMBER = '${adjustmentRecord.value.adjustmentLineNumber}'"
             }
 
             val response = apiCall.insertUpdateDelete(call)
-            Log.d("API Call", call)
-            if(response == "200 OK"){
+            val assemblyLinesResponse2 = apiCall.insertUpdateDelete(assemblyLinesCall)
+            if (response == "200 OK" && assemblyLinesResponse2 == "200 OK" ) {
+                if(currentLines.isEmpty() && assemblyLinesInsert == "200 OK"){
                 closeTestScreen.value = true
-                sharedViewModel.snackBarMessage("Gel Time Saved successfully")
-            } else{
+                sharedViewModel.snackBarMessage("Adjustment Saved successfully")
+                } else {
+                    closeTestScreen.value = true
+                    sharedViewModel.snackBarMessage("Adjustment Saved successfully")
+                }
+            } else {
                 sharedViewModel.snackBarMessage("Error Saving, Please Try Again")
             }
-        }*/
+        }
     }
 
     /**
@@ -240,9 +285,12 @@ class AdjustmentsViewModel(private val dataStoreManager: DataStoreManager, var s
     fun onClear(adjustment: APICallTables.assemblyAdjustment?) {
         if (adjustment != null) {
             adjustmentRecord.value = AdjustmentItem().apply {
-                Searchfield = adjustment.LINEDESCRIPTION
-                qty = ""
+                qty = adjustment.ADJUSTQTY.toString()
+                adjustmentNumber = adjustment.ADJUSTNO.toString()
+                adjustmentLineNumber = adjustment.LINENUMBER
+                sysID = adjustment.SYSUNIQUEID.toInt()
             }
+            currentQty = adjustment.ADJUSTQTY
             viewModelScope.launch {
                 val itemCall: List<APICallTables.ItemDescriptor>? = apiCall.query("SELECT ITEMCODE AS CODE, ITEMDESCRIPTION AS DESCRIPTION, ITEMUNIT AS UNIT, ITEMSTATUS AS STATUS, ITEMBARCODE AS BARCODE, ITEMCATEGORY AS CATEGORY, " +
                         "ONHANDQTY, SUPPLYQTY, DEMANDQTY, AVAILABLEQTY, FREEQTY, 'Item' AS TYPE, SYSUNIQUEID FROM ITEMMASTER where ITEMCODE = '${adjustment.LINECODE}' " +
@@ -265,6 +313,8 @@ class AdjustmentsViewModel(private val dataStoreManager: DataStoreManager, var s
                     type = itemCall?.first()?.TYPE ?: ""
                     sysID = itemCall?.first()?.SYSUNIQUEID
                 })
+                sharedViewModel.currentItem.value = adjustmentRecord.value.item!!
+                Searchfield = adjustmentRecord.value.item?.description ?: ""
             }
         } else {
             adjustmentRecord.value = AdjustmentItem().apply {
@@ -272,7 +322,7 @@ class AdjustmentsViewModel(private val dataStoreManager: DataStoreManager, var s
                 qty = ""
             }
             viewModelScope.launch {
-                val linesCall: List<APICallTables.Count>? = apiCall.query("SELECT COUNT(*) FROM OSTDEF_ADJUSTMENTS where OrderNumber = '${sharedViewModel.currentOrderNumber.value}'")
+                val linesCall: List<APICallTables.Count>? = apiCall.query("SELECT COUNT(*) FROM (SELECT DISTINCT ADJUSTNO FROM OSTDEF_ADJUSTMENTS where OrderNumber = '${sharedViewModel.currentOrderNumber.value}')")
                 val testNumberCount = linesCall?.first()?.COUNT ?: 0
                 adjustmentRecord.value = adjustmentRecord.value.copy(adjustmentNumber = (testNumberCount + 1).toString())
             }

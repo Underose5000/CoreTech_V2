@@ -84,10 +84,10 @@ class APICall(private val dataStoreManager: DataStoreManager) {
 
 
         } catch (e: ClientRequestException) {
-            Log.d("API Call","API error: ${e.response.status}, ${e.response.bodyAsText()}")
+            Log.d("API Call","API error: \n $sqlsend\n ${e.response.status}, ${e.response.bodyAsText()}")
             null
         } catch (e: Exception) {
-            Log.d("API Call","Unexpected error: $e")
+            Log.d("API Call","Unexpected error: \n $sqlsend\n $e")
             null
         }
     }
@@ -127,10 +127,10 @@ class APICall(private val dataStoreManager: DataStoreManager) {
 
 
         } catch (e: ClientRequestException) {
-            Log.d("API Call","API error: ${e.response.status}, ${e.response.bodyAsText()}")
+            Log.d("API Call","API error: \n $sqlsend\n ${e.response.status}, ${e.response.bodyAsText()}")
             null
         } catch (e: Exception) {
-            Log.d("API Call","Unexpected error: $e")
+            Log.d("API Call","Unexpected error: \n $sqlsend\n $e")
             null
         }
     }

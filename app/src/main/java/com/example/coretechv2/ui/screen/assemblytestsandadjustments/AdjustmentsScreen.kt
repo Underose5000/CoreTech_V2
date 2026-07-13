@@ -27,6 +27,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.coretechv2.dataclasses.APICallTables
+import com.example.coretechv2.dataclasses.APICallTypes
 import com.example.coretechv2.factory.assemblytests.AdjustmentsViewModelFactory
 import com.example.coretechv2.ui.component.OutlinedStyleDoubleNumberField
 import com.example.coretechv2.ui.component.OutlinedStyleTextAndButtonField
@@ -45,6 +46,8 @@ fun AdjustmentsScreen(sharedViewModel: SharedViewModel, adjustment: APICallTable
 
     LaunchedEffect(Unit){
         viewModel.retrieveItems()
+        viewModel.onClear(adjustment)
+
     }
     LaunchedEffect(sharedViewModel.currentItem.value){
         Log.d("Launched Effect", "CurrentItem")
@@ -58,6 +61,10 @@ fun AdjustmentsScreen(sharedViewModel: SharedViewModel, adjustment: APICallTable
         sharedViewModel.popupMessageDetails = viewModel.popupMessage
         sharedViewModel.openMessagePopup()
         viewModel.openPopupMessage()
+    }
+    if(viewModel.closeTestScreen.value){
+        sharedViewModel.closePopup()
+        viewModel.closeTestScreen()
     }
 
     Column(
@@ -87,16 +94,28 @@ fun AdjustmentsScreen(sharedViewModel: SharedViewModel, adjustment: APICallTable
                 .padding(horizontal = 20.dp, vertical = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+
             Text(text = "Item")
             Row(modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically) {
+                if (sharedViewModel.saveType == APICallTypes.UPDATE) {
                 OutlinedStyleTextAndButtonField(
                     value = viewModel.Searchfield,
                     onValueChange = viewModel::onSearchFieldChange,
                     icon = Icons.Filled.Search,
-                    onClick = { viewModel.openItemList() },
+                    onClick = {},
                     modifier = Modifier.weight(6f),
+                    readOnly = true
                 )
+                } else {
+                    OutlinedStyleTextAndButtonField(
+                        value = viewModel.Searchfield,
+                        onValueChange = viewModel::onSearchFieldChange,
+                        icon = Icons.Filled.Search,
+                        onClick = { viewModel.openItemList() },
+                        modifier = Modifier.weight(6f),
+                    )
+                }
             }
             Box(){
                 if (viewModel.showSearchBox) {
@@ -155,7 +174,7 @@ fun AdjustmentsScreen(sharedViewModel: SharedViewModel, adjustment: APICallTable
                 modifier = Modifier
                     .weight(2f)
                     .padding(horizontal = 20.dp, vertical = 40.dp),
-                onClick = { viewModel.onSave() }
+                onClick = { viewModel.onSave(adjustment) }
             ) { Text(text = "Save") }
             Spacer(modifier = Modifier.weight(1f))
         }

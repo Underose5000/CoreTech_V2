@@ -1,6 +1,5 @@
 package com.example.coretechv2.ui.screen.assemblytestsandadjustments
 
-import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -26,7 +25,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.coretechv2.dataclasses.APICallTables
-import com.example.coretechv2.dataclasses.assemblytests.GelField
+import com.example.coretechv2.dataclasses.assemblydataclasses.GelField
 import com.example.coretechv2.factory.assemblytests.GelTimeViewModelFactory
 import com.example.coretechv2.ui.component.OutlinedStyleButton
 import com.example.coretechv2.ui.component.OutlinedStyleDoubleNumberField

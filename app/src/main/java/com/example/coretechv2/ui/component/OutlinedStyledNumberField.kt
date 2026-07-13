@@ -3,6 +3,7 @@ package com.example.coretechv2.ui.component
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -148,7 +149,8 @@ fun OutlinedStyleTextAndButtonField(
     value: String,
     onValueChange: (String) -> Unit,
     onClick: () -> Unit,
-    icon: ImageVector
+    icon: ImageVector,
+    readOnly: Boolean = false
 ) {
     BasicTextField(
         value = value,
@@ -161,6 +163,7 @@ fun OutlinedStyleTextAndButtonField(
             color = Color.Black
         ),
         singleLine = true,
+        readOnly = readOnly,
         modifier = Modifier
             .padding(horizontal = 20.dp)
             .width(90.dp)
@@ -193,6 +196,40 @@ fun OutlinedStyleTextAndButtonField(
                     tint = Color.Black
                 )
             }}
+        }
+    )
+}
+
+@Composable
+fun OutlinedStyleTextField(
+    modifier: Modifier = Modifier,
+    value: String,
+    onValueChange: (String) -> Unit
+) {
+    BasicTextField(
+        value = value,
+        onValueChange = { onValueChange(it) },
+        textStyle = TextStyle(
+            textAlign = TextAlign.Left,
+            color = Color.Black
+        ),
+        singleLine = false,
+        modifier = Modifier
+            .padding(horizontal = 20.dp)
+            .fillMaxWidth()
+            .height(200.dp)
+            .then(modifier),
+        maxLines = Int.MAX_VALUE,
+        decorationBox = { innerTextField ->
+            Box(
+                contentAlignment = Alignment.TopStart,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .border(1.dp, Color.Gray, RoundedCornerShape(4.dp))
+                    .padding(vertical = 4.dp, horizontal = 8.dp)
+            ) {
+                innerTextField()
+            }
         }
     )
 }

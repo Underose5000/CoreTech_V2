@@ -8,10 +8,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.coretechv2.dataclasses.APICallTables
 import com.example.coretechv2.dataclasses.APICallTypes
-import com.example.coretechv2.dataclasses.assemblytests.GelField
-import com.example.coretechv2.dataclasses.assemblytests.GelTimeItem
+import com.example.coretechv2.dataclasses.assemblydataclasses.GelField
+import com.example.coretechv2.dataclasses.assemblydataclasses.GelTimeItem
 import com.example.coretechv2.dataclasses.MessageItems
-import com.example.coretechv2.dataclasses.assemblytests.gelHasValue
+import com.example.coretechv2.dataclasses.assemblydataclasses.gelHasValue
 import com.example.coretechv2.repository.APICall
 import com.example.coretechv2.repository.DataStoreManager
 import com.example.coretechv2.repository.fromTimeFormatHMMSS
@@ -115,7 +115,6 @@ class GelTimeViewModel(private val dataStoreManager: DataStoreManager, var share
     fun onSave(){
         viewModelScope.launch {
             val gelTimeFormatted = toTimeFormatHMMSS(gelReading.value.hour, gelReading.value.minute, gelReading.value.second)
-            Log.d("GelTime", "Formated = " + gelTimeFormatted + ", hour = "+ gelReading.value.hour+ ", minute = "+ gelReading.value.minute+ ", second = " + gelReading.value.second)
             var call = ""
             if(sharedViewModel.saveType == APICallTypes.INSERT){
                 call = "INSERT INTO OSTDEF_GELTIME_TESTS " +
@@ -134,7 +133,6 @@ class GelTimeViewModel(private val dataStoreManager: DataStoreManager, var share
             }
 
             val response = apiCall.insertUpdateDelete(call)
-            Log.d("API Call", call)
             if(response == "200 OK"){
                 closeTestScreen.value = true
                 sharedViewModel.snackBarMessage("Gel Time Saved successfully")
@@ -175,7 +173,7 @@ class GelTimeViewModel(private val dataStoreManager: DataStoreManager, var share
                 catPercent = sharedViewModel.currentAssemblyHeader?.ADDITIONALFIELD_9?.replace("%", "") ?: "N/A"
             }
             viewModelScope.launch {
-                val linesCall: List<APICallTables.Count>? = apiCall.query("SELECT COUNT(*) FROM OSTDEF_GELTIME_TESTS where OrderNumber = '${sharedViewModel.currentOrderNumber.value}'")
+                val linesCall: List<APICallTables.Count>? = apiCall.query("SELECT COUNT(*) FROM (SELECT DISTINCT TESTNO FROM OSTDEF_GELTIME_TESTS where OrderNumber = '${sharedViewModel.currentOrderNumber.value}'")
                 val testNumberCount = linesCall?.first()?.COUNT ?: 0
                 gelReading.value = gelReading.value.copy(testNumber = (testNumberCount + 1).toString())
             }

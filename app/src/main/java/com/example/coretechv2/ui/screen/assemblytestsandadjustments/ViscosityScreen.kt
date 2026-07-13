@@ -26,8 +26,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.coretechv2.dataclasses.APICallTables
-import com.example.coretechv2.dataclasses.assemblytests.VisField
-import com.example.coretechv2.dataclasses.assemblytests.VisSettings
+import com.example.coretechv2.dataclasses.assemblydataclasses.VisField
+import com.example.coretechv2.dataclasses.assemblydataclasses.VisSettings
 import com.example.coretechv2.factory.assemblytests.ViscosityViewModelFactory
 import com.example.coretechv2.ui.component.OutlinedStyleButton
 import com.example.coretechv2.ui.component.OutlinedStyleDoubleNumberField
@@ -149,7 +149,7 @@ fun ViscosityScreen(sharedViewModel: SharedViewModel, test: APICallTables.viscos
                         .padding(horizontal = 20.dp, vertical = 20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(text = "Index Range")
+                    Text(text = "Thix Index Speeds")
                     OutlinedStyleButton(text = viewModel.visReading.value.indexRange, onClick = { viewModel.indexPressed() })
                     DropdownMenu(
                         expanded = viewModel.showindexList,

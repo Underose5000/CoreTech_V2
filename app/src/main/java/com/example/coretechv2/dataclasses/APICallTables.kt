@@ -54,6 +54,7 @@ class APICallTables {
         val ITEMDESCRIPTION: String,
         val ITEMUNIT: String,
         val REQUIREDDATE: String,
+        val ORDERNOTES: String,
         val ORDERQTY: Double,
         val COMPLETEQTY : Double,
         val REMAININGQTY: Double,
@@ -84,7 +85,7 @@ class APICallTables {
         val LINECODE: String,
         val LINEDESCRIPTION: String,
         val LINEUNIT : String,
-        val ORDERQTY: Double,
+        var ORDERQTY: Double,
         val TOTALISSUEDQTY: Double,
         val REMAININGQTY: Double,
         val POSITIONREFERENCE: String,
@@ -96,6 +97,16 @@ class APICallTables {
         val ADDITIONALFIELD_4: String,
         val ADDITIONALFIELD_6: String,
     )
+
+
+    @Serializable
+    data class notes(
+        val SYSUNIQUEID: Double,
+        val TYPE: String,
+        val IDNUMBER: String,
+        val NOTE: String,
+    )
+
 
 
     @Serializable
@@ -145,6 +156,88 @@ class APICallTables {
     )
 
 
+    @Serializable
+    data class assemblyLabelLayout(
+        val LABELID: LabelStyles,
+        val PAGEWIDTH: Double,
+        val PAGEHEIGHT: Double,
+        val PAGEPAD: Double,
+        val MIDWIDTH: Double,
+        val STRIPSPOS: Double,
+        val LOGOPOS: Double,
+        val LOGOSIZE: Double,
+        val LOGOOFFSET: Double,
+        val LOGOSMALLSIZE: Double,
+        val ADDPIGMENTSIZE: Double,
+        val ROADMARINESIZE: Double,
+        val QRCODESIZE: Double,
+        val PICTOSIZE: Double,
+        val COLORPOS: Double,
+        val TOPNAMEPOS: Double,
+        val BOTTOMNAMEPOS: Double,
+        val MIDNAMEPOS: Double,
+        val DGPOS: Double,
+        val VARIANTPOS: Double,
+        val VARIANTPADHOZ: Double,
+        val VARIANTPADVER: Double,
+        val SIZEPOS: Double,
+        val WARNINGPOS: Double,
+        val PICTOGAP: Double,
+        val TOPNAMEFS: Double,
+        val BOTTOMNAMEFS: Double,
+        val DGFS: Double,
+        val VARIANTFS: Double,
+        val SIZEFS: Double,
+        val HEADINGFS: Double,
+        val SUBHEADFS: Double,
+        val BODYFS: Double,
+        val SPACEING: Double,
+    )
+
+    @Serializable
+    data class assemblyLabelItemInfo(
+        val HEADERSYSUNIQUEID: Double,
+        val SYSUNIQUEID: Double,
+        val ITEMCODE: String,
+        val TOPNAME: String,
+        val MIDDLENAME: String,
+        val BOTTOMNAME: String,
+        val SIZE: String,
+        val QRCODE: String,
+        val VARIANT: String,
+        val BESTBEFORE: Int,
+        val LABELSTYLE: LabelStyles,
+        val BOXQTY: Int,
+        val ITEMBARCODE: String,
+    )
+
+    @Serializable
+    data class assemblyLabelClassInfo(
+        val HEADERSYSUNIQUEID: Double,
+        val SYSUNIQUEID: Double,
+        val GROUPTYPE: String,
+        val WARNINGSIGN: String,
+        val DIRECTIONS: String,
+        val HELPTIPTIN: String,
+        val HELPTIPPAIL: String,
+        val PRECAUTIONS: String,
+        val INGESTION: String,
+        val SKINCONTACT: String,
+        val EYECONTACT: String,
+        val SAFESTORAGE: String,
+        val PICTOGRAM1: String,
+        val PICTOGRAM2: String,
+        val COLOUR: String,
+    )
+
+
+    @Serializable
+    data class assemblyLabelDGInfo(
+        val UNNUMBER: String,
+        val PACKINGGROUP: String,
+        val DGCLASS: String,
+        val DGQUANTITY: Double,
+    )
     @Serializable
     data class VerifyUserPassword(
         val IS_VALID: Int

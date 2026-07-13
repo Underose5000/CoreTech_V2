@@ -1,4 +1,4 @@
-package com.example.coretechv2.dataclasses.assemblytests
+package com.example.coretechv2.dataclasses.assemblydataclasses
 
 import androidx.compose.runtime.MutableState
 import com.example.coretechv2.dataclasses.ItemDescriptorItem
@@ -8,6 +8,7 @@ data class AdjustmentItem (
     var item: ItemDescriptorItem? = null,
     var adjustmentNumber: String = "1",
     var qty : String = "",
+    var adjustmentLineNumber: Int = 0,
     var sysID: Int? = null
 )
 

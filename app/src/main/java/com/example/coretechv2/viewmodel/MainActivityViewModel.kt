@@ -11,6 +11,8 @@ import com.example.coretechv2.dataclasses.APICallTables
 import com.example.coretechv2.repository.APICall
 import com.example.coretechv2.repository.DataStoreManager
 import com.example.coretechv2.ui.screen.APISettingsScreen
+import io.ktor.client.plugins.ClientRequestException
+import io.ktor.client.statement.bodyAsText
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -25,10 +27,16 @@ class MainActivityViewModel(private val dataStoreManager: DataStoreManager) : Vi
 
     fun verifyConnection(){
         viewModelScope.launch {
-        val connectionConfirmed : List<APICallTables.VerifyConnection>? = apiCall.query("SELECT * FROM VERIFY_CONNECTION")
-            if (connectionConfirmed?.firstOrNull()?.IS_CONNECTED == 1){
-                ConnectedSuccess = true
-            }else{
+            try {
+                val connectionConfirmed: List<APICallTables.VerifyConnection>? = apiCall.query("SELECT * FROM VERIFY_CONNECTION")
+                if (connectionConfirmed?.firstOrNull()?.IS_CONNECTED == 1) {
+                    ConnectedSuccess = true
+                } else {
+                    ConnectedSuccess = false
+                }
+            } catch (e: ClientRequestException) {
+                ConnectedSuccess = false
+            } catch (e: Exception) {
                 ConnectedSuccess = false
             }
         }

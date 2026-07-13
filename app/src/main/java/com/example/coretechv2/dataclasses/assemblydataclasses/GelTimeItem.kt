@@ -1,4 +1,4 @@
-package com.example.coretechv2.dataclasses.assemblytests
+package com.example.coretechv2.dataclasses.assemblydataclasses
 
 import androidx.compose.runtime.MutableState
 
