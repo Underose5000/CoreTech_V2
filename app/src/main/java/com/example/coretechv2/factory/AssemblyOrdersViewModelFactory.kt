@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.coretechv2.repository.DataStoreManager
 import com.example.coretechv2.viewmodel.AssemblyOrdersViewModel
 import com.example.coretechv2.viewmodel.LoginViewModel
+import com.example.coretechv2.viewmodel.SharedViewModel
 
 /**
  * Factory class used to create instances of [AssemblyOrdersViewModel]
@@ -22,7 +23,8 @@ import com.example.coretechv2.viewmodel.LoginViewModel
  * @property context Application context used to initialize DataStoreManager.
  */
 class AssemblyOrdersViewModelFactory(
-    private val context: Context
+    private val context: Context,
+    val sharedViewModel: SharedViewModel
 ) : ViewModelProvider.Factory{
 
     /**
@@ -40,6 +42,6 @@ class AssemblyOrdersViewModelFactory(
         val dataStoreManager =
             DataStoreManager(context.applicationContext)
 
-        return AssemblyOrdersViewModel(dataStoreManager) as T
+        return AssemblyOrdersViewModel(dataStoreManager,sharedViewModel) as T
     }
 }

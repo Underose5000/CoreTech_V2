@@ -63,7 +63,6 @@ enum class VisField {
  * @return true if at least one viscosity field is not blank
  */
 fun visHasValue(item: MutableState<ViscosityItem>): Boolean {
-    Log.d("Vis Reading (Value Check)", item.value.vis60+item.value.vis30)
     if (item.value.vis60.isNotBlank() ||
         item.value.vis30.isNotBlank() ||
         item.value.vis12.isNotBlank() ||

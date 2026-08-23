@@ -8,6 +8,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.coretechv2.ui.screen.AssemblyOrderDetails
 import com.example.coretechv2.ui.screen.AssemblyOrdersScreen
 import com.example.coretechv2.ui.screen.HomeScreen
+import com.example.coretechv2.ui.screen.PrintBoxLabelsScreen
 import com.example.coretechv2.viewmodel.SharedViewModel
 
 
@@ -50,6 +51,12 @@ fun AppNavGraph(navController: NavHostController = rememberNavController(),
         }
         composable("assemblyorderdetail") {
             AssemblyOrderDetails(
+                navController = navController,
+                sharedViewModel
+            )
+        }
+        composable("printboxlabels") {
+            PrintBoxLabelsScreen(
                 navController = navController,
                 sharedViewModel
             )

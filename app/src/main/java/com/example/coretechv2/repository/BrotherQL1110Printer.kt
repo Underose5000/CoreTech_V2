@@ -44,14 +44,14 @@ fun discoverBrotherPrinter(callback: (foundBrotherPrinter: NetPrinter?) -> Unit)
     var printercount = 0
 
     discovery = NetworkDiscovery { printer ->
-        Log.d("BrotherDiscovery", "Found printer: ${printer.modelName} at ${printer.ipAddress}")
+        
         callback(printer)
         printercount += 1
     }
 
     CoroutineScope(Dispatchers.Default).launch {
         delay(5_000)
-        Log.d("BrotherDiscovery", "Discovery Stopped")
+        
         if(printercount == 0){
             callback(null)
         }
@@ -59,7 +59,7 @@ fun discoverBrotherPrinter(callback: (foundBrotherPrinter: NetPrinter?) -> Unit)
     }
     val started = discovery.start()
     if (!started) {
-        Log.d("BrotherQL1110Printer", "Discovery already running")
+        
     }
 }
 
@@ -76,20 +76,20 @@ fun printBrotherImage(
                 val original = imageBytes.asAndroidBitmap()
                 val bitmap = original.copy(Bitmap.Config.ARGB_8888, false)
 
-                Log.d("BrotherQL1110Printer", "printer Ip = $printerIp")
+                
                 val processedBitmap = createBitmap(bitmap.width, bitmap.height)
                 val canvas = Canvas(processedBitmap)
-                Log.d("BrotherQL1110Printer", "printer 1")
+                
                 canvas.drawColor("#FFFFFF".toColorInt())
-                Log.d("BrotherQL1110Printer", "printer 2")
+                
                 canvas.drawBitmap(bitmap, 0f, 0f, null)
-                Log.d("BrotherQL1110Printer", "printer canvas ready")
+                
 
                 val channel = Channel.newWifiChannel(printerIp)
                 val openResult = PrinterDriverGenerator.openChannel(channel)
                 val errorOpen = openResult.error
                 if (errorOpen.getCode() != OpenChannelError.ErrorCode.NoError || openResult.driver == null) {
-                    Log.d("BrotherQL1110Printer", "Failed to open channel: ${errorOpen.getCode()}")
+                    
                 }
                 val printerDriver = openResult.driver!!
 
@@ -111,9 +111,9 @@ fun printBrotherImage(
                 val printError = printerDriver.printImage(processedBitmap, printSettings)
 
                 printerDriver.closeChannel()
-                Log.d("BrotherQL1110Printer", "printing done = $printError")
+                
             } else {
-                Log.d("BrotherQL1110Printer", "imageBitmap empty")
+                
             }
 
         } catch (e: Exception) {

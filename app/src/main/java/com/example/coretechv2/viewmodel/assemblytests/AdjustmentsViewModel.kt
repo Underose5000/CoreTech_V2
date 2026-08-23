@@ -107,7 +107,7 @@ class AdjustmentsViewModel(private val dataStoreManager: DataStoreManager, var s
                     "ONHANDQTY, SUPPLYQTY, DEMANDQTY, AVAILABLEQTY, FREEQTY, 'Item Code' AS TYPE, SYSUNIQUEID FROM ITEMMASTER where ITEMSTATUS <> 'Obsolete' " +
                     "UNION ALL " +
                     "SELECT DESCRIPTORCODE AS CODE, DESCRIPTORDESCRIPTION AS DESCRIPTION, DESCRIPTORUNIT AS UNIT, DESCRIPTORSTATUS AS STATUS, DESCRIPTORBARCODE AS BARCODE, DESCRIPTORCATEGORY AS CATEGORY, " +
-                    "NULL AS ONHANDQTY, NULL AS SUPPLYQTY, NULL AS DEMANDQTY, NULL AS AVAILABLEQTY, NULL AS FREEQTY, 'Descriptor Code' AS TYPE, SYSUNIQUEID FROM DESCRIPTORMASTER where DESCRIPTORSTATUS <> 'Obsolete'"
+                    "NULL AS ONHANDQTY, NULL AS SUPPLYQTY, NULL AS DEMANDQTY, NULL AS AVAILABLEQTY, NULL AS FREEQTY, 'Descriptor Code' AS TYPE, SYSUNIQUEID FROM DESCRIPTORMASTER where DESCRIPTORSTATUS <> 'Obsolete' order by 12 DESC, 1 ASC"
 
             val itemscall: List<APICallTables.ItemDescriptor>? = apiCall.query(call)
 
@@ -218,7 +218,7 @@ class AdjustmentsViewModel(private val dataStoreManager: DataStoreManager, var s
                             "'${sharedViewModel.currentItem.value.unit}', '${sharedViewModel.currentItem.value.type}', '${sharedViewModel.currentAssemblyLines?.first()?.STEPNAME}', '0','${sharedViewModel.currentUser.value}', '${sharedViewModel.currentUser.value}')"
 
                     assemblyLinesInsert = apiCall.insertUpdateDelete(assemblyLinesCall)
-                    Log.d("onSave", assemblyLinesCall)
+                    
 
             }
             else if (currentLines.size > 1) {
@@ -242,7 +242,7 @@ class AdjustmentsViewModel(private val dataStoreManager: DataStoreManager, var s
             }
 
             if (sharedViewModel.saveType == APICallTypes.UPDATE) {
-                Log.d("onSave", adjustmentRecord.value.qty)
+                
 
                 call = "UPDATE OSTDEF_ADJUSTMENTS SET  " +
                         "ADJUSTNO = ${adjustmentRecord.value.adjustmentNumber}," +
@@ -341,22 +341,39 @@ class AdjustmentsViewModel(private val dataStoreManager: DataStoreManager, var s
      * If no data exists:
      * - Immediately closes the test screen
      */
-    fun onCancel() {
-        if (adjustmentHasValue(adjustmentRecord)) {
-            popupMessage.message = "Test Results are not saved\nleave without saving?"
-            popupMessage.messageButton1Text = "No"
-            popupMessage.onClickAction1 = {
-                closePopupMessage.value = true
-            }
-            popupMessage.messageButton2Text = "Yes"
-            popupMessage.onClickAction2 = {
-                closePopupMessage.value = true
+    fun onCancel(adjustment: APICallTables.assemblyAdjustment?) {
+        if (adjustment != null) {
+            if (adjustmentRecord.value.adjustmentNumber != adjustment.ADJUSTNO.toString() ||
+                adjustmentRecord.value.qty != adjustment.ADJUSTQTY.toString()) {
+                popupMessage.message = "Adjustments are not saved\nleave without saving?"
+                popupMessage.messageButton1Text = "No"
+                popupMessage.onClickAction1 = {
+                    closePopupMessage.value = true
+                }
+                popupMessage.messageButton2Text = "Yes"
+                popupMessage.onClickAction2 = {
+                    closePopupMessage.value = true
+                    closeTestScreen.value = true
+                }
+                openPopupMessage.value = true
+            } else{
                 closeTestScreen.value = true
             }
-            openPopupMessage.value = true
+        } else if (adjustmentHasValue(adjustmentRecord)) {
+                    popupMessage.message = "Adjustments are not saved\nleave without saving?"
+                    popupMessage.messageButton1Text = "No"
+                    popupMessage.onClickAction1 = {
+                        closePopupMessage.value = true
+                    }
+                    popupMessage.messageButton2Text = "Yes"
+                    popupMessage.onClickAction2 = {
+                        closePopupMessage.value = true
+                        closeTestScreen.value = true
+                    }
+                    openPopupMessage.value = true
 
         } else {
-            closeTestScreen.value = true
+                    closeTestScreen.value = true
         }
     }
 }

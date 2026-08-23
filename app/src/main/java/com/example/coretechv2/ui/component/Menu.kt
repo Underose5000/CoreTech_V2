@@ -1,6 +1,7 @@
 package com.example.coretechv2.ui.component
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,6 +14,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -50,7 +52,8 @@ fun Menu(
     Column(
         modifier = Modifier
             .width(200.dp)
-            .background(Color.White)
+            .background(MaterialTheme.colorScheme.primaryContainer)
+            .border(1.dp, MaterialTheme.colorScheme.onPrimaryContainer)
             .padding(horizontal = 8.dp)
     ) {
         LazyColumn(
@@ -65,7 +68,7 @@ fun Menu(
                         .padding(horizontal = 10.dp, vertical = 8.dp),
                 ) {
                     if (item.icon != null){Icon(imageVector = item.icon, contentDescription = null)}
-                    Text(text = item.title)
+                    Text(text = item.title())
                 }
                 if (index < menuList.lastIndex)
                 HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)

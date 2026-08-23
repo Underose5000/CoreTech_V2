@@ -291,19 +291,19 @@ fun ViscosityScreen(sharedViewModel: SharedViewModel, test: APICallTables.viscos
                 Button(
                     modifier = Modifier
                         .weight(2f)
-                        .padding(horizontal = 20.dp, vertical = 40.dp),
+                        .padding(horizontal = 20.dp, vertical = 20.dp),
                     onClick = { viewModel.onClear(test) }
                 ) { Text(text = "Clear") }
                 Button(
                     modifier = Modifier
                         .weight(2f)
-                        .padding(horizontal = 20.dp, vertical = 40.dp),
-                    onClick = { viewModel.onCancel() }
+                        .padding(horizontal = 20.dp, vertical = 20.dp),
+                    onClick = { viewModel.onCancel(test) }
                 ) { Text(text = "Cancel") }
                 Button(
                     modifier = Modifier
                         .weight(2f)
-                        .padding(horizontal = 20.dp, vertical = 40.dp),
+                        .padding(horizontal = 20.dp, vertical = 20.dp),
                     onClick = { viewModel.onTestSave() }
                 ) { Text(text = "Save") }
                 Spacer(modifier = Modifier.weight(1f))

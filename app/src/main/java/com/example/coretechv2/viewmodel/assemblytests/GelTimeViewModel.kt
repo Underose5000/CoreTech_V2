@@ -190,8 +190,32 @@ class GelTimeViewModel(private val dataStoreManager: DataStoreManager, var share
      * If no data exists:
      * - Immediately closes the test screen
      */
-    fun onCancel(){
-        if (gelHasValue(gelReading)){
+    fun onCancel(test: APICallTables.gelTimeTest?) {
+        if (test != null) {
+            val (h, m, s) = fromTimeFormatHMMSS(test.GELTIME)
+            if (gelReading.value.testNumber != test.TESTNO.toString() ||
+                gelReading.value.catalyst != test.GELCAT ||
+                gelReading.value.catPercent != test.GELCATPERCENT ||
+                gelReading.value.hour != h ||
+                gelReading.value.minute != m ||
+                gelReading.value.second != s
+            ) {
+                popupMessage.message = "Test Results are not saved\nleave without saving?"
+                popupMessage.messageButton1Text = "No"
+                popupMessage.onClickAction1 = {
+                    closePopupMessage.value = true
+                }
+                popupMessage.messageButton2Text = "Yes"
+                popupMessage.onClickAction2 = {
+                    closePopupMessage.value = true
+                    closeTestScreen.value = true
+                }
+                openPopupMessage.value = true
+
+            } else {
+                closeTestScreen.value = true
+            }
+        } else if (gelHasValue(gelReading)) {
             popupMessage.message = "Test Results are not saved\nleave without saving?"
             popupMessage.messageButton1Text = "No"
             popupMessage.onClickAction1 = {

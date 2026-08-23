@@ -1,8 +1,13 @@
 package com.example.coretechv2.viewmodel
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.coretechv2.dataclasses.APICallTables
@@ -25,6 +30,8 @@ class LoginViewModel(private val dataStoreManager: DataStoreManager) : ViewModel
 
     var showErrorMessage = mutableStateOf(false)
         private set
+    var showPassword = mutableStateOf(false)
+        private set
 
     var username by mutableStateOf("")
         private set
@@ -36,16 +43,20 @@ class LoginViewModel(private val dataStoreManager: DataStoreManager) : ViewModel
         private set
 
     fun onUsernameChange(newValue: String){
+        showErrorMessage.value = false
         username = newValue
     }
 
     fun onPasswordChange(newValue: String){
+        showErrorMessage.value = false
         password = newValue
+    }
+    fun onShowPassword(){
+        showPassword.value = !showPassword.value
     }
 
     fun consumeLoginSuccess(){
         loginSuccess = false
-        username = ""
         password = ""
     }
 

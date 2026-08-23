@@ -1,6 +1,5 @@
 package com.example.coretechv2.ui.component
 
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.background
@@ -55,7 +54,6 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.compose.rememberNavController
 import com.example.coretechv2.dataclasses.APICallTables
 import com.example.coretechv2.dataclasses.LabelElements
 import com.example.coretechv2.dataclasses.LabelStyles
@@ -64,13 +62,11 @@ import com.example.coretechv2.dataclasses.PrinterType
 import com.example.coretechv2.repository.findPrinters
 import com.example.coretechv2.repository.labelToBitmap
 import com.example.coretechv2.repository.printWithEpson
-import com.example.coretechv2.ui.screen.AssemblyOrderDetails
 import com.example.coretechv2.ui.theme.screenBackground
 import com.example.coretechv2.viewmodel.SharedViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 
 fun mmToDp(mm: Double): Dp {
@@ -91,7 +87,7 @@ fun mmToPixels(mm: Double, dpi: Int = 300): Int {
 @Composable
 fun LabelPreview(
     labelElement: LabelElements,
-    numOfCopies: String = "1",
+    numOfCopies: Int = 1,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
@@ -99,11 +95,13 @@ fun LabelPreview(
     val selectedPrinter = remember { mutableStateOf<PrinterType?>(null) }
     var settingsWindow by remember { mutableStateOf(false) }
     var indexPressed by remember { mutableStateOf(false) }
-    var numberOfCopies = remember { mutableStateOf(numOfCopies) }
+    var numberOfCopies = remember { mutableStateOf("1") }
     val _snackbarEvent = MutableSharedFlow<String>()
     val snackbarEvent = _snackbarEvent
 
+
     LaunchedEffect(Unit){
+        numberOfCopies.value = numOfCopies.toString()
         findPrinters(context){ printer ->
             foundPrinters.add(printer)
         }
@@ -116,7 +114,6 @@ fun LabelPreview(
     }
 
     LaunchedEffect(foundPrinters.size){
-        Log.d("LaunchedEffect","Ran")
         if (selectedPrinter.value == null && foundPrinters.isNotEmpty()) {
             if (labelElement.itemInfo.LABELSTYLE.printerSection() == "brotherQL1110"){
                 for (x in 0 until foundPrinters.size){
@@ -256,7 +253,6 @@ fun LabelPreview(
                             .requiredSize(size.width,size.height)
                     ) {
                         imageBitmap = labelToBitmap(labelElement.labelLayout.PAGEWIDTH, labelElement.labelLayout.PAGEHEIGHT,{ labelElement.itemInfo.LABELSTYLE.FunctionCall(labelElement) })
-                        Log.d("Label size", "${imageBitmap?.width} x ${imageBitmap?.height}")
                     }
 
                 }
@@ -431,7 +427,7 @@ fun LabelViewPreview() {
         PICTOGRAM2 = "Flame",
         COLOUR =     "00000000" //"FFFF9F00"//
     )
-    val dgInfo = APICallTables.assemblyLabelDGInfo(
+    val dgInfo = APICallTables.itemDGInfo(
         UNNUMBER = "1886",
         PACKINGGROUP = "III",
         DGCLASS = "3",
@@ -447,7 +443,7 @@ fun LabelViewPreview() {
         sharedViewModel = sharedViewModel
     )
     
-    LabelPreview(labelElement, "1")
+    LabelPreview(labelElement, 1)
     
 }
 

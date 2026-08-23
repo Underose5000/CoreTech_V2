@@ -1,5 +1,6 @@
 package com.example.coretechv2.viewmodel
 
+import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -12,30 +13,11 @@ import com.example.coretechv2.repository.DataStoreManager
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import androidx.core.net.toUri
 
 class APISettingViewModel(private val dataStoreManager: DataStoreManager) : ViewModel() {
 
     private val apiCall = APICall(dataStoreManager)
-
-    init {
-        viewModelScope.launch {
-            dataStoreManager.apiUrlFlow.collect { storedUrl ->
-                newurl = storedUrl ?: ""
-            }
-        }
-
-        viewModelScope.launch {
-            dataStoreManager.apiPortFlow.collect { storedPort ->
-                newport = storedPort ?: ""
-            }
-        }
-
-        viewModelScope.launch {
-            dataStoreManager.apiKeyFlow.collect { storedKey ->
-                newkey = storedKey ?: ""
-            }
-        }
-    }
 
     val oldurl : String = runBlocking {
         dataStoreManager.apiUrlFlow.firstOrNull() ?: ""
@@ -66,6 +48,37 @@ class APISettingViewModel(private val dataStoreManager: DataStoreManager) : View
     var newkey by mutableStateOf("")
         private set
 
+    var scannedCode = mutableStateOf("")
+
+    var showScanner = mutableStateOf(false)
+        private set
+
+    var cameraAccess = mutableStateOf(false)
+        private set
+
+    init {
+        viewModelScope.launch {
+            dataStoreManager.apiUrlFlow.collect { storedUrl ->
+                newurl = storedUrl ?: ""
+            }
+        }
+
+        viewModelScope.launch {
+            dataStoreManager.apiPortFlow.collect { storedPort ->
+                newport = storedPort ?: ""
+            }
+        }
+
+        viewModelScope.launch {
+            dataStoreManager.apiKeyFlow.collect { storedKey ->
+                newkey = storedKey ?: ""
+            }
+        }
+    }
+
+
+
+
     fun onUrlChange(newValue: String){
         newurl = newValue
     }
@@ -81,17 +94,17 @@ class APISettingViewModel(private val dataStoreManager: DataStoreManager) : View
     fun connect(){
         viewModelScope.launch {
             showErrorMessage.value = false
-            Log.d("API Setting", newurl)
+            
             if (newurl.contains("https://") || newurl.contains("http://") ){
                 newurl = newurl.removePrefix("https://")
                 newurl = newurl.removePrefix("http://")
             }
-            Log.d("API Setting", newurl)
+            
 
             dataStoreManager.saveApiSettings(newurl.trim(), newport.trim(), newkey.trim())
 
             val connectionConfirmed : List<APICallTables.VerifyConnection>? = apiCall.query("SELECT * FROM VERIFY_CONNECTION")
-            Log.d("API Setting", "connection Confirmed = $connectionConfirmed")
+            
             if (connectionConfirmed?.firstOrNull()?.IS_CONNECTED == 1){
                 ConnectedSuccess = true
             } else{
@@ -101,5 +114,25 @@ class APISettingViewModel(private val dataStoreManager: DataStoreManager) : View
             }
 
         }
+    }
+
+    fun scanQR(){
+        showScanner.value = true
+    }
+
+    fun onQRCodeScanned(scannedCode: String){
+        if(scannedCode.isNotEmpty()) {
+            val uri = scannedCode.toUri()
+            if (!uri.host.isNullOrEmpty()) { newurl = uri.host!! }
+            if (uri.port != 0) { newport = uri.port.toString() }
+            if (!uri.getQueryParameter("key").isNullOrEmpty()) { newkey = uri.getQueryParameter("key")!! }
+            closeScanner()
+        }
+    }
+    fun closeScanner(){
+        showScanner.value = false
+    }
+    fun onCameraAccess(){
+        cameraAccess.value = true
     }
 }

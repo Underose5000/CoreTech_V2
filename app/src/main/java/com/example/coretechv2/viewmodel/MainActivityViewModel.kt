@@ -24,7 +24,24 @@ class MainActivityViewModel(private val dataStoreManager: DataStoreManager) : Vi
     var ConnectedSuccess by mutableStateOf(true)
         private set
 
+    var isLoggedIn = mutableStateOf(false)
+        private set
+    var apiConnected = mutableStateOf(true)
+        private set
 
+    var currentUser = mutableStateOf("")
+        private set
+
+    fun onApiConnected(){
+        apiConnected.value = ConnectedSuccess
+    }
+
+    fun onIsLoggedInFalse(){
+        isLoggedIn.value = false
+    }
+    fun onIsLoggedInTrue(){
+        isLoggedIn.value = true
+    }
     fun verifyConnection(){
         viewModelScope.launch {
             try {

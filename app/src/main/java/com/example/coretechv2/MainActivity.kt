@@ -5,12 +5,15 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
+import com.example.coretechv2.factory.AssemblyOrderDetailsViewModelFactory
 import com.example.coretechv2.factory.MainActivityViewModelFactory
+import com.example.coretechv2.factory.SharedViewModelFactory
 import com.example.coretechv2.navigation.AppNavGraph
 import com.example.coretechv2.ui.component.ButtonMessage
 import com.example.coretechv2.ui.component.PopupWindow
@@ -22,36 +25,32 @@ import com.example.coretechv2.viewmodel.SharedViewModel
 
 class MainActivity : ComponentActivity() {
 
-    private var isLoggedIn = mutableStateOf(false)
-    private var apiConnected = mutableStateOf(true)
-    private var currentUser = mutableStateOf("")
-
+    private val viewModel: MainActivityViewModel by viewModels {
+        MainActivityViewModelFactory(this)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Log.d("Lifecycle", "onCreate")
+        
         enableEdgeToEdge()
         setContent {
             val context = LocalContext.current
             val navController = rememberNavController()
-            val viewModel: MainActivityViewModel = viewModel(
-                factory = MainActivityViewModelFactory(context)
-            )
-            val sharedViewModel: SharedViewModel = viewModel()
+            val sharedViewModel: SharedViewModel = viewModel(factory = SharedViewModelFactory(context))
             viewModel.verifyConnection()
-
-            apiConnected.value = viewModel.ConnectedSuccess
-            sharedViewModel.currentUser = currentUser
+            viewModel.onApiConnected()
+            sharedViewModel.currentUser = viewModel.currentUser
 
             CoreTechV2Theme {
                 Box{
                     AppNavGraph(navController = navController, sharedViewModel = sharedViewModel)
-                    if (!isLoggedIn.value){
+                    //viewModel.onIsLoggedInTrue()
+                    if (!viewModel.isLoggedIn.value){
                         LoginScreen(
-                            currentUser.value,
-                            onLoginSuccess = { isLoggedIn.value = true },
+                            viewModel.currentUser.value,
+                            onLoginSuccess = { viewModel.onIsLoggedInTrue() },
                             ondifferentUser = {
-                                currentuser -> currentUser.value = currentuser
+                                currentuser -> viewModel.currentUser.value = currentuser.uppercase()
                                 navController.navigate("home"){
                                     popUpTo(navController.graph.startDestinationId) {inclusive = true}
                                     launchSingleTop = true
@@ -61,16 +60,16 @@ class MainActivity : ComponentActivity() {
 
                     }
                     if (sharedViewModel.showPopup.value){
-                        Log.d("popup","Popup called")
+                        
                         PopupWindow(sharedViewModel.popupDetails)
                     }
                     if (sharedViewModel.showMessagePopup.value){
-                        Log.d("popup","Message called")
+                        
                         ButtonMessage(sharedViewModel.popupMessageDetails)
                     }
 
-                    if (!apiConnected.value) {
-                        APISettingsScreen(onConnectedSuccess = {apiConnected.value = true})
+                    if (!viewModel.apiConnected.value) {
+                        APISettingsScreen(onConnectedSuccess = {viewModel.apiConnected.value = true})
                     }
                 }
             }
@@ -78,26 +77,32 @@ class MainActivity : ComponentActivity() {
     }
     override fun onResume() {
         super.onResume()
-        isLoggedIn.value = false
-        Log.d("Lifecycle", "onResume")
+        
     }
     override fun onStart() {
         super.onStart()
-        Log.d("Lifecycle", "onStart")
+        
     }
 
     override fun onPause() {
         super.onPause()
-        Log.d("Lifecycle", "onPause")
+        if(!isChangingConfigurations){
+            viewModel.onIsLoggedInFalse()
+        }
+        
     }
 
     override fun onStop() {
         super.onStop()
-        Log.d("Lifecycle", "onStop")
+
+        
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        Log.d("Lifecycle", "onDestroy changingConfig=$isChangingConfigurations")
+        if(!isChangingConfigurations){
+            viewModel.onIsLoggedInFalse()
+        }
+        
     }
 }

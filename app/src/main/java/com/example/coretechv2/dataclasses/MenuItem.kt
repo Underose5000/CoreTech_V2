@@ -16,7 +16,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
  * @property icon Optional icon displayed alongside the title.
  */
 data class MenuItem(
-    val title: String,
+    val title: () -> String,
     val onClick: () -> Unit,
     val icon: ImageVector? = null,
 )

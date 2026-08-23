@@ -17,6 +17,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.SegmentedButtonDefaults.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -51,7 +53,10 @@ import androidx.compose.ui.unit.dp
 fun OutlinedStyleDoubleNumberField(
     modifier: Modifier = Modifier,
     value: String,
-    onValueChange: (String) -> Unit
+    onValueChange: (String) -> Unit,
+    textStyle: TextStyle = TextStyle(
+        textAlign = TextAlign.Center,
+        color = Color.Black)
 ) {
     BasicTextField(
         value = value,
@@ -63,10 +68,7 @@ fun OutlinedStyleDoubleNumberField(
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Number
         ),
-        textStyle = TextStyle(
-            textAlign = TextAlign.Center,
-            color = Color.Black
-        ),
+        textStyle = textStyle,
         singleLine = true,
         modifier = Modifier
             .padding(horizontal = 20.dp)
@@ -107,7 +109,10 @@ fun OutlinedStyleDoubleNumberField(
 fun OutlinedStyleIntNumberField(
     modifier: Modifier = Modifier,
     value: String,
-    onValueChange: (String) -> Unit
+    onValueChange: (String) -> Unit,
+    textStyle: TextStyle = TextStyle(
+        textAlign = TextAlign.Center,
+        color = Color.Black)
 ) {
     BasicTextField(
         value = value,
@@ -119,10 +124,7 @@ fun OutlinedStyleIntNumberField(
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Number
         ),
-        textStyle = TextStyle(
-            textAlign = TextAlign.Center,
-            color = Color.Black
-        ),
+        textStyle = textStyle,
         singleLine = true,
         modifier = Modifier
             .padding(horizontal = 20.dp)
@@ -156,7 +158,7 @@ fun OutlinedStyleTextAndButtonField(
         value = value,
         onValueChange = { onValueChange(it) },
         keyboardOptions = KeyboardOptions(
-            keyboardType = KeyboardType.Number
+            keyboardType = KeyboardType.Text
         ),
         textStyle = TextStyle(
             textAlign = TextAlign.Start,
@@ -223,6 +225,40 @@ fun OutlinedStyleTextField(
         decorationBox = { innerTextField ->
             Box(
                 contentAlignment = Alignment.TopStart,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .border(1.dp, Color.Gray, RoundedCornerShape(4.dp))
+                    .padding(vertical = 4.dp, horizontal = 8.dp)
+            ) {
+                innerTextField()
+            }
+        }
+    )
+}
+
+@Composable
+fun OutlinedStyleTextLine(
+    modifier: Modifier = Modifier,
+    value: String,
+    onValueChange: (String) -> Unit
+) {
+    BasicTextField(
+        value = value,
+        onValueChange = { onValueChange(it) },
+        textStyle = TextStyle(
+            textAlign = TextAlign.Left,
+            color = Color.Black
+        ),
+        singleLine = true,
+        modifier = Modifier
+            .padding(horizontal = 20.dp)
+            .fillMaxWidth()
+            .height(45.dp)
+            .then(modifier),
+        maxLines = Int.MAX_VALUE,
+        decorationBox = { innerTextField ->
+            Box(
+                contentAlignment = Alignment.CenterStart,
                 modifier = Modifier
                     .fillMaxSize()
                     .border(1.dp, Color.Gray, RoundedCornerShape(4.dp))

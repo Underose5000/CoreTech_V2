@@ -1,6 +1,8 @@
 package com.example.coretechv2.repository
 
 import android.util.Log
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 /**
  * Converts separate hour, minute, and second strings into a formatted time string.
@@ -48,7 +50,7 @@ fun toTimeFormatHMMSS(H: String, M: String, S: String): String {
  * @return True if the string contains only digits, otherwise false.
  */
 fun validTime(t: String): Boolean {
-    Log.d("Time","Time = " + t)
+    
     return t.matches(Regex("^\\d*\$"))
 }
 
@@ -74,4 +76,10 @@ fun fromTimeFormatHMMSS(time: String) : Triple<String, String, String>{
         return Triple(timesplit[0],timesplit[1],timesplit[2])
     }
     return Triple("Error","Error","Error")
+}
+
+fun toDateFormatYYYYMMDD(date: LocalDate): String {
+    val formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd")
+    val formatedDate = date.format(formatter)
+    return formatedDate.toString()
 }

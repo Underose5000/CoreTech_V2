@@ -171,16 +171,12 @@ class ViscosityViewModel(private val dataStoreManager: DataStoreManager, var sha
                         "WHERE SYSUNIQUEID = ${visReading.value.sysID}"
             }
 
-            Log.d("Test Save","Call =" + call)
             val response = apiCall.insertUpdateDelete(call)
 
-            Log.d("Test Save","response =" + response)
             if(response == "200 OK"){
-                Log.d("Test Save","If = True")
                 closeTestScreen.value = true
                 sharedViewModel.snackBarMessage("Viscosity Saved successfully")
             } else{
-                Log.d("Test Save","Else = True")
                 sharedViewModel.snackBarMessage("Error Saving, Please Try Again")
             }
         }
@@ -241,22 +237,57 @@ class ViscosityViewModel(private val dataStoreManager: DataStoreManager, var sha
      * If no data exists:
      * - Immediately closes the test screen
      */
-    fun onCancel(){
-        if (visHasValue(visReading)){
-            popupMessage.message = "Test Results are not saved\nleave without saving?"
-            popupMessage.messageButton1Text = "No"
-            popupMessage.onClickAction1 = {
-                closePopupMessage.value = true
-            }
-            popupMessage.messageButton2Text = "Yes"
-            popupMessage.onClickAction2 = {
-                closePopupMessage.value = true
+    fun onCancel(test: APICallTables.viscosityTest?){
+        if(test != null) {
+            var ratio = "N/A"
+            if (kotlin.math.round((test.READING6/test.READING60) * 10 * 10) / 10 == test.INDEXREADING){ ratio = "6/60"}
+            if (kotlin.math.round((test.READING3/test.READING30) * 10 * 10) / 10 == test.INDEXREADING){ ratio = "3/30"}
+            if (kotlin.math.round((test.READING0_6/test.READING6) * 10 * 10) / 10 == test.INDEXREADING){ ratio = "0.6/6"}
+            if (kotlin.math.round((test.READING0_3/test.READING3) * 10 * 10) / 10 == test.INDEXREADING){ ratio = "0.3/3"}
+            if (visReading.value.testNumber != test.TESTNO.toString() ||
+                visReading.value.spindle != test.SPINDLE ||
+                visReading.value.indexRange != ratio ||
+                visReading.value.vis60 != test.READING60.toString() ||
+                visReading.value.vis30 != test.READING30.toString() ||
+                visReading.value.vis12 != test.READING12.toString() ||
+                visReading.value.vis06 != test.READING6.toString() ||
+                visReading.value.vis03 != test.READING3.toString() ||
+                visReading.value.vis1_5 != test.READING1_5.toString() ||
+                visReading.value.vis0_6 != test.READING0_6.toString() ||
+                visReading.value.vis0_3 != test.READING0_3.toString()
+                ){
+                popupMessage.message = "Test Results are not saved\nleave without saving?"
+                popupMessage.messageButton1Text = "No"
+                popupMessage.onClickAction1 = {
+                    closePopupMessage.value = true
+                }
+                popupMessage.messageButton2Text = "Yes"
+                popupMessage.onClickAction2 = {
+                    closePopupMessage.value = true
+                    closeTestScreen.value = true
+                }
+                openPopupMessage.value = true
+
+            } else {
                 closeTestScreen.value = true
             }
-            openPopupMessage.value = true
-
         } else {
-            closeTestScreen.value = true
+            if (visHasValue(visReading)) {
+                popupMessage.message = "Test Results are not saved\nleave without saving?"
+                popupMessage.messageButton1Text = "No"
+                popupMessage.onClickAction1 = {
+                    closePopupMessage.value = true
+                }
+                popupMessage.messageButton2Text = "Yes"
+                popupMessage.onClickAction2 = {
+                    closePopupMessage.value = true
+                    closeTestScreen.value = true
+                }
+                openPopupMessage.value = true
+
+            } else {
+                closeTestScreen.value = true
+            }
         }
     }
 }

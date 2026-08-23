@@ -3,6 +3,7 @@ package com.example.coretechv2.ui.screen
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,18 +12,31 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation.Companion
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -38,16 +52,18 @@ fun LoginScreen(
     ondifferentUser: (String) -> Unit
 ) {
     val context = LocalContext.current
+    val passwordFocusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
     val viewModel: LoginViewModel = viewModel(
         factory = LoginViewModelFactory(context)
     )
 
     if (viewModel.currentuser.value != currentuser) {
-        Log.d("DifferentUser","current user = $currentuser new user = ${viewModel.currentuser.value}")
+        
         ondifferentUser(viewModel.currentuser.value)
     }
     if (viewModel.loginSuccess) {
-        Log.d("LIFECYCLE", "loginSuccess triggered ")
+        
         onLoginSuccess()
         viewModel.consumeLoginSuccess()
     }
@@ -55,14 +71,14 @@ fun LoginScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White),
+            .background(MaterialTheme.colorScheme.background),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         Row {
             Spacer(modifier = Modifier.weight(1f))
             Image(
-                painter = painterResource(id = R.drawable.company_logo),
+                painter = if(isSystemInDarkTheme()){painterResource(id = R.drawable.company_logo_dark)}else{painterResource(id = R.drawable.company_logo_light)},
                 contentDescription = null,
                 modifier = Modifier.weight(1f)
             )
@@ -73,23 +89,52 @@ fun LoginScreen(
             value = viewModel.username,
             onValueChange = viewModel::onUsernameChange,
             label = { Text("Username") },
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(16.dp),
+            keyboardOptions = KeyboardOptions(
+                imeAction = ImeAction.Next),
+            keyboardActions = KeyboardActions(
+                onNext = {
+                    passwordFocusRequester.requestFocus()
+                }
+            )
         )
 
         OutlinedTextField(
             value = viewModel.password,
             onValueChange = viewModel::onPasswordChange,
             label = { Text("Password") },
-            modifier = Modifier.padding(16.dp),
-            visualTransformation = PasswordVisualTransformation(),
+            modifier = Modifier.padding(16.dp).focusRequester(passwordFocusRequester),
+            visualTransformation = if(viewModel.showPassword.value){VisualTransformation.None}else{PasswordVisualTransformation()},
+            trailingIcon = {
+                IconButton(onClick = {viewModel.onShowPassword()}){
+                    if(viewModel.showPassword.value){
+                        Icon(
+                            imageVector = Icons.Filled.VisibilityOff,
+                            contentDescription = "Hide Password"
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Filled.Visibility,
+                            contentDescription = "Show Password"
+                        )
+                    }
+                }
+            },
             keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Password
+                keyboardType = KeyboardType.Password,
+                imeAction = ImeAction.Done
+            ),
+            keyboardActions = KeyboardActions(
+                onDone = {
+                    viewModel.login()
+                    keyboardController?.hide()
+                }
             )
         )
         if (viewModel.showErrorMessage.value) {
             Text(
                 viewModel.errorMessage.value,
-                color = Color.Red,
+                color = MaterialTheme.colorScheme.error,
                 fontSize = 15.sp,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()

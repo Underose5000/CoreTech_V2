@@ -24,7 +24,9 @@ class APICallTables {
         val ITEMCODE: String,
         val ITEMDESCRIPTION: String,
         val ITEMUNIT: String,
-        val AVAILABLEQTY: Float
+        val AVAILABLEQTY: Float,
+        val DEFAULTRECEIPTWHOUSE: String,
+        val DEFAULTRECEIPTLOCATION: String,
     )
 
 
@@ -59,6 +61,7 @@ class APICallTables {
         val COMPLETEQTY : Double,
         val REMAININGQTY: Double,
         val ASSEMBLYVERSION: String,
+        val PLANNEDTOTALCOSTS: Double,
         var ADDITIONALFIELD_1: String,
         var ADDITIONALFIELD_2: String,
         var ADDITIONALFIELD_3: String,
@@ -71,6 +74,8 @@ class APICallTables {
         var ADDITIONALFIELD_10: String,
         var ADDITIONALFIELD_11: String,
         var ADDITIONALFIELD_12: String,
+        var ADDITIONALFIELD_13: String,
+        val SYSUNIQUEID: Double,
     )
 
 
@@ -96,8 +101,56 @@ class APICallTables {
         val ADDITIONALFIELD_3: String,
         val ADDITIONALFIELD_4: String,
         val ADDITIONALFIELD_6: String,
+        val SYSUNIQUEID: Double,
     )
 
+
+    @Serializable
+    data class assemblyBOMSteps(
+
+        val ITEMCODE: String?,
+        val STEPNAME: String,
+
+        )
+
+    @Serializable
+    data class assemblyBOMMaster(
+        val ASSEMBLYCODE: String,
+        val ASSEMBLYVERSION: String,
+        val VERSIONDESCRIPTION: String,
+        val VERSIONSTATUS: String,
+        val ITEMCODE: String,
+        val ITEMDESCRIPTION: String,
+        val ITEMUNIT: String,
+        val ITEMSTATUS: String,
+        val ASSEMBLYINSTRUCTIONS: String,
+        val ASSEMBLYLEADTIME: Int,
+        val ASSEMBLYDURATION: Double,
+        val ASSEMBLYDURATIONSCALE: String,
+        val BATCHQTY: Double,
+
+    )
+
+    @Serializable
+    data class assemblyBOMLines(
+        val ITEMCODE: String,
+        val STEPSEQUENCE: Int,
+        val STEPNAME: String,
+        val LINENUMBER: Int,
+        val CODETYPE: String,
+        val LINECODE: String,
+        val LINEDESCRIPTION: String,
+        val LINEUNIT: String,
+        val PERQTY: Double,
+        val PERBATCHQTY: Double,
+        val LINESCRAPPERCENT: Double,
+        val RUNORSETUP: String,
+        val POSITIONREFERENCE: String,
+        val LINEINSTRUCTIONS: String,
+        val HEADERSYSUNIQUEID: Double,
+        val SYSUNIQUEID: Double,
+
+    )
 
     @Serializable
     data class notes(
@@ -141,6 +194,52 @@ class APICallTables {
         val GELCATPERCENT: String,
     )
 
+    @Serializable
+    data class peakExothermTest(
+        val SYSUNIQUEID: Double,
+        val ITEMCODE: String,
+        val ORDERNUMBER: String,
+        val TESTNO: Int,
+        val ITEMDESCRIPTION: String,
+        val GELTIME: String,
+        val GELCAT: String,
+        val GELCATPERCENT: String,
+        val PEAKTEMPERATURE: Double
+    )
+
+    @Serializable
+    data class FlammabilityTest(
+        val SYSUNIQUEID: Double,
+        val ITEMCODE: String,
+        val ORDERNUMBER: String,
+        val TESTNO: Int,
+        val ITEMDESCRIPTION: String,
+        val FLAMETIME: String,
+        val DAYSSET: Int,
+        val BURNLENGTH: Double,
+    )
+
+    @Serializable
+    data class ElongationalBreakTest(
+        val SYSUNIQUEID: Double,
+        val ITEMCODE: String,
+        val ORDERNUMBER: String,
+        val TESTNO: Int,
+        val ITEMDESCRIPTION: String,
+        val DAYSSET: Int,
+        val ELONGATIONPERCENT: Double
+    )
+
+    @Serializable
+    data class ResistivityTest(
+        val SYSUNIQUEID: Double,
+        val ITEMCODE: String,
+        val ORDERNUMBER: String,
+        val TESTNO: Int,
+        val ITEMDESCRIPTION: String,
+        val DAYSSET: Int,
+        val RESISTIVITYOHM: Double
+    )
 
     @Serializable
     data class assemblyAdjustment(
@@ -207,7 +306,7 @@ class APICallTables {
         val VARIANT: String,
         val BESTBEFORE: Int,
         val LABELSTYLE: LabelStyles,
-        val BOXQTY: Int,
+        var BOXQTY: Int,
         val ITEMBARCODE: String,
     )
 
@@ -232,7 +331,7 @@ class APICallTables {
 
 
     @Serializable
-    data class assemblyLabelDGInfo(
+    data class itemDGInfo(
         val UNNUMBER: String,
         val PACKINGGROUP: String,
         val DGCLASS: String,
@@ -249,6 +348,10 @@ class APICallTables {
         val IS_CONNECTED: Int
     )
 
+    @Serializable
+    data class StringData(
+        val STRING: String
+    )
 
     @Serializable
     data class Count(

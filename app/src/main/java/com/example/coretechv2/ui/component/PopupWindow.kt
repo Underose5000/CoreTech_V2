@@ -1,6 +1,7 @@
 package com.example.coretechv2.ui.component
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.coretechv2.dataclasses.MenuItem
 import com.example.coretechv2.dataclasses.PopupItems
+import com.example.coretechv2.ui.theme.borderColor
 
 /**
  * A reusable full-screen popup container that displays custom composable content.
@@ -46,6 +48,7 @@ fun PopupWindow(item : PopupItems) {
             modifier = Modifier
                 .width(item.width.dp)
                 .height(item.height.dp)
+                .border(1.dp, borderColor)
                 .background(Color.White),
         ) {
             item.content()

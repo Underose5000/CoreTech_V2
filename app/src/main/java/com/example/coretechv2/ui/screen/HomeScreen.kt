@@ -1,6 +1,7 @@
 package com.example.coretechv2.ui.screen
 
 import android.content.res.Configuration
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -8,35 +9,28 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.toUpperCase
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.coretechv2.R
 import com.example.coretechv2.ui.component.TopBar
 import com.example.coretechv2.viewmodel.SharedViewModel
-import java.util.Locale
-import java.util.Locale.getDefault
 
 @Composable
 fun HomeScreen(
@@ -45,31 +39,53 @@ fun HomeScreen(
 ) {
     val configuration = LocalConfiguration.current
     val snackbarHostState = remember { SnackbarHostState() }
-    val isLandscape =
-        configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     val screenWidthDp = configuration.screenWidthDp
+    val screenHeightDp = configuration.screenHeightDp
+    val screenDensity = configuration.densityDpi
+    var isFlipPhone = false
+    var isTablet = false
 
-    val isTablet = screenWidthDp >= 600
+    if (screenWidthDp >=550 && screenDensity >= 500){
+        isFlipPhone = true
+        Log.d("screen dp size", "is FLip")
+    } else if (screenWidthDp >=600){
+        isTablet = true
+        Log.d("screen dp size", "is Tablet")
+    } else {
+        Log.d("screen dp size", "is Phone")
+    }
+
+    Log.d("screen dp size", "$screenWidthDp by $screenHeightDp @ $screenDensity & is landscape = $isLandscape")
+    LaunchedEffect(Unit) {
+        sharedViewModel.retrieveAssemblyOrders()
+        sharedViewModel.retrieveAllAssemblyOrders()
+        Log.d("LaunchedEffect","Orders Retrieved. List size = ${sharedViewModel.AssemblyOrdersList.size}")
+    }
 
 
     if (isLandscape and isTablet) {
         LandscapeTabletLayout(
             navController = navController,
+            sharedViewModel = sharedViewModel,
             sharedViewModel.currentUser.value,
             snackbarHostState)
     } else if (!isLandscape and isTablet){
         PortraitLayout(
             navController = navController,
+            sharedViewModel = sharedViewModel,
             sharedViewModel.currentUser.value,
             snackbarHostState)
-    } else if (isLandscape and !isTablet){
-        PortraitLayout(
+    } else if (isFlipPhone) {
+        FlipPhoneLayout(
             navController = navController,
+            sharedViewModel = sharedViewModel,
             sharedViewModel.currentUser.value,
             snackbarHostState)
     } else {
         PortraitLayout(
             navController = navController,
+            sharedViewModel = sharedViewModel,
             sharedViewModel.currentUser.value,
             snackbarHostState)
     }
@@ -79,9 +95,11 @@ fun HomeScreen(
 @Composable
 fun LandscapeTabletLayout(
     navController: NavController,
+    sharedViewModel: SharedViewModel,
     currentUser: String,
     snackbarHostState: SnackbarHostState
 ) {
+    Log.d("screen dp size", "LandscapeTabletLayout being used")
     TopBar(
         navController = navController,
         title = "Home",
@@ -96,7 +114,7 @@ fun LandscapeTabletLayout(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    "Welcome ${currentUser.replaceFirstChar { it.uppercase() }}",
+                    "Welcome ${currentUser.lowercase().replaceFirstChar { it.uppercase() }}",
                     fontWeight = FontWeight(800),
                     fontSize = 30.sp,
                     textAlign = TextAlign.Center,
@@ -121,80 +139,34 @@ fun LandscapeTabletLayout(
                     )
                     Spacer(modifier = Modifier.weight(1f))
                     Row(modifier = Modifier.weight(5f)) {
-                        Button(
+                        AssemblyOrdersButton(
+                            navController = navController,
                             modifier = Modifier
                                 .fillMaxSize()
                                 .weight(5f)
                                 .padding(horizontal = 10.dp),
                             shape = RoundedCornerShape(17.dp),
-                            contentPadding = PaddingValues(start = 8.dp, top = 4.dp, end = 4.dp, bottom = 4.dp),
-                            onClick = {navController.navigate("assemblyorders")}
-                        ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.assembly_orders_icon),
-                                contentDescription = null,
-                                modifier = Modifier.scale(1.2f)
-                                    .weight(30f),
-                                )
-                            Spacer(modifier = Modifier.weight(2f))
-                            Text(
-                                "Assembly Orders",
-                                fontSize = 20.sp,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.weight(69f)
-                            )
-                        }
-                        Button(
+                        )
+                        PrintProductLabelsButton(
+                            navController = navController,
                             modifier = Modifier
                                 .fillMaxSize()
                                 .weight(5f)
                                 .padding(horizontal = 10.dp),
                             shape = RoundedCornerShape(17.dp),
-                            contentPadding = PaddingValues(start = 8.dp, top = 4.dp, end = 4.dp, bottom = 4.dp),
-                            onClick = {}
-                        ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.print_product_label_icon),
-                                contentDescription = null,
-                                modifier = Modifier.scale(1.2f)
-                                    .weight(30f),
-
-                                )
-                            Spacer(modifier = Modifier.weight(2f))
-                            Text(
-                                "Print Product Labels",
-                                fontSize = 20.sp,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.weight(69f)
-                            )
-                        }
+                        )
                     }
                     Spacer(modifier = Modifier.weight(1f))
                     Row(modifier = Modifier.weight(5f)) {
-                        Button(
+                        PrintBoxLabelsButton(
+                            navController = navController,
+                            sharedViewModel = sharedViewModel,
                             modifier = Modifier
                                 .fillMaxSize()
                                 .weight(5f)
                                 .padding(horizontal = 10.dp),
                             shape = RoundedCornerShape(17.dp),
-                            contentPadding = PaddingValues(start = 8.dp, top = 4.dp, end = 4.dp, bottom = 4.dp),
-                            onClick = {}
-                        ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.print_box_label_icon),
-                                contentDescription = null,
-                                modifier = Modifier.scale(1.2f)
-                                    .weight(30f)
-
-                                )
-                            Spacer(modifier = Modifier.weight(8f))
-                            Text(
-                                "Print Box Labels",
-                                fontSize = 20.sp,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.weight(60f)
-                            )
-                        }
+                        )
                         Spacer(modifier = Modifier.weight(5f))
                     }
 
@@ -212,69 +184,33 @@ fun LandscapeTabletLayout(
                     )
                     Spacer(modifier = Modifier.weight(1f))
                     Row(modifier = Modifier.weight(5f)) {
-                        Button(
+                        PackOrdersButton(
+                            navController = navController,
                             modifier = Modifier
                                 .fillMaxSize()
                                 .weight(5f)
                                 .padding(horizontal = 10.dp),
                             shape = RoundedCornerShape(17.dp),
-                            onClick = {}
-                        ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.pack_order_icon),
-                                contentDescription = null,
-
-                                )
-                            Spacer(modifier = Modifier.width(5.dp))
-                            Text(
-                                "Pack Orders",
-                                fontSize = 20.sp,
-                                textAlign = TextAlign.Center,
-                            )
-                        }
-                        Button(
+                        )
+                        DispatchOrdersButton(
+                            navController = navController,
                             modifier = Modifier
                                 .fillMaxSize()
                                 .weight(5f)
                                 .padding(horizontal = 10.dp),
                             shape = RoundedCornerShape(17.dp),
-                            onClick = {}
-                        ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.dispatch_order_icon),
-                                contentDescription = null,
-
-                                )
-                            Spacer(modifier = Modifier.width(5.dp))
-                            Text(
-                                "Dispatch Orders",
-                                fontSize = 20.sp,
-                                textAlign = TextAlign.Center,
-                            )
-                        }
+                        )
                     }
                     Spacer(modifier = Modifier.weight(1f))
                     Row(modifier = Modifier.weight(5f)) {
-                        Button(
+                        PrintShippingDocumentsButton(
+                            navController = navController,
                             modifier = Modifier
                                 .fillMaxSize()
                                 .weight(5f)
                                 .padding(horizontal = 10.dp),
                             shape = RoundedCornerShape(17.dp),
-                            onClick = {}
-                        ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.print_shipping_doc_icon),
-                                contentDescription = null,
-
-                                )
-                            Spacer(modifier = Modifier.width(5.dp))
-                            Text(
-                                "Print Shipping Documents",
-                                fontSize = 20.sp,
-                                textAlign = TextAlign.Center,
-                            )
-                        }
+                        )
                         Spacer(modifier = Modifier.weight(5f))
                     }
                 }
@@ -297,46 +233,22 @@ fun LandscapeTabletLayout(
                     )
                     Spacer(modifier = Modifier.weight(1f))
                     Row(modifier = Modifier.weight(5f)) {
-                        Button(
+                        PurchaseOrdersButton(
+                            navController = navController,
                             modifier = Modifier
                                 .fillMaxSize()
                                 .weight(5f)
                                 .padding(horizontal = 10.dp),
                             shape = RoundedCornerShape(17.dp),
-                            onClick = {}
-                        ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.purchase_orders_icon),
-                                contentDescription = null,
-
-                                )
-                            Spacer(modifier = Modifier.width(5.dp))
-                            Text(
-                                "Purchase Orders",
-                                fontSize = 20.sp,
-                                textAlign = TextAlign.Center,
-                            )
-                        }
-                        Button(
+                        )
+                        ReceiveGoodsButton(
+                            navController = navController,
                             modifier = Modifier
                                 .fillMaxSize()
                                 .weight(5f)
                                 .padding(horizontal = 10.dp),
                             shape = RoundedCornerShape(17.dp),
-                            onClick = {}
-                        ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.receive_goods_icon),
-                                contentDescription = null,
-
-                                )
-                            Spacer(modifier = Modifier.width(5.dp))
-                            Text(
-                                "Receive Goods",
-                                fontSize = 20.sp,
-                                textAlign = TextAlign.Center,
-                            )
-                        }
+                        )
                     }
                     Spacer(modifier = Modifier.weight(1f))
                     Row(modifier = Modifier.weight(5f)) {
@@ -358,69 +270,33 @@ fun LandscapeTabletLayout(
                     )
                     Spacer(modifier = Modifier.weight(1f))
                     Row(modifier = Modifier.weight(5f)) {
-                        Button(
+                        ItemsListButton(
+                            navController = navController,
                             modifier = Modifier
                                 .fillMaxSize()
                                 .weight(5f)
                                 .padding(horizontal = 10.dp),
                             shape = RoundedCornerShape(17.dp),
-                            onClick = {}
-                        ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.pack_order_icon),
-                                contentDescription = null,
-
-                                )
-                            Spacer(modifier = Modifier.width(5.dp))
-                            Text(
-                                "Items List",
-                                fontSize = 20.sp,
-                                textAlign = TextAlign.Center,
-                            )
-                        }
-                        Button(
+                        )
+                        StocktakeButton(
+                            navController = navController,
                             modifier = Modifier
                                 .fillMaxSize()
                                 .weight(5f)
                                 .padding(horizontal = 10.dp),
                             shape = RoundedCornerShape(17.dp),
-                            onClick = {}
-                        ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.stocktake_icon),
-                                contentDescription = null,
-
-                                )
-                            Spacer(modifier = Modifier.width(5.dp))
-                            Text(
-                                "Stocktake",
-                                fontSize = 20.sp,
-                                textAlign = TextAlign.Center,
-                            )
-                        }
+                        )
                     }
                     Spacer(modifier = Modifier.weight(1f))
                     Row(modifier = Modifier.weight(5f)) {
-                        Button(
+                        RequestStockButton(
+                            navController = navController,
                             modifier = Modifier
                                 .fillMaxSize()
                                 .weight(5f)
                                 .padding(horizontal = 10.dp),
                             shape = RoundedCornerShape(17.dp),
-                            onClick = {}
-                        ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.request_stock_icon),
-                                contentDescription = null,
-
-                                )
-                            Spacer(modifier = Modifier.width(5.dp))
-                            Text(
-                                "Request Stock",
-                                fontSize = 20.sp,
-                                textAlign = TextAlign.Center,
-                            )
-                        }
+                        )
                         Spacer(modifier = Modifier.weight(5f))
                     }
                 }
@@ -453,9 +329,11 @@ fun LandscapeTabletLayout(
 @Composable
 fun PortraitLayout(
     navController: NavController,
+    sharedViewModel: SharedViewModel,
     currentUser: String,
     snackbarHostState: SnackbarHostState
 ) {
+    Log.d("screen dp size", "PortraitLayout being used")
     TopBar(
         navController = navController,
         title = "Home",
@@ -469,7 +347,7 @@ fun PortraitLayout(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    "Welcome ${currentUser.replaceFirstChar { it.uppercase() }}",
+                    "Welcome ${currentUser.lowercase().replaceFirstChar { it.uppercase() }}",
                     fontWeight = FontWeight(800),
                     fontSize = 30.sp,
                     textAlign = TextAlign.Center,
@@ -493,52 +371,30 @@ fun PortraitLayout(
                         textAlign = TextAlign.Center,
                     )
                     Spacer(modifier = Modifier.weight(1f))
-                    Button(
+                    AssemblyOrdersButton(
+                        navController = navController,
                         modifier = Modifier
-                            .fillMaxSize()
-                            .weight(5f),
-                        shape = RoundedCornerShape(12.dp),
-                        onClick = {}
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.assembly_orders_icon),
-                            contentDescription = null,
-                            //modifier = Modifier.weight(1f)
-                        )
-                        Text(
-                            "Assembly Orders",
-                            fontSize = 20.sp,
-                            textAlign = TextAlign.Center,
-                        )
-                    }
+                        .fillMaxSize()
+                        .weight(5f),
+                        shape = RoundedCornerShape(12.dp)
+                    )
                     Spacer(modifier = Modifier.weight(1f))
-                    Button(
+                    PrintProductLabelsButton(
+                        navController = navController,
                         modifier = Modifier
                             .fillMaxSize()
                             .weight(5f),
-                        shape = RoundedCornerShape(12.dp),
-                        onClick = {}
-                    ) {
-                        Text(
-                            "Print Product Labels",
-                            fontSize = 20.sp,
-                            textAlign = TextAlign.Center,
-                        )
-                    }
+                        shape = RoundedCornerShape(12.dp)
+                    )
                     Spacer(modifier = Modifier.weight(1f))
-                    Button(
+                    PrintBoxLabelsButton(
+                        navController = navController,
+                        sharedViewModel = sharedViewModel,
                         modifier = Modifier
                             .fillMaxSize()
                             .weight(5f),
-                        shape = RoundedCornerShape(12.dp),
-                        onClick = {}
-                    ) {
-                        Text(
-                            "Print Box Labels",
-                            fontSize = 20.sp,
-                            textAlign = TextAlign.Center,
-                        )
-                    }
+                        shape = RoundedCornerShape(12.dp)
+                    )
                 }
                 Column(
                     modifier = Modifier
@@ -552,47 +408,29 @@ fun PortraitLayout(
                         textAlign = TextAlign.Center,
                     )
                     Spacer(modifier = Modifier.weight(1f))
-                    Button(
+                    PackOrdersButton(
+                        navController = navController,
                         modifier = Modifier
                             .fillMaxSize()
                             .weight(5f),
-                        shape = RoundedCornerShape(12.dp),
-                        onClick = {}
-                    ) {
-                        Text(
-                            "Pack Order",
-                            fontSize = 20.sp,
-                            textAlign = TextAlign.Center,
-                        )
-                    }
+                        shape = RoundedCornerShape(12.dp)
+                    )
                     Spacer(modifier = Modifier.weight(1f))
-                    Button(
+                    DispatchOrdersButton(
+                        navController = navController,
                         modifier = Modifier
                             .fillMaxSize()
                             .weight(5f),
-                        shape = RoundedCornerShape(12.dp),
-                        onClick = {}
-                    ) {
-                        Text(
-                            "Dispatch Order",
-                            fontSize = 20.sp,
-                            textAlign = TextAlign.Center,
-                        )
-                    }
+                        shape = RoundedCornerShape(12.dp)
+                    )
                     Spacer(modifier = Modifier.weight(1f))
-                    Button(
+                    PrintShippingDocumentsButton(
+                        navController = navController,
                         modifier = Modifier
                             .fillMaxSize()
                             .weight(5f),
-                        shape = RoundedCornerShape(12.dp),
-                        onClick = {}
-                    ) {
-                        Text(
-                            "Print Shipping Documents",
-                            fontSize = 20.sp,
-                            textAlign = TextAlign.Center,
-                        )
-                    }
+                        shape = RoundedCornerShape(12.dp)
+                    )
                 }
             }
             Row(
@@ -612,44 +450,23 @@ fun PortraitLayout(
                         textAlign = TextAlign.Center,
                     )
                     Spacer(modifier = Modifier.weight(1f))
-                    Button(
+                    PurchaseOrdersButton(
+                        navController = navController,
                         modifier = Modifier
                             .fillMaxSize()
                             .weight(5f),
-                        shape = RoundedCornerShape(12.dp),
-                        onClick = {}
-                    ) {
-                        Text(
-                            "Purchase Orders",
-                            fontSize = 20.sp,
-                            textAlign = TextAlign.Center,
-                        )
-                    }
+                        shape = RoundedCornerShape(12.dp)
+                    )
                     Spacer(modifier = Modifier.weight(1f))
-                    Button(
+                    ReceiveGoodsButton(
+                        navController = navController,
                         modifier = Modifier
                             .fillMaxSize()
                             .weight(5f),
-                        shape = RoundedCornerShape(12.dp),
-                        onClick = {}
-                    ) {
-                        Text(
-                            "Receive Goods",
-                            fontSize = 20.sp,
-                            textAlign = TextAlign.Center,
-                        )
-                    }
+                        shape = RoundedCornerShape(12.dp)
+                    )
                     Spacer(modifier = Modifier.weight(1f))
                     Spacer(modifier = Modifier.weight(5f))
-                    /*Button(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .weight(5f),
-                            shape = RoundedCornerShape(12.dp),
-                        onClick = {}
-                    ) { Text("TBD",
-                        fontSize = 20.sp,
-                        textAlign = TextAlign.Center,) }*/
                 }
                 Column(
                     modifier = Modifier
@@ -663,47 +480,29 @@ fun PortraitLayout(
                         textAlign = TextAlign.Center,
                     )
                     Spacer(modifier = Modifier.weight(1f))
-                    Button(
+                    ItemsListButton(
+                        navController = navController,
                         modifier = Modifier
                             .fillMaxSize()
                             .weight(5f),
-                        shape = RoundedCornerShape(12.dp),
-                        onClick = {}
-                    ) {
-                        Text(
-                            "Items List",
-                            fontSize = 20.sp,
-                            textAlign = TextAlign.Center,
-                        )
-                    }
+                        shape = RoundedCornerShape(12.dp)
+                    )
                     Spacer(modifier = Modifier.weight(1f))
-                    Button(
+                    StocktakeButton(
+                        navController = navController,
                         modifier = Modifier
                             .fillMaxSize()
                             .weight(5f),
-                        shape = RoundedCornerShape(12.dp),
-                        onClick = {}
-                    ) {
-                        Text(
-                            "Stocktake",
-                            fontSize = 20.sp,
-                            textAlign = TextAlign.Center,
-                        )
-                    }
+                        shape = RoundedCornerShape(12.dp)
+                    )
                     Spacer(modifier = Modifier.weight(1f))
-                    Button(
+                    RequestStockButton(
+                        navController = navController,
                         modifier = Modifier
                             .fillMaxSize()
                             .weight(5f),
-                        shape = RoundedCornerShape(12.dp),
-                        onClick = {}
-                    ) {
-                        Text(
-                            "Request Stock",
-                            fontSize = 20.sp,
-                            textAlign = TextAlign.Center,
-                        )
-                    }
+                        shape = RoundedCornerShape(12.dp)
+                    )
                 }
             }
         }
@@ -729,4 +528,482 @@ fun PortraitLayout(
         }
     }
 
+}
+
+@Composable
+fun FlipPhoneLayout(
+    navController: NavController,
+    sharedViewModel: SharedViewModel,
+    currentUser: String,
+    snackbarHostState: SnackbarHostState
+){
+    Log.d("screen dp size", "FlipPhoneLayout being used")
+    TopBar(
+        navController = navController,
+        title = "Home",
+        snackbarHostState
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(all = 15.dp)
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    "Welcome ${currentUser.lowercase().replaceFirstChar { it.uppercase() }}",
+                    fontWeight = FontWeight(800),
+                    fontSize = 20.sp,
+                    textAlign = TextAlign.Center,
+                )
+            }
+
+            Row(
+                modifier = Modifier
+                    .weight(4f)
+                    .padding(vertical = 10.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 30.dp)
+                ) {
+                    Text(
+                        "Assembly",
+                        fontWeight = FontWeight(800),
+                        fontSize = 20.sp,
+                        textAlign = TextAlign.Center,
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    AssemblyOrdersButton(
+                        navController = navController,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(5f),
+                        shape = RoundedCornerShape(12.dp),
+                        fontSize = 15
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    PrintProductLabelsButton(
+                        navController = navController,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(5f),
+                        shape = RoundedCornerShape(12.dp),
+                        fontSize = 15
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    PrintBoxLabelsButton(
+                        navController = navController,
+                        sharedViewModel = sharedViewModel,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(5f),
+                        shape = RoundedCornerShape(12.dp),
+                        fontSize = 15
+                    )
+                }
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 30.dp)
+                ) {
+                    Text(
+                        "Sales",
+                        fontWeight = FontWeight(800),
+                        fontSize = 20.sp,
+                        textAlign = TextAlign.Center,
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    PackOrdersButton(
+                        navController = navController,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(5f),
+                        shape = RoundedCornerShape(12.dp),
+                        fontSize = 15
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    DispatchOrdersButton(
+                        navController = navController,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(5f),
+                        shape = RoundedCornerShape(12.dp),
+                        fontSize = 15
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    PrintShippingDocumentsButton(
+                        navController = navController,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(5f),
+                        shape = RoundedCornerShape(12.dp),
+                        fontSize = 15
+                    )
+                }
+            }
+            Row(
+                modifier = Modifier
+                    .weight(4f)
+                    .padding(vertical = 10.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 30.dp)
+                ) {
+                    Text(
+                        "Purchases",
+                        fontWeight = FontWeight(800),
+                        fontSize = 20.sp,
+                        textAlign = TextAlign.Center,
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    PurchaseOrdersButton(
+                        navController = navController,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(5f),
+                        shape = RoundedCornerShape(12.dp),
+                        fontSize = 15
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    ReceiveGoodsButton(
+                        navController = navController,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(5f),
+                        shape = RoundedCornerShape(12.dp),
+                        fontSize = 15
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    Spacer(modifier = Modifier.weight(5f))
+                }
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 30.dp)
+                ) {
+                    Text(
+                        "Inventory",
+                        fontWeight = FontWeight(800),
+                        fontSize = 20.sp,
+                        textAlign = TextAlign.Center,
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    ItemsListButton(
+                        navController = navController,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(5f),
+                        shape = RoundedCornerShape(12.dp),
+                        fontSize = 15
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    StocktakeButton(
+                        navController = navController,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(5f),
+                        shape = RoundedCornerShape(12.dp),
+                        fontSize = 15
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    RequestStockButton(
+                        navController = navController,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(5f),
+                        shape = RoundedCornerShape(12.dp),
+                        fontSize = 15
+                    )
+                }
+            }
+        }
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(all = 10.dp)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.End,
+        ) {
+            Row(modifier = Modifier.weight(15f)) {
+                Spacer(modifier = Modifier.weight(3f))
+                Image(
+                    painter = painterResource(id = R.drawable.homepage_graphic),
+                    contentDescription = null,
+                    modifier = Modifier.weight(3f)
+                )
+            }
+            Spacer(modifier = Modifier.weight(15f))
+        }
+    }
+}
+
+@Composable
+fun AssemblyOrdersButton(navController: NavController, modifier: Modifier, shape: Shape, fontSize: Int = 20) {
+    Button(
+        modifier = modifier,
+        shape = shape,
+        contentPadding = PaddingValues(start = 10.dp, top = 4.dp, end = 4.dp, bottom = 4.dp),
+        onClick = { navController.navigate("assemblyorders") }
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.assembly_orders_icon),
+            contentDescription = null,
+            modifier = Modifier
+                .scale(1.2f)
+                .weight(1f)
+        )
+        Text(
+            "Assembly Orders",
+            fontSize = fontSize.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.weight(3f)
+        )
+    }
+}
+@Composable
+fun PrintProductLabelsButton(navController: NavController, modifier: Modifier, shape: Shape, fontSize: Int = 20) {
+    Button(
+        modifier = modifier,
+        shape = shape,
+        contentPadding = PaddingValues(start = 10.dp, top = 4.dp, end = 4.dp, bottom = 4.dp),
+        onClick = {},
+        enabled = false
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.print_product_label_icon),
+            contentDescription = null,
+            modifier = Modifier
+                .scale(1.2f)
+                .weight(1f)
+            )
+        Text(
+            "Print Product Labels",
+            fontSize = fontSize.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.weight(3f)
+        )
+    }
+}
+@Composable
+fun PrintBoxLabelsButton(navController: NavController,sharedViewModel: SharedViewModel, modifier: Modifier, shape: Shape, fontSize: Int = 20) {
+    Button(
+        modifier = modifier,
+        shape = shape,
+        contentPadding = PaddingValues(start = 10.dp, top = 4.dp, end = 4.dp, bottom = 4.dp),
+        onClick = {navController.navigate("printboxlabels") },
+        enabled = true
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.print_box_label_icon),
+            contentDescription = null,
+            modifier = Modifier
+                .scale(1.2f)
+                .weight(1f)
+        )
+        Text(
+            "Print Box Labels",
+            fontSize = fontSize.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.weight(3f)
+        )
+    }
+}
+@Composable
+fun PackOrdersButton(navController: NavController, modifier: Modifier, shape: Shape, fontSize: Int = 20) {
+    Button(
+        modifier = modifier,
+        shape = shape,
+        contentPadding = PaddingValues(start = 10.dp, top = 4.dp, end = 4.dp, bottom = 4.dp),
+        onClick = {},
+        enabled = false
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.pack_order_icon),
+            contentDescription = null,
+            modifier = Modifier
+                .scale(1.2f)
+                .weight(1f)
+            )
+        Text(
+            "Pack Orders",
+            fontSize = fontSize.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.weight(3f)
+        )
+    }
+}
+@Composable
+fun DispatchOrdersButton(navController: NavController, modifier: Modifier, shape: Shape, fontSize: Int = 20) {
+    Button(
+        modifier = modifier,
+        shape = shape,
+        contentPadding = PaddingValues(start = 10.dp, top = 4.dp, end = 4.dp, bottom = 4.dp),
+        onClick = {},
+        enabled = false
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.dispatch_order_icon),
+            contentDescription = null,
+            modifier = Modifier
+                .scale(1.2f)
+                .weight(1f)
+            )
+        Text(
+            "Dispatch Orders",
+            fontSize = fontSize.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.weight(3f)
+        )
+    }
+}
+@Composable
+fun PrintShippingDocumentsButton(navController: NavController, modifier: Modifier, shape: Shape, fontSize: Int = 20) {
+    Button(
+        modifier = modifier,
+        shape = shape,
+        contentPadding = PaddingValues(start = 10.dp, top = 4.dp, end = 4.dp, bottom = 4.dp),
+        onClick = {},
+        enabled = false
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.print_shipping_doc_icon),
+            contentDescription = null,
+            modifier = Modifier
+                .scale(1.2f)
+                .weight(1f)
+            )
+        Text(
+            "Print Shipping Documents",
+            fontSize = fontSize.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.weight(3f)
+        )
+    }
+}
+@Composable
+fun PurchaseOrdersButton(navController: NavController, modifier: Modifier, shape: Shape, fontSize: Int = 20) {
+    Button(
+        modifier = modifier,
+        shape = shape,
+        contentPadding = PaddingValues(start = 10.dp, top = 4.dp, end = 4.dp, bottom = 4.dp),
+        onClick = {},
+        enabled = false
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.purchase_orders_icon),
+            contentDescription = null,
+            modifier = Modifier
+                .scale(1.2f)
+                .weight(1f)
+            )
+        Text(
+            "Purchase Orders",
+            fontSize = fontSize.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.weight(3f)
+        )
+    }
+}
+@Composable
+fun ReceiveGoodsButton(navController: NavController, modifier: Modifier, shape: Shape, fontSize: Int = 20) {
+    Button(
+        modifier = modifier,
+        shape = shape,
+        contentPadding = PaddingValues(start = 10.dp, top = 4.dp, end = 4.dp, bottom = 4.dp),
+        onClick = {},
+        enabled = false
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.receive_goods_icon),
+            contentDescription = null,
+            modifier = Modifier
+                .scale(1.2f)
+                .weight(1f)
+            )
+        Text(
+            "Receive Goods",
+            fontSize = fontSize.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.weight(3f)
+        )
+    }
+}
+@Composable
+fun ItemsListButton(navController: NavController, modifier: Modifier, shape: Shape, fontSize: Int = 20) {
+    Button(
+        modifier = modifier,
+        shape = shape,
+        contentPadding = PaddingValues(start = 10.dp, top = 4.dp, end = 4.dp, bottom = 4.dp),
+        onClick = {},
+        enabled = false
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.pack_order_icon),
+            contentDescription = null,
+            modifier = Modifier
+                .scale(1.2f)
+                .weight(1f)
+            )
+        Text(
+            "Items List",
+            fontSize = fontSize.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.weight(3f)
+        )
+    }
+}
+@Composable
+fun StocktakeButton(navController: NavController, modifier: Modifier, shape: Shape, fontSize: Int = 20) {
+    Button(
+        modifier = modifier,
+        shape = shape,
+        contentPadding = PaddingValues(start = 10.dp, top = 4.dp, end = 4.dp, bottom = 4.dp),
+        onClick = {},
+        enabled = false
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.stocktake_icon),
+            contentDescription = null,
+            modifier = Modifier
+                .scale(1.2f)
+                .weight(1f)
+            )
+        Text(
+            "Stocktake",
+            fontSize = fontSize.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.weight(3f)
+        )
+    }
+}
+@Composable
+fun RequestStockButton(navController: NavController, modifier: Modifier, shape: Shape, fontSize: Int = 20) {
+    Button(
+        modifier = modifier,
+        shape = shape,
+        contentPadding = PaddingValues(start = 10.dp, top = 4.dp, end = 4.dp, bottom = 4.dp),
+        onClick = {},
+        enabled = false
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.request_stock_icon),
+            contentDescription = null,
+            modifier = Modifier
+                .scale(1.2f)
+                .weight(1f)
+            )
+        Text(
+            "Request Stock",
+            fontSize = fontSize.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.weight(3f)
+        )
+    }
 }

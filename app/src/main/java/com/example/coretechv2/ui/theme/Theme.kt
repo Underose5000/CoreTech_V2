@@ -13,55 +13,83 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = darkBlue,
-    secondary = scottBlue,
-    tertiary = Pink80,
-    background = Color(0xFF000000),
-    surface = darkBlue,
-    onPrimary = Color.Red,
-    onSecondary = Color.Red,
-    onTertiary = Color.White,
+    primary = Color(0xFF0AA0D9),
+    onPrimary = Color(0xFFFFFFFF),
+    primaryContainer = Color(0xFF0879A6),
+    onPrimaryContainer = Color(0xFFFFFFFF),
+    secondary = Color(0xFF0AA0D9),
+    background = Color(0xFF2C2C2C),
+    outline = Color(0xFF0AA0D9),
+    outlineVariant = Color(0xFF547F8F),
     onBackground = Color(0xFFFFFFFF),
     onSurface = Color(0xFFFFFFFF),
+    onSurfaceVariant = Color(0xFF0AA0D9),
+    inverseSurface = Color(0xFFFFFFFF),
+    inverseOnSurface = Color(0xFF000000),
+
+    onSecondary = testColor,
+    onTertiary = testColor,
+    surface = testColor,
+    primaryFixed = testColor,
+    primaryFixedDim = testColor,
+    onPrimaryFixed = testColor,
+    onPrimaryFixedVariant = testColor,
+    secondaryContainer = testColor,
+    onSecondaryContainer = testColor,
+    tertiaryContainer = testColor,
+    onTertiaryContainer = testColor,
+    surfaceVariant = testColor,
+    tertiary = testColor,
+    surfaceTint = testColor,
+    inversePrimary = testColor,
+    error = testColor,
+    onError = testColor,
+    errorContainer = testColor,
+    onErrorContainer = testColor,
+    scrim = testColor,
+    surfaceBright = testColor,
+    surfaceContainer = testColor,
+    surfaceContainerHigh = testColor,
+    surfaceContainerHighest = testColor,
+    surfaceContainerLow = testColor,
+    surfaceContainerLowest = testColor,
+    surfaceDim = testColor,
+    secondaryFixed = testColor,
+    secondaryFixedDim = testColor,
+    onSecondaryFixed = testColor,
+    onSecondaryFixedVariant = testColor,
+    tertiaryFixed = testColor,
+    tertiaryFixedDim = testColor,
+    onTertiaryFixed = testColor,
+    onTertiaryFixedVariant = testColor,
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = darkBlue,
-    secondary = scottBlue,
-    tertiary = Pink80,
-    background = Color(0xFFFFFFFF),
-    surface = darkBlue,
-    onPrimary = Color.Red,
-    onSecondary = Color.Red,
-    onTertiary = Color.White,
+    primary = Color(0xFF0879A6),
+    onPrimary = Color(0xFFFFFFFF),
+    primaryContainer = Color(0xFF0AA0D9),
+    onPrimaryContainer = Color(0xFFFFFFFF),
+    secondary = Color(0xFF0879A6),
+    background = Color(0xFFE0E0E0),
+    outline = Color(0xFF0879A6),
+    outlineVariant = Color(0xFF547F8F),
     onBackground = Color(0xFF000000),
-    onSurface = Color(0xFFFFFFFF),
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    onSurface = Color(0xFF000000),
+    onSurfaceVariant = Color(0xFF0879A6),
+    inverseSurface = Color(0xFF727272),
+    inverseOnSurface = Color(0xFFFFFFFF),
 )
 
 @Composable
 fun CoreTechV2Theme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+    val colorScheme = if (darkTheme) {
+        DarkColorScheme
+    } else {
+        LightColorScheme
     }
 
     MaterialTheme(

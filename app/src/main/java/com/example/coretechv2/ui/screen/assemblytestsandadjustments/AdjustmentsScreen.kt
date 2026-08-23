@@ -50,7 +50,7 @@ fun AdjustmentsScreen(sharedViewModel: SharedViewModel, adjustment: APICallTable
 
     }
     LaunchedEffect(sharedViewModel.currentItem.value){
-        Log.d("Launched Effect", "CurrentItem")
+        
         viewModel.closeSearchBoxs()
     }
     if (viewModel.closePopupMessage.value) {
@@ -168,7 +168,7 @@ fun AdjustmentsScreen(sharedViewModel: SharedViewModel, adjustment: APICallTable
                 modifier = Modifier
                     .weight(2f)
                     .padding(horizontal = 20.dp, vertical = 40.dp),
-                onClick = { viewModel.onCancel() }
+                onClick = { viewModel.onCancel(adjustment) }
             ) { Text(text = "Cancel") }
             Button(
                 modifier = Modifier

@@ -149,9 +149,9 @@ fun printWithEpson(
 
         val renderer = object : EPSLabelPrinter.Renderer {
             override fun draw(canvas: Canvas, pageIndex: Int, pageWidth: Int, pageHeight: Int, targetRect: Rect): Boolean {
-                Log.d("Epson", "Bitmap: ${rotatedBitmap.width} x ${rotatedBitmap.height}")
-                Log.d("Epson", "Page: $pageWidth x $pageHeight")
-                Log.d("Epson", "TargetRect: $targetRect")
+                
+                
+                
                 val paint = Paint()
                 val srcRect = RectF(0f, 0f, rotatedBitmap.width.toFloat(), rotatedBitmap.height.toFloat())
                 val dstRect = RectF(0f, 0f, pageWidth.toFloat(), pageHeight.toFloat())
@@ -162,13 +162,13 @@ fun printWithEpson(
         }
 
         try {
-            Log.d("EpsonPrint", "Starting print job on ${printer.modelName}")
+            
             val resultCode = printer.print(settings, renderer, object : EPSLabelPrinter.ProgressListener {
                 override fun onProgress(pageIndex: Int) {
-                    Log.d("EpsonPrint", "Printing page $pageIndex")
+                    
                 }
             })
-            Log.d("EpsonPrint", "Printer.print() finished with code $resultCode")
+            
         } catch (e: Exception) {
             Log.e("EpsonPrint", "Exception during print", e)
         } finally {

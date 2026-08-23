@@ -1,12 +1,29 @@
 package com.example.coretechv2.viewmodel
 
-import android.util.Log
+import kotlin.math.ceil
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.coretechv2.dataclasses.APICallTables
@@ -20,11 +37,19 @@ import com.example.coretechv2.dataclasses.PopupItems
 import com.example.coretechv2.dataclasses.assemblydataclasses.AssemblyLinesItem
 import com.example.coretechv2.repository.APICall
 import com.example.coretechv2.repository.DataStoreManager
+import com.example.coretechv2.repository.toDateFormatYYYYMMDD
+import com.example.coretechv2.ui.component.OutlinedStyleTextLine
 import com.example.coretechv2.ui.screen.NotesScreen
+import com.example.coretechv2.ui.screen.assemblytestsandadjustments.AddLineScreen
 import com.example.coretechv2.ui.screen.assemblytestsandadjustments.AdjustmentsScreen
+import com.example.coretechv2.ui.screen.assemblytestsandadjustments.ElongationalBreakScreen
+import com.example.coretechv2.ui.screen.assemblytestsandadjustments.FlammabilityScreen
 import com.example.coretechv2.ui.screen.assemblytestsandadjustments.GelTimeScreen
+import com.example.coretechv2.ui.screen.assemblytestsandadjustments.PeakExothermScreen
+import com.example.coretechv2.ui.screen.assemblytestsandadjustments.ResistivityScreen
 import com.example.coretechv2.ui.screen.assemblytestsandadjustments.ViscosityScreen
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import kotlin.String
 import kotlin.collections.emptyList
 import kotlin.collections.firstOrNull
@@ -38,92 +63,11 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
         private set
     var showPopupMessage = mutableStateOf(false)
         private set
-    var savedactionMenuList: MutableList<MenuItem> = mutableListOf()
+    var savedActionMenuList: MutableList<MenuItem> = mutableListOf()
+        private set
+    var savedAddMenuList: MutableList<MenuItem> = mutableListOf()
+        private set
 
-    var actionMenuList: MutableList<MenuItem> = mutableListOf(
-        MenuItem(
-            title = "Refresh page",
-            onClick = {
-                reload()
-                showActionMenu = false
-            }
-        ),
-        MenuItem(
-            title = "Edit Order",
-            onClick = {
-                savedactionMenuList = actionMenuList.toMutableList()
-                editMode = true
-                showActionMenu = false
-                actionMenuList = mutableListOf(
-                    MenuItem(
-                        title = "Save Edits",
-                        onClick = {
-                            actionMenuList = savedactionMenuList.toMutableList()
-                            editMode = false
-                            saveEditsChange()
-                            showActionMenu = false
-                        }
-                    ),
-                    MenuItem(
-                        title = "Cancel",
-                        onClick = {
-                            actionMenuList = savedactionMenuList.toMutableList()
-                            editMode = false
-                            reload()
-                            showActionMenu = false
-                    }
-                )
-                )
-            },
-        ),
-        MenuItem(
-            title = "Complete",
-            onClick = {}
-        ),
-
-    )
-
-    val addMenuList = listOf(
-        MenuItem(
-            title = "Viscosity Test",
-            onClick = {
-                popupDetails.width = 700
-                popupDetails.height = 500
-                popupDetails.content = {
-                    sharedViewModel.updateSaveType(APICallTypes.INSERT)
-                    ViscosityScreen(sharedViewModel)
-                }
-                showPopupWindow.value = true
-                showAddMenu = false
-                      },
-        ),
-        MenuItem(
-            title = "Gel Time Test",
-            onClick = {
-                popupDetails.width = 700
-                popupDetails.height = 500
-                popupDetails.content = {
-                    sharedViewModel.updateSaveType(APICallTypes.INSERT)
-                    GelTimeScreen(sharedViewModel)
-                }
-                showPopupWindow.value = true
-                showAddMenu = false
-            },
-        ),
-        MenuItem(
-            title = "Adjustment",
-            onClick = {
-                popupDetails.width = 700
-                popupDetails.height = 500
-                popupDetails.content = {
-                    sharedViewModel.updateSaveType(APICallTypes.INSERT)
-                    AdjustmentsScreen(sharedViewModel)
-                }
-                showPopupWindow.value = true
-                showAddMenu = false
-            }
-        ),
-    )
     var assemblyHeader by mutableStateOf<List<APICallTables.AssemblyHeader>>(emptyList())
         private set
     var assemblyDetailsLines = mutableStateListOf<AssemblyLinesItem>()
@@ -144,6 +88,10 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
 
     var showAssemblyDetails = mutableStateOf(false)
         private set
+    var closeDetailScreen = mutableStateOf(false)
+        private set
+    var hideAllDetails = mutableStateOf(false)
+        private set
 
     var notes by mutableStateOf("")
         private set
@@ -155,43 +103,258 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
         private set
 
     var orderQty = mutableStateOf("")
+        private set
+    var numberOfBatches = mutableStateOf("1")
+        private set
+    var oldNumberOfBatches = mutableStateOf("")
+        private set
+    var maxBatchSize = mutableStateOf("")
+        private set
 
-    var noOfBatches = mutableStateOf("")
+    var  batchNumber = mutableStateOf("")
 
+    val stepNames = mutableStateListOf<Any>()
 
+    var batchSize = mutableDoubleStateOf(0.0)
+        private set
+    var batchSizeUnit = mutableStateOf("Kg")
+        private set
 
+    var isFlipPhone by mutableStateOf(false)
+        private set
 
+    var isTablet by mutableStateOf(false)
 
+    var isLandscape by mutableStateOf(false)
+
+    var actionMenuList: MutableList<MenuItem> = mutableListOf(
+        MenuItem(
+            title = {"Refresh page"},
+            onClick = {
+                reload()
+                showActionMenu = false
+            }
+        ),
+        MenuItem(
+            title = {if (hideAllDetails.value){"Show Details"}else{"Hide Details"}},
+            onClick = {
+                if (!hideAllDetails.value && showAssemblyDetails.value){
+                    showAssemblyDetails.value = false
+                    hideAllDetails.value = !hideAllDetails.value
+                    showActionMenu = false
+                }else{
+                    hideAllDetails.value = !hideAllDetails.value
+                    showActionMenu = false
+                }
+            }
+        ),
+        MenuItem(
+            title = {"Edit Order"},
+            onClick = {
+                savedActionMenuList = actionMenuList.toMutableList()
+                savedAddMenuList = addMenuList.toMutableList()
+                editMode = true
+                showActionMenu = false
+                actionMenuList = mutableListOf(
+                    MenuItem(
+                        title = {"Save Edits"},
+                        onClick = {
+                            actionMenuList = savedActionMenuList.toMutableList()
+                            addMenuList = savedAddMenuList.toMutableList()
+                            editMode = false
+                            saveEditsChange()
+                            showActionMenu = false
+                        }
+                    ),
+                    MenuItem(
+                        title = {"Delete Order"},
+                        onClick = {
+                            actionMenuList = savedActionMenuList.toMutableList()
+                            addMenuList = savedAddMenuList.toMutableList()
+                            editMode = false
+                            deleteAssemblyOrder()
+                            showActionMenu = false
+                        }
+                    ),
+                    MenuItem(
+                        title = {"Cancel"},
+                        onClick = {
+                            actionMenuList = savedActionMenuList.toMutableList()
+                            addMenuList = savedAddMenuList.toMutableList()
+                            editMode = false
+                            reload()
+                            showActionMenu = false
+                    }
+                )
+                )
+                addMenuList = mutableListOf(
+                    MenuItem(
+                        title = {"Add Line"},
+                        onClick = {
+                            popupDetails.width = 700
+                            popupDetails.height = 500
+                            popupDetails.content = {
+                                AddLineScreen(sharedViewModel, stepNames)
+                            }
+                            showPopupWindow.value = true
+                            showAddMenu = false
+                        }
+                    ),
+                )
+            },
+        ),
+        MenuItem(
+            title = {"Complete"},
+            onClick = {
+                showActionMenu = false
+                completeOrder()
+            }
+        ),
+
+    )
+
+    var addMenuList = listOf(
+        MenuItem(
+            title = {"Viscosity Test"},
+            onClick = {
+                popupDetails.width = 700
+                popupDetails.height = 500
+                popupDetails.content = {
+                    sharedViewModel.updateSaveType(APICallTypes.INSERT)
+                    ViscosityScreen(sharedViewModel)
+                }
+                showPopupWindow.value = true
+                showAddMenu = false
+                      },
+        ),
+        MenuItem(
+            title = {"Gel Time Test"},
+            onClick = {
+                popupDetails.width = 700
+                popupDetails.height = 500
+                popupDetails.content = {
+                    sharedViewModel.updateSaveType(APICallTypes.INSERT)
+                    GelTimeScreen(sharedViewModel)
+                }
+                showPopupWindow.value = true
+                showAddMenu = false
+            },
+        ),
+        MenuItem(
+            title = {"Elongation Test"},
+            onClick = {
+                popupDetails.width = 600
+                popupDetails.height = 350
+                popupDetails.content = {
+                    sharedViewModel.updateSaveType(APICallTypes.INSERT)
+                    ElongationalBreakScreen(sharedViewModel)
+                }
+                showPopupWindow.value = true
+                showAddMenu = false
+            },
+        ),
+        MenuItem(
+            title = {"Flammability Test"},
+            onClick = {
+                popupDetails.width = 700
+                popupDetails.height = 500
+                popupDetails.content = {
+                    sharedViewModel.updateSaveType(APICallTypes.INSERT)
+                    FlammabilityScreen(sharedViewModel)
+                }
+                showPopupWindow.value = true
+                showAddMenu = false
+            },
+        ),
+        MenuItem(
+            title = {"Resistivity Test"},
+            onClick = {
+                popupDetails.width = 600
+                popupDetails.height = 350
+                popupDetails.content = {
+                    sharedViewModel.updateSaveType(APICallTypes.INSERT)
+                    ResistivityScreen(sharedViewModel)
+                }
+                showPopupWindow.value = true
+                showAddMenu = false
+            },
+        ),
+        MenuItem(
+            title = {"Peak Exo Test"},
+            onClick = {
+                popupDetails.width = 700
+                popupDetails.height = 500
+                popupDetails.content = {
+                    sharedViewModel.updateSaveType(APICallTypes.INSERT)
+                    PeakExothermScreen(sharedViewModel)
+                }
+                showPopupWindow.value = true
+                showAddMenu = false
+            },
+        ),
+        MenuItem(
+            title = {"Adjustment"},
+            onClick = {
+                popupDetails.width = 700
+                popupDetails.height = 500
+                popupDetails.content = {
+                    sharedViewModel.updateSaveType(APICallTypes.INSERT)
+                    AdjustmentsScreen(sharedViewModel)
+                }
+                showPopupWindow.value = true
+                showAddMenu = false
+            }
+        ),
+    )
 
     fun togglePopup(window: MutableState<Boolean>){
         window.value = !window.value
     }
 
+    fun onFlipPhone(){
+        isFlipPhone = true
+    }
+
     fun showAssemblyDetails(){
         showAssemblyDetails.value = true
     }
+
     fun hideAssemblyDetails(){
         showAssemblyDetails.value = false
+    }
+
+    fun showAllDetails(){
+        hideAllDetails.value = true
+    }
+
+    fun hideAllDetails(){
+        hideAllDetails.value = false
     }
 
     fun showTestAndAdjustments(){
         showTestAndAdjustments.value = true
     }
+
     fun hideTestAndAdjustments(){
         showTestAndAdjustments.value = false
     }
+
     fun retrieveAssemblyDetails(){
         viewModelScope.launch {
             val assemblyHeaderCall : List<APICallTables.AssemblyHeader>? = apiCall.query("SELECT * FROM AssemblyHeader where OrderNumber = '${sharedViewModel.currentOrderNumber.value}'")
             assemblyHeader = assemblyHeaderCall ?: emptyList()
-            orderQty.value = assemblyHeader.first().ORDERQTY.toString()
-            noOfBatches.value = assemblyHeader.first().ADDITIONALFIELD_12
+            orderQty.value = assemblyHeader.firstOrNull()?.ORDERQTY.toString()
+            if (orderQty.value.isNotEmpty() && assemblyHeader.firstOrNull()?.ADDITIONALFIELD_13?.isNotEmpty() == true){
+                maxBatchSize.value = assemblyHeader.firstOrNull()?.ADDITIONALFIELD_13!!
+                numberOfBatches.value = ceil(orderQty.value.toDouble()/maxBatchSize.value.toDouble()).toInt().toString()
+                oldNumberOfBatches.value = ceil(orderQty.value.toDouble()/maxBatchSize.value.toDouble()).toInt().toString()
+            }
 
-
-            val assemblyDetailsLinesCall : List<APICallTables.AssemblyLines>? = apiCall.query("SELECT * FROM AssemblyLines where OrderNumber = '${sharedViewModel.currentOrderNumber.value}'")
+            val assemblyDetailsLinesCall : List<APICallTables.AssemblyLines>? = apiCall.query("SELECT * FROM AssemblyLines where OrderNumber = '${sharedViewModel.currentOrderNumber.value}' order by LINENUMBER")
             assemblyDetailsLines.clear()
+            batchSize.doubleValue = 0.0
             for (i in 0 until (assemblyDetailsLinesCall?.size ?: 0)) {
-                val assemblyDetailsLine: AssemblyLinesItem = AssemblyLinesItem(
+                val assemblyDetailsLine = AssemblyLinesItem(
                     ORDERNUMBER = assemblyDetailsLinesCall!![i].ORDERNUMBER,
                     STEPNAME = assemblyDetailsLinesCall[i].STEPNAME,
                     STEPSEQUENCE = assemblyDetailsLinesCall[i].STEPSEQUENCE,
@@ -207,24 +370,42 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
                     POSITIONREFERENCE = assemblyDetailsLinesCall[i].POSITIONREFERENCE,
                     LINENOTES = assemblyDetailsLinesCall[i].LINENOTES,
                     HEADERSYSUNIQUEID = assemblyDetailsLinesCall[i].HEADERSYSUNIQUEID.toString(),
-                    ADDITIONALFIELD_1 = assemblyDetailsLinesCall[i].ADDITIONALFIELD_1,
+                    ADDITIONALFIELD_1 = assemblyDetailsLinesCall[i].ADDITIONALFIELD_1.toBoolean(),
                     ADDITIONALFIELD_2 = assemblyDetailsLinesCall[i].ADDITIONALFIELD_2,
                     ADDITIONALFIELD_3 = assemblyDetailsLinesCall[i].ADDITIONALFIELD_3,
                     ADDITIONALFIELD_4 = assemblyDetailsLinesCall[i].ADDITIONALFIELD_4,
                     ADDITIONALFIELD_6 = assemblyDetailsLinesCall[i].ADDITIONALFIELD_6,
                 )
                 assemblyDetailsLines.add(assemblyDetailsLine)
+                if (assemblyDetailsLinesCall[i].STEPNAME == "Assembly"){
+                    batchSize.doubleValue += assemblyDetailsLinesCall[i].ORDERQTY
+                }
+                if (!stepNames.contains(assemblyDetailsLinesCall[i].STEPNAME)){
+                    stepNames.add(assemblyDetailsLinesCall[i].STEPNAME)
+                }
+            }
+            if (batchSize.doubleValue <= 0){
+                batchSize.doubleValue = orderQty.value.toDouble()
+                batchSizeUnit.value = assemblyHeader.first().ITEMUNIT
             }
             sharedViewModel.currentAssemblyHeader = assemblyHeader.firstOrNull()
             sharedViewModel.currentAssemblyLines = assemblyDetailsLinesCall
-            Log.d("Test","assemblyDetailsLines size = ${assemblyDetailsLines.size} string = ${assemblyDetailsLines}")
+
+            val call = "UPDATE AssemblyHeader SET " +
+                    "ADDITIONALFIELD_12 = ${numberOfBatches.value.toInt()}, " +
+                    "ADDITIONALFIELD_6 = ${batchSize.doubleValue}, " +
+                    "SYSUSERMODIFIED = '${sharedViewModel.currentUser.value}' " +
+                    "WHERE ORDERNUMBER = '${assemblyHeader.first().ORDERNUMBER}'"
+
+
+            apiCall.insertUpdateDelete(call)
+            
 
 
         }
     }
 
     fun retrieveTestDetails(){
-        testAndAdjustments.clear()
         val testCount = mutableListOf<Int>()
 
         viewModelScope.launch {
@@ -232,6 +413,15 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
             testCount.addAll(viscosityTests?.map { it.TESTNO } ?: emptyList())
             val gelTimeTests : List<APICallTables.gelTimeTest>? = apiCall.query("SELECT * FROM OSTDEF_GELTIME_TESTS where OrderNumber = '${sharedViewModel.currentOrderNumber.value}'")
             testCount.addAll(gelTimeTests?.map { it.TESTNO } ?: emptyList())
+            val elongationTests : List<APICallTables.ElongationalBreakTest>? = apiCall.query("SELECT * FROM OSTDEF_ELONGATIONAL_TEST where OrderNumber = '${sharedViewModel.currentOrderNumber.value}'")
+            testCount.addAll(elongationTests?.map { it.TESTNO } ?: emptyList())
+            val flameTests : List<APICallTables.FlammabilityTest>? = apiCall.query("SELECT * FROM OSTDEF_FLAMMABILITY_TEST where OrderNumber = '${sharedViewModel.currentOrderNumber.value}'")
+            testCount.addAll(flameTests?.map { it.TESTNO } ?: emptyList())
+            val resistivityTests : List<APICallTables.ResistivityTest>? = apiCall.query("SELECT * FROM OSTDEF_RESISTIVITY_TEST where OrderNumber = '${sharedViewModel.currentOrderNumber.value}'")
+            testCount.addAll(resistivityTests?.map { it.TESTNO } ?: emptyList())
+            val peakExothermTests : List<APICallTables.peakExothermTest>? = apiCall.query("SELECT * FROM OSTDEF_PEAKEXOTHERM_TEST where OrderNumber = '${sharedViewModel.currentOrderNumber.value}'")
+            testCount.addAll(peakExothermTests?.map { it.TESTNO } ?: emptyList())
+
 
             testCount.sortDescending()
             sharedViewModel.testCount.value = testCount.firstOrNull() ?: 0
@@ -249,6 +439,7 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
             testAndAdjustmentsCount.sortDescending()
 
 
+            testAndAdjustments.clear()
             for (testValue in 0 until testAndAdjustmentsCount.first()) {
                 val testAndAdjustment = mutableStateListOf<Any>()
                 val test = mutableStateListOf<Any>()
@@ -258,6 +449,18 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
                 }
                 for (tn in 0 until (gelTimeTests?.size ?: 0)) {
                     if (gelTimeTests?.get(tn)?.TESTNO == testValue + 1) test.add(gelTimeTests[tn])
+                }
+                for (tn in 0 until (elongationTests?.size ?: 0)) {
+                    if (elongationTests?.get(tn)?.TESTNO == testValue + 1) test.add(elongationTests[tn])
+                }
+                for (tn in 0 until (flameTests?.size ?: 0)) {
+                    if (flameTests?.get(tn)?.TESTNO == testValue + 1) test.add(flameTests[tn])
+                }
+                for (tn in 0 until (resistivityTests?.size ?: 0)) {
+                    if (resistivityTests?.get(tn)?.TESTNO == testValue + 1) test.add(resistivityTests[tn])
+                }
+                for (tn in 0 until (peakExothermTests?.size ?: 0)) {
+                    if (peakExothermTests?.get(tn)?.TESTNO == testValue + 1) test.add(peakExothermTests[tn])
                 }
                 for (tn in 0 until (adjustmentLines?.size ?: 0)) {
                     if (adjustmentLines?.get(tn)?.ADJUSTNO == testValue + 1) adjust.add(adjustmentLines[tn])
@@ -274,56 +477,60 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
                 notes += notesline?.get(NN)?.NOTE
                 notes += "\n\n"
             }
-            Log.d("test",notes)
+            
         }
     }
 
     fun retrieveLabelData() {
         viewModelScope.launch {
-            val itemInfoCall: List<APICallTables.assemblyLabelItemInfo>? = apiCall.query("SELECT LII.HEADERSYSUNIQUEID, LII.SYSUNIQUEID, LII.ITEMCODE, LII.TOPNAME, LII.MIDDLENAME, LII.BOTTOMNAME, LII.SIZE, LII.QRCODE, LII.VARIANT, LII.BESTBEFORE, LII.LABELSTYLE, LII.BOXQTY, IM.ITEMBARCODE FROM OSTDEF_LABELITEMINFO AS LII JOIN ITEMMASTER AS IM on LII.ITEMCODE = IM.ITEMCODE where LII.ITEMCODE = '${assemblyHeader.firstOrNull()?.ITEMCODE}'")
+            val itemInfoCall: List<APICallTables.assemblyLabelItemInfo>? = apiCall.query("SELECT LII.HEADERSYSUNIQUEID, LII.SYSUNIQUEID, LII.ITEMCODE, LII.TOPNAME, LII.MIDDLENAME, LII.BOTTOMNAME, LII.SIZE, LII.QRCODE, LII.VARIANT, LII.BESTBEFORE, LII.LABELSTYLE, LII.BOXQTY, IM.ITEMBARCODE FROM OSTDEF_LABELITEMINFO AS LII JOIN ITEMMASTER AS IM on LII.ITEMCODE = IM.ITEMCODE where LII.ITEMCODE = '${sharedViewModel.currentItemCode.value}'")
             itemInfo = itemInfoCall ?: emptyList()
 
-            for (x in 0 until itemInfo.size){
-                val classInfoCall: List<APICallTables.assemblyLabelClassInfo>? = apiCall.query("Select * from OSTDEF_LABELCLASSINFO where SYSUNIQUEID = '${itemInfo[x].HEADERSYSUNIQUEID}'")
-                val labelLayoutCall: List<APICallTables.assemblyLabelLayout>? = apiCall.query("Select * from OSTDEF_LABELLAYOUTINFO where LABELID = '${itemInfo[x].LABELSTYLE}'")
-                val boxLayoutCall: List<APICallTables.assemblyLabelLayout>? = apiCall.query("Select * from OSTDEF_LABELLAYOUTINFO where LABELID = '${LabelStyles.BOX}'")
-                val dgInfoCall: List<APICallTables.assemblyLabelDGInfo>? = apiCall.query("select dgi.UNNUMBER, dgi.PACKINGGROUP, dgi.DGCLASS, dgl.DGQUANTITY from OSTDEF_DGINFO as dgi " +
-                        "join OSTDEF_DGLINES as dgl on dgl.HEADERSYSUNIQUEID = dgi.SYSUNIQUEID and dgl.LINECODE = '${itemInfo[x].ITEMCODE}' and dgl.CODETYPE = 'Item Code'")
-                if (classInfoCall != null && labelLayoutCall != null){
-                    productLabelDataList.add(LabelElements(itemInfo[x], classInfoCall.first(), labelLayoutCall.first(), dgInfoCall?.first(), sharedViewModel))
-                    if (boxLayoutCall != null){
-                        boxLabelDataList.add(LabelElements(itemInfo[x].copy(LABELSTYLE = LabelStyles.BOX), classInfoCall.first(), boxLayoutCall.first(), dgInfoCall?.first(), sharedViewModel))
-                    }
-                    var itemName = ""
-                    if (itemInfo.size > 1) {
-                        if (itemInfo[x].MIDDLENAME.isNotEmpty()) {
-                            itemName = "${itemInfo[x].MIDDLENAME}\n"
-                        } else {
-                            itemName = "${itemInfo[x].TOPNAME} ${itemInfo[x].BOTTOMNAME}\n"
-                        }
-                    }
-                    actionMenuList.addAll(
-                        listOf(
-                            MenuItem(
-                                title = "${itemName}Product Labels",
-                                onClick = {
-                                    labelStyle = itemInfo[x].LABELSTYLE
-                                    labelIndex = x
-                                    sharedViewModel.openLabelPreview()
-                                    showActionMenu = false
-                                }
-                            ),
-                            MenuItem(
-                                title = "${itemName}Box Labels",
-                                onClick = {
-                                    labelStyle = LabelStyles.BOX
-                                    labelIndex = x
-                                    sharedViewModel.openLabelPreview()
-                                    showActionMenu = false
-                                }
-                            ),
-                        )
+            if(itemInfo.isNotEmpty()) {
+                for (x in 0 until itemInfo.size) {
+                    val classInfoCall: List<APICallTables.assemblyLabelClassInfo>? = apiCall.query("Select * from OSTDEF_LABELCLASSINFO where SYSUNIQUEID = '${itemInfo[x].HEADERSYSUNIQUEID}'")
+                    val labelLayoutCall: List<APICallTables.assemblyLabelLayout>? = apiCall.query("Select * from OSTDEF_LABELLAYOUTINFO where LABELID = '${itemInfo[x].LABELSTYLE}'")
+                    val boxLayoutCall: List<APICallTables.assemblyLabelLayout>? = apiCall.query("Select * from OSTDEF_LABELLAYOUTINFO where LABELID = '${LabelStyles.BOX}'")
+                    val dgInfoCall: List<APICallTables.itemDGInfo>? = apiCall.query(
+                        "select dgi.UNNUMBER, dgi.PACKINGGROUP, dgi.DGCLASS, dgl.DGQUANTITY from OSTDEF_DGINFO as dgi " +
+                                "join OSTDEF_DGLINES as dgl on dgl.HEADERSYSUNIQUEID = dgi.SYSUNIQUEID and dgl.LINECODE = '${itemInfo[x].ITEMCODE}' and dgl.CODETYPE = 'Item Code'"
                     )
+                    if (classInfoCall != null && labelLayoutCall != null) {
+                        productLabelDataList.add(LabelElements(itemInfo[x], classInfoCall.first(), labelLayoutCall.first(), dgInfoCall?.first(), sharedViewModel))
+                        if (boxLayoutCall != null) {
+                            boxLabelDataList.add(LabelElements(itemInfo[x].copy(LABELSTYLE = LabelStyles.BOX), classInfoCall.first(), boxLayoutCall.first(), dgInfoCall?.first(), sharedViewModel))
+                        }
+                        var itemName = ""
+                        if (itemInfo.size > 1) {
+                            if (itemInfo[x].MIDDLENAME.isNotEmpty()) {
+                                itemName = "${itemInfo[x].MIDDLENAME}\n"
+                            } else {
+                                itemName = "${itemInfo[x].TOPNAME} ${itemInfo[x].BOTTOMNAME}\n"
+                            }
+                        }
+                        actionMenuList.addAll(
+                            listOf(
+                                MenuItem(
+                                    title = { "${itemName}Product Labels" },
+                                    onClick = {
+                                        labelStyle = itemInfo[x].LABELSTYLE
+                                        labelIndex = x
+                                        sharedViewModel.openLabelPreview()
+                                        showActionMenu = false
+                                    }
+                                ),
+                                MenuItem(
+                                    title = { "${itemName}Box Labels" },
+                                    onClick = {
+                                        labelStyle = LabelStyles.BOX
+                                        labelIndex = x
+                                        sharedViewModel.openLabelPreview()
+                                        showActionMenu = false
+                                    }
+                                ),
+                            )
+                        )
+                    }
                 }
             }
         }
@@ -339,6 +546,15 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
         showAddMenu = !showAddMenu
     }
 
+    fun closeMenus(){
+        showAddMenu = false
+        showActionMenu = false
+    }
+
+    fun openDetailScreen(){
+        closeDetailScreen.value = false
+    }
+
     fun notesPressed(){
         popupDetails.width = 700
         popupDetails.height = 500
@@ -350,15 +566,20 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
         showAddMenu = false
     }
 
-    fun addListItemPressed(selection : MutableState<Boolean>){
-        selection.value = true
-        showAddMenu = false
+    fun onMaxBatchSizeChange(newValue: String){
+        maxBatchSize.value = newValue
+    }
+
+    fun onNumberOfBatchesChange(newValue: String){
+        numberOfBatches.value = newValue
+    }
+
+    fun orderQty(newValue: String){
+        orderQty.value = newValue
     }
 
     fun onEditLineChange(newValue: String, field : AssemblyLinesItem, line: Int){
-
-
-        Log.d("Qty", assemblyDetailsLines[line].ORDERQTY)
+        
         val updatedList = assemblyDetailsLines
 
         updatedList[line] = updatedList[line].copy(
@@ -366,30 +587,30 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
         )
 
         assemblyDetailsLines = updatedList
-        Log.d("update Qty", assemblyDetailsLines[line].ORDERQTY)
+        
     }
 
     fun saveEditsChange() {
         if (showAssemblyDetails.value) {
+            if (oldNumberOfBatches.value == numberOfBatches.value){
+                numberOfBatches.value = ceil(orderQty.value.toDouble()/maxBatchSize.value.toDouble()).toInt().toString()
+            } else {
+                maxBatchSize.value = (orderQty.value.toDouble()/numberOfBatches.value.toDouble()).toString()
+            }
             viewModelScope.launch {
-                var callCheck = 0
-                for (i in 0 until assemblyDetailsLines.size) {
-                    val call = "UPDATE AssemblyLines SET  " +
-                            "ORDERQTY = ${assemblyDetailsLines[i].ORDERQTY.toDouble()}," +
-                            "SYSUSERMODIFIED = '${sharedViewModel.currentUser.value}'" +
-                            "WHERE LINENUMBER = ${assemblyDetailsLines[i].LINENUMBER} and " +
-                            "LINECODE = '${assemblyDetailsLines[i].LINECODE}' and " +
-                            "ORDERNUMBER = '${assemblyDetailsLines[i].ORDERNUMBER}'"
+                val call = "UPDATE AssemblyHeader SET " +
+                            "ORDERQTY = ${orderQty.value.toDouble()}, " +
+                            "ADDITIONALFIELD_12 = ${numberOfBatches.value.toInt()}, " +
+                            "ADDITIONALFIELD_13 = ${maxBatchSize.value.toDouble()}, " +
+                            "SYSUSERMODIFIED = '${sharedViewModel.currentUser.value}' " +
+                            "WHERE ORDERNUMBER = '${assemblyHeader.first().ORDERNUMBER}'"
 
-                    val response = apiCall.insertUpdateDelete(call)
-                    if (response == "200 OK") {
-                        callCheck += 1
-                    } else {
-                        sharedViewModel.snackBarMessage("Error Saving ${assemblyDetailsLines[i].LINEDESCRIPTION}, Please Try Again")
-                    }
-                }
-                if (callCheck == assemblyDetailsLines.size) {
+                
+                val response = apiCall.insertUpdateDelete(call)
+                if (response == "200 OK") {
                     sharedViewModel.snackBarMessage("Qty Saved successfully")
+                } else {
+                    sharedViewModel.snackBarMessage("Error Saving Details, Please Try Again")
                 }
                 reload()
             }
@@ -418,8 +639,494 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
             }
         }
     }
+
     fun reload(){
-        retrieveAssemblyDetails()
-        retrieveTestDetails()
+        if(!closeDetailScreen.value) {
+            retrieveAssemblyDetails()
+            retrieveTestDetails()
+        }
     }
+
+    fun lineChecked(order: AssemblyLinesItem) {
+        order.ADDITIONALFIELD_1 = !order.ADDITIONALFIELD_1
+        reload()
+        viewModelScope.launch {
+            val call = "UPDATE AssemblyLines SET  " +
+                    "ADDITIONALFIELD_1 = '${order.ADDITIONALFIELD_1}', " +
+                    "SYSUSERMODIFIED = '${sharedViewModel.currentUser.value}' " +
+                    "WHERE LINENUMBER = ${order.LINENUMBER} and " +
+                    "LINECODE = '${order.LINECODE}' and " +
+                    "ORDERNUMBER = '${order.ORDERNUMBER}'"
+
+            
+            val response = apiCall.insertUpdateDelete(call)
+            if (response != "200 OK") {
+                sharedViewModel.snackBarMessage("Error Saving Checkbox, Please Try Again")
+                order.ADDITIONALFIELD_1 = !order.ADDITIONALFIELD_1
+                reload()
+            }
+        }
+    }
+
+    fun batchEntered(order: AssemblyLinesItem){
+        popupDetails.width = 450
+        popupDetails.height = 200
+        popupDetails.content = {
+            LaunchedEffect(Unit){
+                batchNumber.value = order.ADDITIONALFIELD_2
+            }
+            
+            Box(
+                modifier = Modifier
+                    .fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(all = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                    Text(
+                        text = "Batch Number",
+                        style = MaterialTheme.typography.headlineLarge,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedStyleTextLine(
+                        value = batchNumber.value,
+                        onValueChange = { newValue -> batchNumber.value = newValue
+                        }
+                    )
+                    Row(
+                        modifier = Modifier.weight(2f),
+                        verticalAlignment = Alignment.CenterVertically
+                    ){
+                        Spacer(modifier = Modifier.weight(1f))
+                        Button(
+                            modifier = Modifier
+                                .weight(3f)
+                                .padding(horizontal = 15.dp, vertical = 20.dp),
+                            onClick = { sharedViewModel.closePopup() }
+                        ) { Text(text = "Cancel") }
+                        Button(
+                            modifier = Modifier
+                                .weight(3f)
+                                .padding(horizontal = 15.dp, vertical = 20.dp),
+                            onClick = {
+                                if (batchNumber.value.isNotEmpty()) {
+                                    viewModelScope.launch {
+                                        val call = "UPDATE AssemblyLines SET  " +
+                                                "ADDITIONALFIELD_2 = '${batchNumber.value}', " +
+                                                "SYSUSERMODIFIED = '${sharedViewModel.currentUser.value}' " +
+                                                "WHERE LINENUMBER = ${order.LINENUMBER} and " +
+                                                "LINECODE = '${order.LINECODE}' and " +
+                                                "ORDERNUMBER = '${order.ORDERNUMBER}'"
+
+                                        
+                                        val response = apiCall.insertUpdateDelete(call)
+                                        if (response == "200 OK") {
+                                            sharedViewModel.closePopup()
+                                        } else {
+                                            sharedViewModel.snackBarMessage("Error Saving Batch Number, Please Try Again")
+                                        }
+                                    }
+                                } else {
+                                    sharedViewModel.closePopup()
+                                }
+                            }
+                        ) { Text(text = "Save") }
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+            }
+        }
+        showPopupWindow.value = true
+    }
+
+    fun lineDelete(order: AssemblyLinesItem){
+        popupDetails.width = 450
+        popupDetails.height = 230
+        popupDetails.content = {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(all = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "Delete Assembly Line",
+                        style = MaterialTheme.typography.headlineLarge,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Text(
+                        text = "Are you sure you want to remove ${order.LINEDESCRIPTION} from this assembly?",
+                        textAlign = TextAlign.Center,
+                    )
+
+                    Row(
+                        modifier = Modifier.weight(2f),
+                        verticalAlignment = Alignment.CenterVertically
+                    ){
+                        Spacer(modifier = Modifier.weight(1f))
+                        Button(
+                            modifier = Modifier
+                                .weight(3f)
+                                .padding(horizontal = 15.dp, vertical = 20.dp),
+                            onClick = { sharedViewModel.closePopup() }
+                        ) { Text(text = "No") }
+                        Button(
+                            modifier = Modifier
+                                .weight(3f)
+                                .padding(horizontal = 15.dp, vertical = 20.dp),
+                            onClick = {
+                                viewModelScope.launch {
+                                    val call = "DELETE FROM AssemblyLines " +
+                                            "WHERE LINENUMBER = ${order.LINENUMBER} and " +
+                                            "LINECODE = '${order.LINECODE}' and " +
+                                            "ORDERNUMBER = '${order.ORDERNUMBER}'"
+
+                                    
+                                    val response = apiCall.insertUpdateDelete(call)
+                                    if (response == "200 OK") {
+                                        sharedViewModel.closePopup()
+                                    } else {
+                                        sharedViewModel.snackBarMessage("Error Deleting Assembly Line, Please Try Again")
+                                    }
+                                }
+                            }
+                        ) { Text(text = "Yes") }
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+            }
+        }
+        showPopupWindow.value = true
+    }
+
+    fun testDelete(line: Any){
+        if (editMode) {
+            popupDetails.width = 450
+            popupDetails.height = 230
+            popupDetails.content = {
+                var testTable = ""
+                var testName = ""
+                var testNo = ""
+                var testOrderNumber = ""
+                var testID = ""
+                when (line) {
+                    is APICallTables.viscosityTest -> {
+                        testTable = "OSTDEF_VISCOSITY_TESTS"
+                        testName = "Viscosity"
+                        testNo = line.TESTNO.toString()
+                        testOrderNumber = line.ORDERNUMBER
+                        testID = line.SYSUNIQUEID.toString()
+                    }
+
+                    is APICallTables.gelTimeTest -> {
+                        testTable = "OSTDEF_GELTIME_TESTS"
+                        testName = "Gel Time"
+                        testNo = line.TESTNO.toString()
+                        testOrderNumber = line.ORDERNUMBER
+                        testID = line.SYSUNIQUEID.toString()
+                    }
+
+                    is APICallTables.ElongationalBreakTest -> {
+                        testTable = "OSTDEF_ELONGATIONAL_TEST"
+                        testName = "Elongation"
+                        testNo = line.TESTNO.toString()
+                        testOrderNumber = line.ORDERNUMBER
+                        testID = line.SYSUNIQUEID.toString()
+                    }
+
+                    is APICallTables.FlammabilityTest -> {
+                        testTable = "OSTDEF_FLAMMABILITY_TEST"
+                        testName = "Flammability"
+                        testNo = line.TESTNO.toString()
+                        testOrderNumber = line.ORDERNUMBER
+                        testID = line.SYSUNIQUEID.toString()
+                    }
+
+                    is APICallTables.ResistivityTest -> {
+                        testTable = "OSTDEF_RESISTIVITY_TEST"
+                        testName = "Resistivity"
+                        testNo = line.TESTNO.toString()
+                        testOrderNumber = line.ORDERNUMBER
+                        testID = line.SYSUNIQUEID.toString()
+                    }
+
+                    is APICallTables.peakExothermTest -> {
+                        testTable = "OSTDEF_PEAKEXOTHERM_TEST"
+                        testName = "Peak Exotherm"
+                        testNo = line.TESTNO.toString()
+                        testOrderNumber = line.ORDERNUMBER
+                        testID = line.SYSUNIQUEID.toString()
+                    }
+                }
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(all = 16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = "Delete $testName Test",
+                            style = MaterialTheme.typography.headlineLarge,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Text(
+                            text = "Are you sure you want to delete the $testName test from this assembly?",
+                            textAlign = TextAlign.Center,
+                        )
+
+                        Row(
+                            modifier = Modifier.weight(2f),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Spacer(modifier = Modifier.weight(1f))
+                            Button(
+                                modifier = Modifier
+                                    .weight(3f)
+                                    .padding(horizontal = 15.dp, vertical = 20.dp),
+                                onClick = { sharedViewModel.closePopup() }
+                            ) { Text(text = "No") }
+                            Button(
+                                modifier = Modifier
+                                    .weight(3f)
+                                    .padding(horizontal = 15.dp, vertical = 20.dp),
+                                onClick = {
+                                    viewModelScope.launch {
+                                        val call = "DELETE FROM $testTable " +
+                                                "WHERE TESTNO = $testNo and " +
+                                                "ORDERNUMBER = '$testOrderNumber' and " +
+                                                "SYSUNIQUEID = $testID"
+
+                                        
+                                        val response = apiCall.insertUpdateDelete(call)
+                                        if (response == "200 OK") {
+                                            sharedViewModel.closePopup()
+                                        } else {
+                                            sharedViewModel.snackBarMessage("Error Deleting Test Line, Please Try Again")
+                                        }
+                                    }
+                                }
+                            ) { Text(text = "Yes") }
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
+                    }
+                }
+            }
+            showPopupWindow.value = true
+        }
+    }
+
+    fun adjustmentsDelete(line: APICallTables.assemblyAdjustment){
+        popupDetails.width = 450
+        popupDetails.height = 200
+        popupDetails.content = {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(all = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Delete Adjustment Line",
+                        style = MaterialTheme.typography.headlineLarge,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Text(
+                        text = "Are you sure you want to delete the ${line.LINEDESCRIPTION} adjustment from this assembly?",
+                        textAlign = TextAlign.Center,
+                    )
+
+                    Row(
+                        modifier = Modifier.weight(2f),
+                        verticalAlignment = Alignment.CenterVertically
+                    ){
+                        Spacer(modifier = Modifier.weight(1f))
+                        Button(
+                            modifier = Modifier
+                                .weight(3f)
+                                .padding(horizontal = 15.dp, vertical = 20.dp),
+                            onClick = { sharedViewModel.closePopup() }
+                        ) { Text(text = "No") }
+                        Button(
+                            modifier = Modifier
+                                .weight(3f)
+                                .padding(horizontal = 15.dp, vertical = 20.dp),
+                            onClick = {
+                                viewModelScope.launch {
+                                    val call = "DELETE FROM OSTDEF_ADJUSTMENTS " +
+                                            "WHERE ADJUSTNO = ${line.ADJUSTNO} and " +
+                                            "ORDERNUMBER = '${line.ORDERNUMBER}' and " +
+                                            "SYSUNIQUEID = ${line.SYSUNIQUEID}"
+
+                                    val assemblyLinesCall = "UPDATE ASSEMBLYLINES " +
+                                            "SET ORDERQTY = ORDERQTY - ${line.ADJUSTQTY} " +
+                                            "WHERE ORDERNUMBER = '${line.ORDERNUMBER}' AND " +
+                                            "LINECODE = '${line.LINECODE}' and " +
+                                            "LINENUMBER = '${line.LINENUMBER}'"
+
+                                    
+                                    val responseCall = apiCall.insertUpdateDelete(call)
+                                    val responseAssembly = apiCall.insertUpdateDelete(assemblyLinesCall)
+                                    if (responseCall == "200 OK" && responseAssembly == "200 OK") {
+                                        closeDetailScreen.value = true
+                                        sharedViewModel.closePopup()
+                                    } else {
+                                        sharedViewModel.snackBarMessage("Error Deleting Adjustment Line, Please Try Again")
+                                    }
+                                }
+                            }
+                        ) { Text(text = "Yes") }
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+            }
+        }
+        showPopupWindow.value = true
+    }
+
+    fun completeOrderSend(){
+        viewModelScope.launch {
+            val itemCall: List<APICallTables.ItemMaster>? = apiCall.query("SELECT * FROM ITEMMASTER WHERE ITEMCODE = '${assemblyHeader.first().ITEMCODE}'")
+            val assemblyHeaderCall: List<APICallTables.AssemblyHeader>? = apiCall.query("SELECT * FROM ASSEMBLYHEADER WHERE ORDERNUMBER = '${assemblyHeader.first().ORDERNUMBER}'")
+            val date = toDateFormatYYYYMMDD(LocalDate.now())
+            val receiptUnitCost = assemblyHeaderCall?.first()?.PLANNEDTOTALCOSTS?.div(assemblyHeader.first().ORDERQTY)
+
+            
+            
+
+            val call = "INSERT INTO ASSEMBLYRECEIPTS" +
+                    "(ORDERNUMBER, ITEMCODE, RECEIPTQTY, RECEIPTUNIT, RECEIPTDATE, RECEIPTUNITCOST, RECEIPTWAREHOUSE, RECEIPTLOCATION) " +
+                    "VALUES " +
+                    "('${assemblyHeader.first().ORDERNUMBER}','${assemblyHeader.first().ITEMCODE}',${assemblyHeader.first().ORDERQTY},'${assemblyHeader.first().ITEMUNIT}', " +
+                    "'$date', '${receiptUnitCost}' ,'${itemCall?.first()?.DEFAULTRECEIPTWHOUSE}', '${itemCall?.first()?.DEFAULTRECEIPTLOCATION}')"
+
+            
+            val response = apiCall.insertUpdateDelete(call)
+            if (response == "200 OK") {
+                sharedViewModel.snackBarMessage("Order Completed")
+                closeDetailScreen.value = true
+            } else {
+                sharedViewModel.snackBarMessage("Error Saving, Please Try Again")
+            }
+        }
+    }
+
+    fun completeOrder() {
+        if (assemblyHeader.first().ORDERSTATUS == "Open") {
+            completeOrderSend()
+        } else{
+            popupMessageDetails.width = 380
+            popupMessageDetails.height = 200
+            popupMessageDetails.message = "It looks like this assembly order has \n already been marked as complete.\n\nWould you like to continue?"
+            popupMessageDetails.messageButton1Text = "No"
+            popupMessageDetails.onClickAction1 = {
+                sharedViewModel.closeMessagePopup()
+            }
+            popupMessageDetails.messageButton2Text = "Yes"
+            popupMessageDetails.onClickAction2 = {
+                completeOrderSend()
+                sharedViewModel.closeMessagePopup()
+            }
+            sharedViewModel.popupMessageDetails = popupMessageDetails
+            sharedViewModel.openMessagePopup()
+        }
+    }
+
+    fun deleteAssemblyOrder() {
+        popupDetails.width = 450
+        popupDetails.height = 250
+        popupDetails.content = {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(all = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Delete Assembly Order",
+                        style = MaterialTheme.typography.headlineLarge,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Text(
+                        text = "Are you sure you want to delete the assembly order: ${assemblyHeader.firstOrNull()?.ORDERNUMBER} - ${assemblyHeader.firstOrNull()?.ITEMDESCRIPTION}?",
+                        textAlign = TextAlign.Center,
+                    )
+
+                    Row(
+                        modifier = Modifier.weight(2f),
+                        verticalAlignment = Alignment.CenterVertically
+                    ){
+                        Spacer(modifier = Modifier.weight(1f))
+                        Button(
+                            modifier = Modifier
+                                .weight(3f)
+                                .padding(horizontal = 15.dp, vertical = 20.dp),
+                            onClick = { sharedViewModel.closePopup() }
+                        ) { Text(text = "No") }
+                        Button(
+                            modifier = Modifier
+                                .weight(3f)
+                                .padding(horizontal = 15.dp, vertical = 20.dp),
+                            onClick = {
+                                viewModelScope.launch {
+                                    val assemblyLinesCall = "DELETE FROM ASSEMBLYLINES WHERE ORDERNUMBER = '${assemblyHeader.firstOrNull()?.ORDERNUMBER}'"
+                                    val assemblyHeaderCall = "DELETE FROM AssemblyHeader WHERE ORDERNUMBER = '${assemblyHeader.firstOrNull()?.ORDERNUMBER}'"
+
+
+                                    val responseAssembly = apiCall.insertUpdateDelete(assemblyLinesCall)
+                                    val responseHeader = apiCall.insertUpdateDelete(assemblyHeaderCall)
+                                    if (responseHeader == "200 OK" && responseAssembly == "200 OK") {
+                                        sharedViewModel.closePopup()
+                                        closeDetailScreen.value = true
+                                        sharedViewModel.snackBarMessage("Assembly Order Deleted")
+
+                                    } else {
+                                        sharedViewModel.snackBarMessage("Error Deleting Assembly Order, Please Try Again")
+                                    }
+                                }
+                            }
+                        ) { Text(text = "Yes") }
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+            }
+        }
+        showPopupWindow.value = true
+    }
+
+
 }
