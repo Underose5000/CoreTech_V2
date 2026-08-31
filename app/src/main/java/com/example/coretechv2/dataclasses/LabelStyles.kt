@@ -7,6 +7,13 @@ import com.example.coretechv2.printlayouts.TuffStickThreeSectionLabel
 import com.example.coretechv2.printlayouts.TuffStickTwoSectionLabel
 import com.example.coretechv2.printlayouts.TwoSectionLabel
 
+/**
+ * Defines the available label styles used by the application.
+ *
+ * Each label style determines the layout used to display the label,
+ * whether the product is packaged in a tin, and which printer is used
+ * to print the label.
+ */
 enum class LabelStyles {
 
     ML250,ML500,ML500PL,L1,L2,L4,L20,L200,BULK, BOX, TUFFL1, TUFFL4, TUFFL20, TUFFL200, ERROR;
