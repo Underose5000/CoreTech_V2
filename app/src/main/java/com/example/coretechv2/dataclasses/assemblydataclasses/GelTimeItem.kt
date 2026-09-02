@@ -16,10 +16,10 @@ import androidx.compose.runtime.MutableState
  * @property second Second component of gel time
  * @property sysID Database unique identifier (nullable for new records)
  */
-data class GelTimeItem (
-    var catPercent: String  = "2",
+data class GelTimeItem(
+    var catPercent: String = "2",
     var testNumber: String = "1",
-    var catalyst : String = "N/A",
+    var catalyst: String = "N/A",
     var hour: String = "",
     var minute: String = "",
     var second: String = "",
@@ -45,7 +45,8 @@ enum class GelField {
 fun gelHasValue(item: MutableState<GelTimeItem>): Boolean {
     if (item.value.hour.isNotBlank() ||
         item.value.minute.isNotBlank() ||
-        item.value.second.isNotBlank()){
+        item.value.second.isNotBlank()
+    ) {
         return true
     }
     return false

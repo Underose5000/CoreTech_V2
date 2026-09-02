@@ -1,13 +1,11 @@
 package com.example.coretechv2.ui.component
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTransformGestures
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -34,10 +32,12 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -57,10 +57,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.coretechv2.dataclasses.APICallTables
 import com.example.coretechv2.dataclasses.LabelElements
 import com.example.coretechv2.dataclasses.LabelStyles
-import com.example.coretechv2.repository.printBrotherImage
 import com.example.coretechv2.dataclasses.PrinterType
 import com.example.coretechv2.repository.findPrinters
 import com.example.coretechv2.repository.labelToBitmap
+import com.example.coretechv2.repository.printBrotherImage
 import com.example.coretechv2.repository.printWithEpson
 import com.example.coretechv2.ui.theme.screenBackground
 import com.example.coretechv2.viewmodel.SharedViewModel
@@ -69,20 +69,71 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 
+/**
+ * Converts a measurement from millimetres to density-independent pixels (dp).
+ *
+ * The conversion uses a factor of approximately 3.78 dp per millimetre,
+ * based on the standard 96 DPI screen density.
+ *
+ * @param mm The measurement in millimetres.
+ * @return The equivalent measurement in [Dp].
+ */
 fun mmToDp(mm: Double): Dp {
     return (mm * 3.78).dp
 }
 
+/**
+ * Converts a measurement from typographic points (pt) to scalable pixels (sp).
+ *
+ * The conversion first converts points to pixels using the standard
+ * 96 DPI relationship, then represents the result as an [TextUnit] in sp.
+ *
+ * @param pt The font size or measurement in typographic points.
+ * @return The equivalent measurement as a scalable pixel [TextUnit].
+ */
 fun ptToSp(pt: Double): TextUnit {
     val dp = pt * (96f / 72f)
     return dp.sp
 }
 
+/**
+ * Converts a physical measurement from millimetres to pixels at the
+ * specified printer resolution.
+ *
+ * This conversion is primarily used when preparing labels for printing,
+ * where the physical label dimensions must be represented as a pixel
+ * bitmap at the printer's DPI.
+ *
+ * @param mm The measurement in millimetres.
+ * @param dpi The desired resolution in dots per inch. Defaults to 300 DPI.
+ * @return The equivalent measurement in pixels.
+ */
 fun mmToPixels(mm: Double, dpi: Int = 300): Int {
     return ((mm / 25.4f) * dpi).toInt()
 }
 
-
+/**
+ * Displays a preview of a product label and provides controls for
+ * selecting a printer and printing one or more copies of the label.
+ *
+ * The label is rendered as a bitmap using the supplied [LabelElements]
+ * configuration. The preview can be zoomed using pinch-to-zoom gestures
+ * and is automatically scaled to fit within the available screen space.
+ *
+ * On initial composition, available printers are discovered and a suitable
+ * printer is automatically selected based on the printer type configured
+ * for the label. Users can manually select a printer, refresh the printer
+ * list, and specify the number of copies to print through the print
+ * settings window.
+ *
+ * Supported printers include the Brother QL-1110 and Epson ColorWorks
+ * CW-C6510 printer families.
+ *
+ * @param labelElement The label data, layout configuration, styling
+ * and shared view model required to render and print the label.
+ * @param numOfCopies The initial number of label copies to print.
+ * Defaults to 1.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LabelPreview(
@@ -100,9 +151,9 @@ fun LabelPreview(
     val snackbarEvent = _snackbarEvent
 
 
-    LaunchedEffect(Unit){
+    LaunchedEffect(Unit) {
         numberOfCopies.value = numOfCopies.toString()
-        findPrinters(context){ printer ->
+        findPrinters(context) { printer ->
             foundPrinters.add(printer)
         }
     }
@@ -113,16 +164,16 @@ fun LabelPreview(
         }
     }
 
-    LaunchedEffect(foundPrinters.size){
+    LaunchedEffect(foundPrinters.size) {
         if (selectedPrinter.value == null && foundPrinters.isNotEmpty()) {
-            if (labelElement.itemInfo.LABELSTYLE.printerSection() == "brotherQL1110"){
-                for (x in 0 until foundPrinters.size){
-                    if(foundPrinters[x].name != "N/A" && foundPrinters[x].brotherQL1110 != null) {
-                      selectedPrinter.value = foundPrinters[x]
-                      break
+            if (labelElement.itemInfo.LABELSTYLE.printerSection() == "brotherQL1110") {
+                for (x in 0 until foundPrinters.size) {
+                    if (foundPrinters[x].name != "N/A" && foundPrinters[x].brotherQL1110 != null) {
+                        selectedPrinter.value = foundPrinters[x]
+                        break
                     }
                 }
-            } else if (labelElement.itemInfo.LABELSTYLE.printerSection() == "epsonCWC6510"){
+            } else if (labelElement.itemInfo.LABELSTYLE.printerSection() == "epsonCWC6510") {
                 for (x in 0 until foundPrinters.size) {
                     if (foundPrinters[x].name != "N/A" && foundPrinters[x].epsonCWC6510 != null) {
                         selectedPrinter.value = foundPrinters[x]
@@ -145,39 +196,38 @@ fun LabelPreview(
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = {
-            TopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.primary,
-                ),
-                title = {
-                    Text("Product Label")
-                },
-                navigationIcon = {
-                        IconButton(onClick = {labelElement.sharedViewModel.closeLabelPreview()}){
+        Scaffold(
+            snackbarHost = { SnackbarHost(snackbarHostState) },
+            topBar = {
+                TopAppBar(
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        titleContentColor = MaterialTheme.colorScheme.primary,
+                    ),
+                    title = {
+                        Text("Product Label")
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = { labelElement.sharedViewModel.closeLabelPreview() }) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back"
                             )
                         }
-                },
-                actions = {
-                        IconButton(onClick = { settingsWindow = !settingsWindow }){
+                    },
+                    actions = {
+                        IconButton(onClick = { settingsWindow = !settingsWindow }) {
                             Icon(
                                 imageVector = Icons.Filled.Settings,
                                 contentDescription = "Print Settings"
                             )
                         }
                         IconButton(onClick = {
-                            if(selectedPrinter.value == null){
+                            if (selectedPrinter.value == null) {
                                 CoroutineScope(Dispatchers.Default).launch {
                                     _snackbarEvent.emit("No Printer Selected")
                                 }
-                            }
-                            else if (selectedPrinter.value!!.epsonCWC6510 != null) {
+                            } else if (selectedPrinter.value!!.epsonCWC6510 != null) {
                                 CoroutineScope(Dispatchers.Default).launch {
                                     _snackbarEvent.emit("Printing on Epson CW-C6510")
                                 }
@@ -188,8 +238,7 @@ fun LabelPreview(
                                     height = mmToPixels(labelElement.labelLayout.PAGEWIDTH),
                                     numOfCopies = numberOfCopies.value.toInt()
                                 )
-                            }
-                            else if (selectedPrinter.value!!.brotherQL1110 != null) {
+                            } else if (selectedPrinter.value!!.brotherQL1110 != null) {
                                 CoroutineScope(Dispatchers.Default).launch {
                                     _snackbarEvent.emit("Printing on Brother QL-1110")
                                 }
@@ -200,144 +249,157 @@ fun LabelPreview(
                                     numOfCopies = numberOfCopies.value.toInt()
                                 )
                             }
-                        }){
+                        }) {
                             Icon(
                                 imageVector = Icons.Filled.Print,
                                 contentDescription = "Print"
                             )
                         }
-                }
-            )
-        }
-    ) {innerPadding ->
-        Box(
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
-                .background(color = Color.Gray),
-            contentAlignment = Alignment.Center
-        ) {
-            var width = size.width
-            var height = size.height
-            var userZoom by remember { mutableFloatStateOf(1.0f) }
-
-            BoxWithConstraints(
+                    }
+                )
+            }
+        ) { innerPadding ->
+            Box(
                 modifier = Modifier
+                    .padding(innerPadding)
                     .fillMaxSize()
-                    .pointerInput(Unit) {
-                        detectTransformGestures { _, _, zoomChange, _ ->
-                            userZoom = (userZoom * zoomChange)
-                                .coerceIn(0.25f, 10f)
-                        }
-                    },
+                    .background(color = Color.Gray),
                 contentAlignment = Alignment.Center
             ) {
-                val fitScale = minOf(
-                    this.maxWidth.value / width.value,
-                    this.maxHeight.value / height.value
-                ) * 0.95f
+                var width = size.width
+                var height = size.height
+                var userZoom by remember { mutableFloatStateOf(1.0f) }
 
-                val finalScale = fitScale * userZoom
-
-                Box(
+                BoxWithConstraints(
                     modifier = Modifier
-                        .graphicsLayer {
-                            scaleX = finalScale
-                            scaleY = finalScale
-                        }
-                        .requiredSize(size.width,size.height),
+                        .fillMaxSize()
+                        .pointerInput(Unit) {
+                            detectTransformGestures { _, _, zoomChange, _ ->
+                                userZoom = (userZoom * zoomChange)
+                                    .coerceIn(0.25f, 10f)
+                            }
+                        },
                     contentAlignment = Alignment.Center
                 ) {
+                    val fitScale = minOf(
+                        this.maxWidth.value / width.value,
+                        this.maxHeight.value / height.value
+                    ) * 0.95f
+
+                    val finalScale = fitScale * userZoom
+
                     Box(
                         modifier = Modifier
-                            .requiredSize(size.width,size.height)
+                            .graphicsLayer {
+                                scaleX = finalScale
+                                scaleY = finalScale
+                            }
+                            .requiredSize(size.width, size.height),
+                        contentAlignment = Alignment.Center
                     ) {
-                        imageBitmap = labelToBitmap(labelElement.labelLayout.PAGEWIDTH, labelElement.labelLayout.PAGEHEIGHT,{ labelElement.itemInfo.LABELSTYLE.FunctionCall(labelElement) })
-                    }
+                        Box(
+                            modifier = Modifier
+                                .requiredSize(size.width, size.height)
+                        ) {
+                            imageBitmap = labelToBitmap(labelElement.labelLayout.PAGEWIDTH, labelElement.labelLayout.PAGEHEIGHT, { labelElement.itemInfo.LABELSTYLE.FunctionCall(labelElement) })
+                        }
 
+                    }
                 }
             }
-        }
 
+        }
     }
-    }
-    if(settingsWindow){
-        Box(modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ){
+    if (settingsWindow) {
         Box(
-            modifier = Modifier
-                .size(400.dp,300.dp)
-                .background(screenBackground)
-                .border(1.dp, Black)
-        ){
-            Column(){
-                Row(
-                    modifier = Modifier.weight(1f),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Spacer(modifier = Modifier.weight(1f))
-                    Text("Printer")
-                    OutlinedStyleButton(modifier = Modifier.weight(6f).padding(start = 20.dp), text = selectedPrinter.value?.name ?: "No Printers Found", onClick = { indexPressed = true })
-                    DropdownMenu(
-                        expanded = indexPressed,
-                        onDismissRequest = { indexPressed = false }
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(400.dp, 300.dp)
+                    .background(screenBackground)
+                    .border(1.dp, Black)
+            ) {
+                Column() {
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        for (x in 0 until foundPrinters.size){
-                            if(foundPrinters[x].name != "N/A") {
-                                DropdownMenuItem(
-                                    onClick = {
-                                        selectedPrinter.value = foundPrinters[x]
-                                        indexPressed = false
-                                    },
-                                    text = { Text(foundPrinters[x].name) })
+                        Spacer(modifier = Modifier.weight(1f))
+                        Text("Printer")
+                        OutlinedStyleButton(modifier = Modifier
+                            .weight(6f)
+                            .padding(start = 20.dp), text = selectedPrinter.value?.name ?: "No Printers Found", onClick = { indexPressed = true })
+                        DropdownMenu(
+                            expanded = indexPressed,
+                            onDismissRequest = { indexPressed = false }
+                        ) {
+                            for (x in 0 until foundPrinters.size) {
+                                if (foundPrinters[x].name != "N/A") {
+                                    DropdownMenuItem(
+                                        onClick = {
+                                            selectedPrinter.value = foundPrinters[x]
+                                            indexPressed = false
+                                        },
+                                        text = { Text(foundPrinters[x].name) })
+                                }
                             }
                         }
-                    }
-                    IconButton(onClick = {
-                        findPrinters(context){ printer ->
-                            foundPrinters.clear()
-                            foundPrinters.add(printer)
+                        IconButton(onClick = {
+                            findPrinters(context) { printer ->
+                                foundPrinters.clear()
+                                foundPrinters.add(printer)
+                            }
+                        }) {
+                            Icon(
+                                imageVector = Icons.Filled.Refresh,
+                                contentDescription = "Refresh Printer List"
+                            )
                         }
-                    }){
-                        Icon(
-                            imageVector = Icons.Filled.Refresh,
-                            contentDescription = "Refresh Printer List"
-                        )
+                        Spacer(modifier = Modifier.weight(1f))
                     }
-                    Spacer(modifier = Modifier.weight(1f))
-                }
-                Row(
-                    modifier = Modifier.weight(1f),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Spacer(modifier = Modifier.weight(1f))
-                    Text(text = "Number of Labels")
-                    OutlinedStyleIntNumberField(
-                        value = numberOfCopies.value,
-                        onValueChange = { newValue -> numberOfCopies.value = newValue }
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                }
-                Row(
-                    modifier = Modifier.weight(1f),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Spacer(modifier = Modifier.weight(1f))
-                    Button(
-                        modifier = Modifier
-                            .weight(2f),
-                        onClick = { settingsWindow = false }
-                    ) { Text(text = "OK") }
-                    Spacer(modifier = Modifier.weight(1f))
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Spacer(modifier = Modifier.weight(1f))
+                        Text(text = "Number of Labels")
+                        OutlinedStyleIntNumberField(
+                            value = numberOfCopies.value,
+                            onValueChange = { newValue -> numberOfCopies.value = newValue }
+                        )
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Spacer(modifier = Modifier.weight(1f))
+                        Button(
+                            modifier = Modifier
+                                .weight(2f),
+                            onClick = { settingsWindow = false }
+                        ) { Text(text = "OK") }
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
                 }
             }
         }
-    }
     }
 }
 
-
+/**
+ * Provides a Compose preview of [LabelPreview] using a sample product
+ * label configuration.
+ *
+ * The preview creates representative label layout, product information,
+ * class information, and shared view model data so that the label preview
+ * can be inspected in Android Studio without requiring live API data or
+ * a connected printer.
+ *
+ * The preview uses a 1280dp by 800dp display configuration at 240 DPI.
+ */
 @Preview(device = "spec:width=1280dp,height=800dp,dpi=240")
 @Composable
 fun LabelViewPreview() {
@@ -378,7 +440,7 @@ fun LabelViewPreview() {
         BODYFS = 5.0,
         SPACEING = 3.0,
     )
-    
+
     val sharedViewModel: SharedViewModel = viewModel()
     val itemInfo = APICallTables.assemblyLabelItemInfo(
         HEADERSYSUNIQUEID = 1.0,
@@ -425,7 +487,7 @@ fun LabelViewPreview() {
         SAFESTORAGE = "Store in cool dry place away from sunlight and sources of ignition.",
         PICTOGRAM1 = "Mark",
         PICTOGRAM2 = "Flame",
-        COLOUR =     "00000000" //"FFFF9F00"//
+        COLOUR = "00000000" //"FFFF9F00"//
     )
     val dgInfo = APICallTables.itemDGInfo(
         UNNUMBER = "1886",
@@ -434,7 +496,7 @@ fun LabelViewPreview() {
         DGQUANTITY = 10.0
     )
 
-    
+
     val labelElement = LabelElements(
         itemInfo = itemInfo,
         classInfo = classInfo,
@@ -442,8 +504,8 @@ fun LabelViewPreview() {
         dgInfo = null,//dgInfo,
         sharedViewModel = sharedViewModel
     )
-    
+
     LabelPreview(labelElement, 1)
-    
+
 }
 

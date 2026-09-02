@@ -1,6 +1,5 @@
 package com.example.coretechv2.ui.screen
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -36,7 +35,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation.Companion
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -45,6 +43,26 @@ import com.example.coretechv2.R
 import com.example.coretechv2.factory.LoginViewModelFactory
 import com.example.coretechv2.viewmodel.LoginViewModel
 
+/**
+ * Displays the login screen for the application.
+ *
+ * Creates and manages a [LoginViewModel] responsible for handling username and
+ * password input, password visibility, login attempts, and login errors.
+ * The screen also provides keyboard navigation between the username and password
+ * fields and hides the keyboard when a login is submitted through the keyboard.
+ *
+ * When the login is successful, [onLoginSuccess] is invoked. If the view model
+ * detects that a different user has been entered, [ondifferentUser] is invoked
+ * with the updated username.
+ *
+ * The company logo is selected according to the system's current light or dark
+ * theme.
+ *
+ * @param currentuser Username currently associated with the application session.
+ * @param onLoginSuccess Callback invoked when the login is successfully completed.
+ * @param ondifferentUser Callback invoked when the view model detects a different
+ * user, receiving the updated username as its parameter.
+ */
 @Composable
 fun LoginScreen(
     currentuser: String,
@@ -59,11 +77,11 @@ fun LoginScreen(
     )
 
     if (viewModel.currentuser.value != currentuser) {
-        
+
         ondifferentUser(viewModel.currentuser.value)
     }
     if (viewModel.loginSuccess) {
-        
+
         onLoginSuccess()
         viewModel.consumeLoginSuccess()
     }
@@ -78,7 +96,11 @@ fun LoginScreen(
         Row {
             Spacer(modifier = Modifier.weight(1f))
             Image(
-                painter = if(isSystemInDarkTheme()){painterResource(id = R.drawable.company_logo_dark)}else{painterResource(id = R.drawable.company_logo_light)},
+                painter = if (isSystemInDarkTheme()) {
+                    painterResource(id = R.drawable.company_logo_dark)
+                } else {
+                    painterResource(id = R.drawable.company_logo_light)
+                },
                 contentDescription = null,
                 modifier = Modifier.weight(1f)
             )
@@ -91,7 +113,8 @@ fun LoginScreen(
             label = { Text("Username") },
             modifier = Modifier.padding(16.dp),
             keyboardOptions = KeyboardOptions(
-                imeAction = ImeAction.Next),
+                imeAction = ImeAction.Next
+            ),
             keyboardActions = KeyboardActions(
                 onNext = {
                     passwordFocusRequester.requestFocus()
@@ -103,11 +126,17 @@ fun LoginScreen(
             value = viewModel.password,
             onValueChange = viewModel::onPasswordChange,
             label = { Text("Password") },
-            modifier = Modifier.padding(16.dp).focusRequester(passwordFocusRequester),
-            visualTransformation = if(viewModel.showPassword.value){VisualTransformation.None}else{PasswordVisualTransformation()},
+            modifier = Modifier
+                .padding(16.dp)
+                .focusRequester(passwordFocusRequester),
+            visualTransformation = if (viewModel.showPassword.value) {
+                VisualTransformation.None
+            } else {
+                PasswordVisualTransformation()
+            },
             trailingIcon = {
-                IconButton(onClick = {viewModel.onShowPassword()}){
-                    if(viewModel.showPassword.value){
+                IconButton(onClick = { viewModel.onShowPassword() }) {
+                    if (viewModel.showPassword.value) {
                         Icon(
                             imageVector = Icons.Filled.VisibilityOff,
                             contentDescription = "Hide Password"

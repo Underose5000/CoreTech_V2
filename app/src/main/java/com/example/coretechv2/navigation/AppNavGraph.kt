@@ -13,27 +13,31 @@ import com.example.coretechv2.viewmodel.SharedViewModel
 
 
 /**
- * Main navigation graph for the application.
+ * Defines the main navigation graph for the application.
  *
- * Defines all top-level navigation destinations and routes
- * used throughout the app using Jetpack Compose Navigation.
+ * This navigation graph contains the top-level destinations used throughout
+ * the application and manages navigation between them using Jetpack Compose
+ * Navigation.
  *
- * Current destinations:
- * - "home" -> [HomeScreen]
- * - "assemblyorders" -> [AssemblyOrdersScreen]
- * - "assemblyorderdetail" -> [AssemblyOrderDetails]
+ * The available destinations are:
+ * - `"home"` -> [HomeScreen]
+ * - `"assemblyorders"` -> [AssemblyOrdersScreen]
+ * - `"assemblyorderdetail"` -> [AssemblyOrderDetails]
+ * - `"printboxlabels"` -> [PrintBoxLabelsScreen]
  *
- * A shared instance of [SharedViewModel] is passed to all screens
- * to maintain shared application state across navigation destinations.
+ * A shared instance of [SharedViewModel] is passed to each screen to maintain
+ * shared application state across navigation destinations.
  *
- * @param navController Navigation controller used to manage app navigation.
- * Defaults to a remembered navigation controller instance.
- * @param sharedViewModel Shared ViewModel containing global application state.
+ * @param navController The navigation controller used to manage navigation
+ * between destinations. Defaults to a remembered navigation controller.
+ * @param sharedViewModel The shared ViewModel containing application state
+ * that is accessed by the navigation destinations.
  */
 
 @Composable
-fun AppNavGraph(navController: NavHostController = rememberNavController(),
-                sharedViewModel: SharedViewModel
+fun AppNavGraph(
+    navController: NavHostController = rememberNavController(),
+    sharedViewModel: SharedViewModel
 ) {
     NavHost(navController = navController, startDestination = "home") {
 

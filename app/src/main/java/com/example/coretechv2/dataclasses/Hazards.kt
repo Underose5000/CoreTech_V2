@@ -13,6 +13,7 @@ import com.example.coretechv2.R
 enum class Hazards {
 
     FLAMMABLE, CORROSIVE, ENVIRONMENT, GAS, HAZARD, MARK, OXIDIZER, SKULL, CLASS_3, CLASS_52, CLASS_61, CLASS_8, LIMITED_QUANTITES;
+
     /**
      * Returns the drawable resource associated with this hazard.
      *
@@ -38,37 +39,37 @@ enum class Hazards {
     }
 
 
-companion object {
-    /**
-     * Converts a string representation of a hazard into its corresponding
-     * [Hazards] enum value.
-     *
-     * The method accepts hazard names such as `"flame"` and `"corrosive"`,
-     * as well as numerical dangerous goods classifications such as `"3"`,
-     * `"5.2"`, `"6.1"`, and `"8"`.
-     *
-     * If the supplied value is null or does not match a recognised hazard,
-     * [MARK] is returned as the default value.
-     *
-     * @param value the string representation of the hazard.
-     * @return the corresponding [Hazards] value, or [MARK] if no match is found.
-     */
-    fun fromString(value: String?): Hazards {
-        return when (value) {
-            "flame" -> FLAMMABLE
-            "corrosive" -> CORROSIVE
-            "environment" -> ENVIRONMENT
-            "gas" -> GAS
-            "hazard" -> HAZARD
-            "mark" -> MARK
-            "oxidizer" -> OXIDIZER
-            "skull" -> SKULL
-            "3"-> CLASS_3
-            "5.2"-> CLASS_52
-            "6.1"-> CLASS_61
-            "8"-> CLASS_8
-            else -> MARK
+    companion object {
+        /**
+         * Converts a string representation of a hazard into its corresponding
+         * [Hazards] enum value.
+         *
+         * The method accepts hazard names such as `"flame"` and `"corrosive"`,
+         * as well as numerical dangerous goods classifications such as `"3"`,
+         * `"5.2"`, `"6.1"`, and `"8"`.
+         *
+         * If the supplied value is null or does not match a recognised hazard,
+         * [MARK] is returned as the default value.
+         *
+         * @param value the string representation of the hazard.
+         * @return the corresponding [Hazards] value, or [MARK] if no match is found.
+         */
+        fun fromString(value: String?): Hazards {
+            return when (value) {
+                "flame" -> FLAMMABLE
+                "corrosive" -> CORROSIVE
+                "environment" -> ENVIRONMENT
+                "gas" -> GAS
+                "hazard" -> HAZARD
+                "mark" -> MARK
+                "oxidizer" -> OXIDIZER
+                "skull" -> SKULL
+                "3" -> CLASS_3
+                "5.2" -> CLASS_52
+                "6.1" -> CLASS_61
+                "8" -> CLASS_8
+                else -> MARK
+            }
         }
     }
-}
 }

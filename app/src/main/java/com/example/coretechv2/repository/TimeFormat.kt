@@ -1,6 +1,5 @@
 package com.example.coretechv2.repository
 
-import android.util.Log
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -39,7 +38,8 @@ fun toTimeFormatHMMSS(H: String, M: String, S: String): String {
 /**
  * Validates whether a string contains only numeric characters.
  *
- * Empty strings are considered valid due to the regex used.
+ * Empty strings are considered valid and are interpreted as zero by
+ * [toTimeFormatHMMSS].
  *
  * Examples:
  * - validTime("123") -> true
@@ -47,17 +47,18 @@ fun toTimeFormatHMMSS(H: String, M: String, S: String): String {
  * - validTime("12a") -> false
  *
  * @param t The string to validate.
- * @return True if the string contains only digits, otherwise false.
+ * @return `true` if the string contains only digits or is empty,
+ * otherwise `false`.
  */
 fun validTime(t: String): Boolean {
-    
+
     return t.matches(Regex("^\\d*\$"))
 }
 
 /**
  * Splits a formatted H:MM:SS time string into its individual components.
  *
- * The input string must contain exactly 3 colon-separated values.
+ * The input string must contain exactly three colon-separated values.
  *
  * Examples:
  * - fromTimeFormatHMMSS("1:02:03")
@@ -67,17 +68,28 @@ fun validTime(t: String): Boolean {
  *      -> Triple("Error", "Error", "Error")
  *
  * @param time A time string in H:MM:SS format.
- * @return A Triple containing hour, minute, and second strings,
- *         or Triple("Error","Error","Error") if the format is invalid.
+ * @return A [Triple] containing hour, minute, and second strings,
+ * or `Triple("Error", "Error", "Error")` if the format is invalid.
  */
-fun fromTimeFormatHMMSS(time: String) : Triple<String, String, String>{
+fun fromTimeFormatHMMSS(time: String): Triple<String, String, String> {
     val timesplit = time.split(":")
-    if (timesplit.size == 3){
-        return Triple(timesplit[0],timesplit[1],timesplit[2])
+    if (timesplit.size == 3) {
+        return Triple(timesplit[0], timesplit[1], timesplit[2])
     }
-    return Triple("Error","Error","Error")
+    return Triple("Error", "Error", "Error")
 }
 
+/**
+ * Converts a [LocalDate] into a formatted date string.
+ *
+ * The returned date uses the `yyyy/MM/dd` format.
+ *
+ * Example:
+ * - toDateFormatYYYYMMDD(LocalDate.of(2026, 8, 31)) -> "2026/08/31"
+ *
+ * @param date The [LocalDate] to format.
+ * @return The formatted date as a `yyyy/MM/dd` string.
+ */
 fun toDateFormatYYYYMMDD(date: LocalDate): String {
     val formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd")
     val formatedDate = date.format(formatter)

@@ -58,7 +58,7 @@ class APICallTables {
         val REQUIREDDATE: String,
         val ORDERNOTES: String,
         val ORDERQTY: Double,
-        val COMPLETEQTY : Double,
+        val COMPLETEQTY: Double,
         val REMAININGQTY: Double,
         val ASSEMBLYVERSION: String,
         val PLANNEDTOTALCOSTS: Double,
@@ -89,7 +89,7 @@ class APICallTables {
         val CODETYPE: String,
         val LINECODE: String,
         val LINEDESCRIPTION: String,
-        val LINEUNIT : String,
+        val LINEUNIT: String,
         var ORDERQTY: Double,
         val TOTALISSUEDQTY: Double,
         val REMAININGQTY: Double,
@@ -129,7 +129,7 @@ class APICallTables {
         val ASSEMBLYDURATIONSCALE: String,
         val BATCHQTY: Double,
 
-    )
+        )
 
     @Serializable
     data class assemblyBOMLines(
@@ -150,7 +150,7 @@ class APICallTables {
         val HEADERSYSUNIQUEID: Double,
         val SYSUNIQUEID: Double,
 
-    )
+        )
 
     @Serializable
     data class notes(
@@ -159,7 +159,6 @@ class APICallTables {
         val IDNUMBER: String,
         val NOTE: String,
     )
-
 
 
     @Serializable
@@ -337,6 +336,7 @@ class APICallTables {
         val DGCLASS: String,
         val DGQUANTITY: Double,
     )
+
     @Serializable
     data class VerifyUserPassword(
         val IS_VALID: Int

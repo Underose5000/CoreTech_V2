@@ -28,7 +28,7 @@ import com.example.coretechv2.viewmodel.assemblytests.GelTimeViewModel
 class GelTimeViewModelFactory(
     private val context: Context,
     val sharedViewModel: SharedViewModel
-) : ViewModelProvider.Factory{
+) : ViewModelProvider.Factory {
 
     /**
      * Creates a new instance of the requested ViewModel class.

@@ -1,6 +1,5 @@
 package com.example.coretechv2.viewmodel.assemblytests
 
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -9,17 +8,23 @@ import androidx.lifecycle.viewModelScope
 import com.example.coretechv2.dataclasses.APICallTables
 import com.example.coretechv2.dataclasses.APICallTypes
 import com.example.coretechv2.dataclasses.MessageItems
-import com.example.coretechv2.dataclasses.assemblydataclasses.VisField
-import com.example.coretechv2.dataclasses.assemblydataclasses.VisSettings
-import com.example.coretechv2.dataclasses.assemblydataclasses.ViscosityItem
-import com.example.coretechv2.dataclasses.assemblydataclasses.visHasValue
 import com.example.coretechv2.repository.APICall
 import com.example.coretechv2.repository.DataStoreManager
-import com.example.coretechv2.repository.fromTimeFormatHMMSS
 import com.example.coretechv2.viewmodel.SharedViewModel
 import kotlinx.coroutines.launch
-import kotlin.math.round
 
+/**
+ * ViewModel responsible for managing elongational break test operations.
+ *
+ * This ViewModel manages the test number, number of days since the test
+ * specimen was set, elongation percentage, test record identification,
+ * popup state, and saving or loading elongational break test results.
+ *
+ * @property dataStoreManager Provides access to persisted application settings
+ * and configuration required by the API layer.
+ * @property sharedViewModel Provides shared application state, including the
+ * current assembly, current order number, current user, and save mode.
+ */
 class ElongationalBreakViewModel(private val dataStoreManager: DataStoreManager, var sharedViewModel: SharedViewModel) : ViewModel() {
     private val apiCall = APICall(dataStoreManager)
     var popupMessage = MessageItems()
@@ -40,67 +45,80 @@ class ElongationalBreakViewModel(private val dataStoreManager: DataStoreManager,
 
 
     /**
-     * Closes the popup message dialog by resetting its state.
+     * Resets the message popup close state.
      */
-    fun closePopupMessage(){
+    fun closePopupMessage() {
         closePopupMessage.value = false
     }
 
     /**
-     * Closes the viscosity test screen and triggers navigation back.
+     * Resets the state used to close the elongational break test screen.
      */
-    fun closeTestScreen(){
+    fun closeTestScreen() {
         closeTestScreen.value = false
     }
 
     /**
-     * Resets the popup message trigger flag.
+     * Resets the message popup open state.
+     *
+     * This method currently sets the value to `false`, allowing the popup-open
+     * event to be consumed or reset by the calling UI.
      */
-    fun openPopupMessage(){
+    fun openPopupMessage() {
         openPopupMessage.value = false
     }
 
     /**
-     * Toggles the spindle dropdown visibility.
+     * Updates the current test number.
+     *
+     * @param newValue The new test number entered by the user.
      */
-    fun onTestNumberChange(newValue: String){
+    fun onTestNumberChange(newValue: String) {
         testNumber = newValue
     }
 
-    fun onDaysSinceSet(newValue: String){
+    /**
+     * Updates the number of days since the test specimen was set.
+     *
+     * @param newValue The new number of days entered by the user.
+     */
+    fun onDaysSinceSet(newValue: String) {
         daysSinceSet = newValue
     }
 
-    fun onElongationChange(newValue: String){
+    /**
+     * Updates the measured elongation percentage.
+     *
+     * @param newValue The new elongation value entered by the user.
+     */
+    fun onElongationChange(newValue: String) {
         elongation = newValue
     }
 
     /**
-     * Saves the current viscosity test to the database.
+     * Saves the current elongational break test to the database.
      *
-     * This function:
-     * - Calculates the viscosity index ratio based on selected range
-     * - Builds an INSERT or UPDATE SQL query
-     * - Sends the query to the backend API
-     * - Handles success or failure responses
+     * When the shared save type is [APICallTypes.INSERT], a new test record
+     * is inserted into the elongational test table using information from
+     * the current assembly.
      *
-     * On success:
-     * - Closes the test screen
-     * - Shows success snackbar message
+     * When the shared save type is [APICallTypes.UPDATE], the existing record
+     * identified by [testID] is updated.
      *
-     * On failure:
-     * - Shows error snackbar message
+     * On a successful database operation, the test screen is closed and a
+     * success snackbar message is displayed. If the operation fails, an
+     * error snackbar message is displayed instead.
      */
-    fun onSave(){
+    fun onSave() {
         viewModelScope.launch {
             var call = ""
-            if(sharedViewModel.saveType == APICallTypes.INSERT){
+            if (sharedViewModel.saveType == APICallTypes.INSERT) {
                 call = "INSERT INTO OSTDEF_ELONGATIONAL_TEST " +
                         "(ITEMCODE, ORDERNUMBER, ITEMDESCRIPTION, TESTNO, DAYSSET, ELONGATIONPERCENT, SYSUSERCREATED, SYSUSERMODIFIED) " +
                         "VALUES('${sharedViewModel.currentAssemblyHeader?.ITEMCODE}', '${sharedViewModel.currentAssemblyHeader?.ORDERNUMBER}', '${sharedViewModel.currentAssemblyHeader?.ITEMDESCRIPTION}', $testNumber, $daysSinceSet, $elongation, " +
                         "'${sharedViewModel.currentUser.value}', '${sharedViewModel.currentUser.value}')"
             }
-            if(sharedViewModel.saveType == APICallTypes.UPDATE){
+            if (sharedViewModel.saveType == APICallTypes.UPDATE) {
                 call = "UPDATE OSTDEF_ELONGATIONAL_TEST SET " +
                         "TESTNO = $testNumber, " +
                         "DAYSSET = $daysSinceSet, " +
@@ -108,37 +126,41 @@ class ElongationalBreakViewModel(private val dataStoreManager: DataStoreManager,
                         "SYSUSERMODIFIED = '${sharedViewModel.currentUser.value}' " +
                         "WHERE SYSUNIQUEID = $testID"
             }
-            
+
 
             val response = apiCall.insertUpdateDelete(call)
 
-            if(response == "200 OK"){
+            if (response == "200 OK") {
                 closeTestScreen.value = true
                 sharedViewModel.snackBarMessage("Elongation Saved successfully")
-            } else{
+            } else {
                 sharedViewModel.snackBarMessage("Error Saving, Please Try Again")
             }
         }
     }
 
     /**
-     * Loads an existing viscosity test into the UI or initializes a new test.
+     * Loads an existing elongational break test or prepares the ViewModel
+     * for creating a new test.
      *
-     * If a test is provided:
-     * - Maps database values into UI state
-     * - Calculates correct index range from stored values
+     * When an existing test is supplied, its stored test number, days since
+     * set, elongation percentage, and database identifier are loaded into
+     * the ViewModel.
      *
-     * If no test is provided:
-     * - Initializes default values from shared assembly header
-     * - Fetches next available test number from the database
+     * When no test is supplied, the next available test number is calculated
+     * from the number of distinct tests associated with the current order,
+     * and the test result fields are cleared.
+     *
+     * @param test The existing elongational break test to load, or `null`
+     * when creating a new test.
      */
-    fun onClear(test: APICallTables.ElongationalBreakTest?){
+    fun onClear(test: APICallTables.ElongationalBreakTest?) {
         if (test != null) {
             testNumber = test.TESTNO.toString()
             daysSinceSet = test.DAYSSET.toString()
             elongation = test.ELONGATIONPERCENT.toString()
             testID = test.SYSUNIQUEID.toString()
-        }else {
+        } else {
             viewModelScope.launch {
                 val linesCall: List<APICallTables.Count>? =
                     apiCall.query("SELECT COUNT(*) FROM (SELECT DISTINCT TESTNO FROM OSTDEF_ELONGATIONAL_TEST WHERE OrderNumber = '${sharedViewModel.currentOrderNumber.value}')")
@@ -151,15 +173,21 @@ class ElongationalBreakViewModel(private val dataStoreManager: DataStoreManager,
     }
 
     /**
-     * Handles cancellation of the viscosity test screen.
+     * Cancels the current elongational break test operation.
      *
-     * If the current test contains data:
-     * - Shows a confirmation popup before leaving
+     * When editing an existing test, the current values are compared with
+     * the original values. If changes have been made, a confirmation popup
+     * is displayed before leaving the screen.
      *
-     * If no data exists:
-     * - Immediately closes the test screen
+     * When creating a new test, a confirmation popup is displayed if either
+     * the days-since-set or elongation fields contain data.
+     *
+     * If no unsaved changes exist, the test screen is closed immediately.
+     *
+     * @param test The existing elongational break test being edited, or
+     * `null` when creating a new test.
      */
-    fun onCancel(test: APICallTables.ElongationalBreakTest?){
+    fun onCancel(test: APICallTables.ElongationalBreakTest?) {
         if (test != null) {
             if (testNumber != test.TESTNO.toString() ||
                 daysSinceSet != test.DAYSSET.toString() ||
@@ -180,7 +208,7 @@ class ElongationalBreakViewModel(private val dataStoreManager: DataStoreManager,
             } else {
                 closeTestScreen.value = true
             }
-        } else if (daysSinceSet != "" || elongation != ""){
+        } else if (daysSinceSet != "" || elongation != "") {
             popupMessage.message = "Test Results are not saved\nleave without saving?"
             popupMessage.messageButton1Text = "No"
             popupMessage.onClickAction1 = {

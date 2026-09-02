@@ -32,6 +32,19 @@ import com.example.coretechv2.R
 import com.example.coretechv2.ui.component.TopBar
 import com.example.coretechv2.viewmodel.SharedViewModel
 
+/**
+ * Displays the main home screen of the application.
+ *
+ * Determines the appropriate layout based on the device's screen dimensions,
+ * density, and orientation. The home screen provides access to the application's
+ * assembly, sales, purchasing, and inventory functionality.
+ *
+ * The screen also retrieves the user's assembly orders when it is first displayed.
+ *
+ * @param navController Navigation controller used to navigate between application screens.
+ * @param sharedViewModel Shared view model containing application-wide state and
+ * data, including the current user and assembly orders.
+ */
 @Composable
 fun HomeScreen(
     navController: NavController,
@@ -46,10 +59,10 @@ fun HomeScreen(
     var isFlipPhone = false
     var isTablet = false
 
-    if (screenWidthDp >=550 && screenDensity >= 500){
+    if (screenWidthDp >= 550 && screenDensity >= 500) {
         isFlipPhone = true
         Log.d("screen dp size", "is FLip")
-    } else if (screenWidthDp >=600){
+    } else if (screenWidthDp >= 600) {
         isTablet = true
         Log.d("screen dp size", "is Tablet")
     } else {
@@ -60,7 +73,7 @@ fun HomeScreen(
     LaunchedEffect(Unit) {
         sharedViewModel.retrieveAssemblyOrders()
         sharedViewModel.retrieveAllAssemblyOrders()
-        Log.d("LaunchedEffect","Orders Retrieved. List size = ${sharedViewModel.AssemblyOrdersList.size}")
+        Log.d("LaunchedEffect", "Orders Retrieved. List size = ${sharedViewModel.AssemblyOrdersList.size}")
     }
 
 
@@ -69,29 +82,44 @@ fun HomeScreen(
             navController = navController,
             sharedViewModel = sharedViewModel,
             sharedViewModel.currentUser.value,
-            snackbarHostState)
-    } else if (!isLandscape and isTablet){
-        PortraitLayout(
+            snackbarHostState
+        )
+    } else if (!isLandscape and isTablet) {
+        PortraitTabletLayout(
             navController = navController,
             sharedViewModel = sharedViewModel,
             sharedViewModel.currentUser.value,
-            snackbarHostState)
+            snackbarHostState
+        )
     } else if (isFlipPhone) {
         FlipPhoneLayout(
             navController = navController,
             sharedViewModel = sharedViewModel,
             sharedViewModel.currentUser.value,
-            snackbarHostState)
+            snackbarHostState
+        )
     } else {
         PortraitLayout(
             navController = navController,
             sharedViewModel = sharedViewModel,
             sharedViewModel.currentUser.value,
-            snackbarHostState)
+            snackbarHostState
+        )
     }
 }
 
-
+/**
+ * Displays the home screen layout for a tablet in landscape orientation.
+ *
+ * Organises the available application functions into Assembly, Sales, Purchases,
+ * and Inventory sections. Buttons are arranged horizontally to make use of the
+ * additional screen width available in landscape orientation.
+ *
+ * @param navController Navigation controller used to navigate between application screens.
+ * @param sharedViewModel Shared view model containing application-wide state and data.
+ * @param currentUser Name of the currently logged-in user displayed in the welcome message.
+ * @param snackbarHostState State used by the top bar to display snackbar messages.
+ */
 @Composable
 fun LandscapeTabletLayout(
     navController: NavController,
@@ -105,7 +133,7 @@ fun LandscapeTabletLayout(
         title = "Home",
         snackbarHostState,
 
-    ) { innerPadding ->
+        ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -326,8 +354,20 @@ fun LandscapeTabletLayout(
 
 }
 
+/**
+ * Displays the home screen layout for a tablet in portrait orientation.
+ *
+ * Organises the available application functions into Assembly, Sales, Purchases,
+ * and Inventory sections. Buttons are displayed vertically within each section
+ * to accommodate the reduced screen width of portrait orientation.
+ *
+ * @param navController Navigation controller used to navigate between application screens.
+ * @param sharedViewModel Shared view model containing application-wide state and data.
+ * @param currentUser Name of the currently logged-in user displayed in the welcome message.
+ * @param snackbarHostState State used by the top bar to display snackbar messages.
+ */
 @Composable
-fun PortraitLayout(
+fun PortraitTabletLayout(
     navController: NavController,
     sharedViewModel: SharedViewModel,
     currentUser: String,
@@ -374,8 +414,8 @@ fun PortraitLayout(
                     AssemblyOrdersButton(
                         navController = navController,
                         modifier = Modifier
-                        .fillMaxSize()
-                        .weight(5f),
+                            .fillMaxSize()
+                            .weight(5f),
                         shape = RoundedCornerShape(12.dp)
                     )
                     Spacer(modifier = Modifier.weight(1f))
@@ -530,13 +570,24 @@ fun PortraitLayout(
 
 }
 
+/**
+ * Displays the home screen layout for a high-density foldable or flip phone.
+ *
+ * Uses a more compact layout and smaller text sizes than the standard phone
+ * and tablet layouts to accommodate the device's available screen dimensions.
+ *
+ * @param navController Navigation controller used to navigate between application screens.
+ * @param sharedViewModel Shared view model containing application-wide state and data.
+ * @param currentUser Name of the currently logged-in user displayed in the welcome message.
+ * @param snackbarHostState State used by the top bar to display snackbar messages.
+ */
 @Composable
 fun FlipPhoneLayout(
     navController: NavController,
     sharedViewModel: SharedViewModel,
     currentUser: String,
     snackbarHostState: SnackbarHostState
-){
+) {
     Log.d("screen dp size", "FlipPhoneLayout being used")
     TopBar(
         navController = navController,
@@ -744,6 +795,230 @@ fun FlipPhoneLayout(
     }
 }
 
+/**
+ * Displays the standard portrait home screen layout.
+ *
+ * Organises the available application functions into Assembly, Sales, Purchases,
+ * and Inventory sections using a two-column arrangement. This layout is used
+ * for standard phones that do not meet the tablet or flip-phone screen criteria.
+ *
+ * @param navController Navigation controller used to navigate between application screens.
+ * @param sharedViewModel Shared view model containing application-wide state and data.
+ * @param currentUser Name of the currently logged-in user displayed in the welcome message.
+ * @param snackbarHostState State used by the top bar to display snackbar messages.
+ */
+@Composable
+fun PortraitLayout(
+    navController: NavController,
+    sharedViewModel: SharedViewModel,
+    currentUser: String,
+    snackbarHostState: SnackbarHostState
+) {
+    Log.d("screen dp size", "PortraitLayout being used")
+    TopBar(
+        navController = navController,
+        title = "Home",
+        snackbarHostState
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(all = 30.dp)
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    "Welcome ${currentUser.lowercase().replaceFirstChar { it.uppercase() }}",
+                    fontWeight = FontWeight(800),
+                    fontSize = 30.sp,
+                    textAlign = TextAlign.Center,
+                )
+            }
+
+            Row(
+                modifier = Modifier
+                    .weight(3f)
+                    .padding(vertical = 20.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 50.dp)
+                ) {
+                    Text(
+                        "Assembly",
+                        fontWeight = FontWeight(800),
+                        fontSize = 30.sp,
+                        textAlign = TextAlign.Center,
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    AssemblyOrdersButton(
+                        navController = navController,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(5f),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    PrintProductLabelsButton(
+                        navController = navController,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(5f),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    PrintBoxLabelsButton(
+                        navController = navController,
+                        sharedViewModel = sharedViewModel,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(5f),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                }
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 50.dp)
+                ) {
+                    Text(
+                        "Sales",
+                        fontWeight = FontWeight(800),
+                        fontSize = 30.sp,
+                        textAlign = TextAlign.Center,
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    PackOrdersButton(
+                        navController = navController,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(5f),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    DispatchOrdersButton(
+                        navController = navController,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(5f),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    PrintShippingDocumentsButton(
+                        navController = navController,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(5f),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                }
+            }
+            Row(
+                modifier = Modifier
+                    .weight(3f)
+                    .padding(vertical = 20.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 50.dp)
+                ) {
+                    Text(
+                        "Purchases",
+                        fontWeight = FontWeight(800),
+                        fontSize = 30.sp,
+                        textAlign = TextAlign.Center,
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    PurchaseOrdersButton(
+                        navController = navController,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(5f),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    ReceiveGoodsButton(
+                        navController = navController,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(5f),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    Spacer(modifier = Modifier.weight(5f))
+                }
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 50.dp)
+                ) {
+                    Text(
+                        "Inventory",
+                        fontWeight = FontWeight(800),
+                        fontSize = 30.sp,
+                        textAlign = TextAlign.Center,
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    ItemsListButton(
+                        navController = navController,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(5f),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    StocktakeButton(
+                        navController = navController,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(5f),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    RequestStockButton(
+                        navController = navController,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(5f),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                }
+            }
+        }
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(all = 10.dp)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.End,
+        ) {
+            Row(modifier = Modifier.weight(10f)) {
+                Spacer(modifier = Modifier.weight(2f))
+                Image(
+                    painter = painterResource(id = R.drawable.homepage_graphic),
+                    contentDescription = null,
+                    modifier = Modifier.weight(3f)
+                )
+            }
+            Spacer(modifier = Modifier.weight(15f))
+        }
+    }
+
+}
+
+/**
+ * Displays a button for navigating to the Assembly Orders screen.
+ *
+ * @param navController Navigation controller used to navigate to the Assembly Orders screen.
+ * @param modifier Modifier used to configure the button's layout and appearance.
+ * @param shape Shape applied to the button's corners.
+ * @param fontSize Font size used for the button label in scaled pixels.
+ */
 @Composable
 fun AssemblyOrdersButton(navController: NavController, modifier: Modifier, shape: Shape, fontSize: Int = 20) {
     Button(
@@ -767,6 +1042,19 @@ fun AssemblyOrdersButton(navController: NavController, modifier: Modifier, shape
         )
     }
 }
+
+/**
+ * Displays the Print Product Labels button.
+ *
+ * This functionality is currently disabled and does not perform an action
+ * when pressed.
+ *
+ * @param navController Navigation controller available for future navigation
+ * to the product label printing screen.
+ * @param modifier Modifier used to configure the button's layout and appearance.
+ * @param shape Shape applied to the button's corners.
+ * @param fontSize Font size used for the button label in scaled pixels.
+ */
 @Composable
 fun PrintProductLabelsButton(navController: NavController, modifier: Modifier, shape: Shape, fontSize: Int = 20) {
     Button(
@@ -782,7 +1070,7 @@ fun PrintProductLabelsButton(navController: NavController, modifier: Modifier, s
             modifier = Modifier
                 .scale(1.2f)
                 .weight(1f)
-            )
+        )
         Text(
             "Print Product Labels",
             fontSize = fontSize.sp,
@@ -791,13 +1079,23 @@ fun PrintProductLabelsButton(navController: NavController, modifier: Modifier, s
         )
     }
 }
+
+/**
+ * Displays a button for navigating to the Print Box Labels screen.
+ *
+ * @param navController Navigation controller used to navigate to the Print Box Labels screen.
+ * @param sharedViewModel Shared view model containing application-wide state and data.
+ * @param modifier Modifier used to configure the button's layout and appearance.
+ * @param shape Shape applied to the button's corners.
+ * @param fontSize Font size used for the button label in scaled pixels.
+ */
 @Composable
-fun PrintBoxLabelsButton(navController: NavController,sharedViewModel: SharedViewModel, modifier: Modifier, shape: Shape, fontSize: Int = 20) {
+fun PrintBoxLabelsButton(navController: NavController, sharedViewModel: SharedViewModel, modifier: Modifier, shape: Shape, fontSize: Int = 20) {
     Button(
         modifier = modifier,
         shape = shape,
         contentPadding = PaddingValues(start = 10.dp, top = 4.dp, end = 4.dp, bottom = 4.dp),
-        onClick = {navController.navigate("printboxlabels") },
+        onClick = { navController.navigate("printboxlabels") },
         enabled = true
     ) {
         Image(
@@ -815,6 +1113,19 @@ fun PrintBoxLabelsButton(navController: NavController,sharedViewModel: SharedVie
         )
     }
 }
+
+/**
+ * Displays the Pack Orders button.
+ *
+ * This functionality is currently disabled and does not perform an action
+ * when pressed.
+ *
+ * @param navController Navigation controller available for future navigation
+ * to the Pack Orders screen.
+ * @param modifier Modifier used to configure the button's layout and appearance.
+ * @param shape Shape applied to the button's corners.
+ * @param fontSize Font size used for the button label in scaled pixels.
+ */
 @Composable
 fun PackOrdersButton(navController: NavController, modifier: Modifier, shape: Shape, fontSize: Int = 20) {
     Button(
@@ -830,7 +1141,7 @@ fun PackOrdersButton(navController: NavController, modifier: Modifier, shape: Sh
             modifier = Modifier
                 .scale(1.2f)
                 .weight(1f)
-            )
+        )
         Text(
             "Pack Orders",
             fontSize = fontSize.sp,
@@ -839,6 +1150,19 @@ fun PackOrdersButton(navController: NavController, modifier: Modifier, shape: Sh
         )
     }
 }
+
+/**
+ * Displays the Dispatch Orders button.
+ *
+ * This functionality is currently disabled and does not perform an action
+ * when pressed.
+ *
+ * @param navController Navigation controller available for future navigation
+ * to the Dispatch Orders screen.
+ * @param modifier Modifier used to configure the button's layout and appearance.
+ * @param shape Shape applied to the button's corners.
+ * @param fontSize Font size used for the button label in scaled pixels.
+ */
 @Composable
 fun DispatchOrdersButton(navController: NavController, modifier: Modifier, shape: Shape, fontSize: Int = 20) {
     Button(
@@ -854,7 +1178,7 @@ fun DispatchOrdersButton(navController: NavController, modifier: Modifier, shape
             modifier = Modifier
                 .scale(1.2f)
                 .weight(1f)
-            )
+        )
         Text(
             "Dispatch Orders",
             fontSize = fontSize.sp,
@@ -863,6 +1187,19 @@ fun DispatchOrdersButton(navController: NavController, modifier: Modifier, shape
         )
     }
 }
+
+/**
+ * Displays the Print Shipping Documents button.
+ *
+ * This functionality is currently disabled and does not perform an action
+ * when pressed.
+ *
+ * @param navController Navigation controller available for future navigation
+ * to the shipping documents screen.
+ * @param modifier Modifier used to configure the button's layout and appearance.
+ * @param shape Shape applied to the button's corners.
+ * @param fontSize Font size used for the button label in scaled pixels.
+ */
 @Composable
 fun PrintShippingDocumentsButton(navController: NavController, modifier: Modifier, shape: Shape, fontSize: Int = 20) {
     Button(
@@ -878,7 +1215,7 @@ fun PrintShippingDocumentsButton(navController: NavController, modifier: Modifie
             modifier = Modifier
                 .scale(1.2f)
                 .weight(1f)
-            )
+        )
         Text(
             "Print Shipping Documents",
             fontSize = fontSize.sp,
@@ -887,6 +1224,19 @@ fun PrintShippingDocumentsButton(navController: NavController, modifier: Modifie
         )
     }
 }
+
+/**
+ * Displays the Purchase Orders button.
+ *
+ * This functionality is currently disabled and does not perform an action
+ * when pressed.
+ *
+ * @param navController Navigation controller available for future navigation
+ * to the Purchase Orders screen.
+ * @param modifier Modifier used to configure the button's layout and appearance.
+ * @param shape Shape applied to the button's corners.
+ * @param fontSize Font size used for the button label in scaled pixels.
+ */
 @Composable
 fun PurchaseOrdersButton(navController: NavController, modifier: Modifier, shape: Shape, fontSize: Int = 20) {
     Button(
@@ -902,7 +1252,7 @@ fun PurchaseOrdersButton(navController: NavController, modifier: Modifier, shape
             modifier = Modifier
                 .scale(1.2f)
                 .weight(1f)
-            )
+        )
         Text(
             "Purchase Orders",
             fontSize = fontSize.sp,
@@ -911,6 +1261,19 @@ fun PurchaseOrdersButton(navController: NavController, modifier: Modifier, shape
         )
     }
 }
+
+/**
+ * Displays the Receive Goods button.
+ *
+ * This functionality is currently disabled and does not perform an action
+ * when pressed.
+ *
+ * @param navController Navigation controller available for future navigation
+ * to the Receive Goods screen.
+ * @param modifier Modifier used to configure the button's layout and appearance.
+ * @param shape Shape applied to the button's corners.
+ * @param fontSize Font size used for the button label in scaled pixels.
+ */
 @Composable
 fun ReceiveGoodsButton(navController: NavController, modifier: Modifier, shape: Shape, fontSize: Int = 20) {
     Button(
@@ -926,7 +1289,7 @@ fun ReceiveGoodsButton(navController: NavController, modifier: Modifier, shape: 
             modifier = Modifier
                 .scale(1.2f)
                 .weight(1f)
-            )
+        )
         Text(
             "Receive Goods",
             fontSize = fontSize.sp,
@@ -935,6 +1298,19 @@ fun ReceiveGoodsButton(navController: NavController, modifier: Modifier, shape: 
         )
     }
 }
+
+/**
+ * Displays the Items List button.
+ *
+ * This functionality is currently disabled and does not perform an action
+ * when pressed.
+ *
+ * @param navController Navigation controller available for future navigation
+ * to the Items List screen.
+ * @param modifier Modifier used to configure the button's layout and appearance.
+ * @param shape Shape applied to the button's corners.
+ * @param fontSize Font size used for the button label in scaled pixels.
+ */
 @Composable
 fun ItemsListButton(navController: NavController, modifier: Modifier, shape: Shape, fontSize: Int = 20) {
     Button(
@@ -950,7 +1326,7 @@ fun ItemsListButton(navController: NavController, modifier: Modifier, shape: Sha
             modifier = Modifier
                 .scale(1.2f)
                 .weight(1f)
-            )
+        )
         Text(
             "Items List",
             fontSize = fontSize.sp,
@@ -959,6 +1335,19 @@ fun ItemsListButton(navController: NavController, modifier: Modifier, shape: Sha
         )
     }
 }
+
+/**
+ * Displays the Stocktake button.
+ *
+ * This functionality is currently disabled and does not perform an action
+ * when pressed.
+ *
+ * @param navController Navigation controller available for future navigation
+ * to the Stocktake screen.
+ * @param modifier Modifier used to configure the button's layout and appearance.
+ * @param shape Shape applied to the button's corners.
+ * @param fontSize Font size used for the button label in scaled pixels.
+ */
 @Composable
 fun StocktakeButton(navController: NavController, modifier: Modifier, shape: Shape, fontSize: Int = 20) {
     Button(
@@ -974,7 +1363,7 @@ fun StocktakeButton(navController: NavController, modifier: Modifier, shape: Sha
             modifier = Modifier
                 .scale(1.2f)
                 .weight(1f)
-            )
+        )
         Text(
             "Stocktake",
             fontSize = fontSize.sp,
@@ -983,6 +1372,19 @@ fun StocktakeButton(navController: NavController, modifier: Modifier, shape: Sha
         )
     }
 }
+
+/**
+ * Displays the Request Stock button.
+ *
+ * This functionality is currently disabled and does not perform an action
+ * when pressed.
+ *
+ * @param navController Navigation controller available for future navigation
+ * to the Request Stock screen.
+ * @param modifier Modifier used to configure the button's layout and appearance.
+ * @param shape Shape applied to the button's corners.
+ * @param fontSize Font size used for the button label in scaled pixels.
+ */
 @Composable
 fun RequestStockButton(navController: NavController, modifier: Modifier, shape: Shape, fontSize: Int = 20) {
     Button(
@@ -998,7 +1400,7 @@ fun RequestStockButton(navController: NavController, modifier: Modifier, shape: 
             modifier = Modifier
                 .scale(1.2f)
                 .weight(1f)
-            )
+        )
         Text(
             "Request Stock",
             fontSize = fontSize.sp,

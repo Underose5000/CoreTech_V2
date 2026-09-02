@@ -17,6 +17,22 @@ import com.example.coretechv2.dataclasses.APICallTables
 import com.example.coretechv2.dataclasses.ItemDescriptorItem
 import com.example.coretechv2.viewmodel.SharedViewModel
 
+/**
+ * Displays a scrollable list of search results and allows the user to
+ * select an item from the results.
+ *
+ * The displayed results are determined by the type of the first element
+ * in [searchedList]. Currently, [APICallTables.ItemDescriptor] results
+ * are supported. Selecting an item creates an [ItemDescriptorItem] from
+ * the selected result and stores it in the supplied [SharedViewModel].
+ *
+ * If [searchedList] is empty, no search results are displayed.
+ *
+ * @param searchedList The list of search results to display. The list is
+ * expected to contain objects of a supported search result type.
+ * @param sharedViewModel The [SharedViewModel] used to store the item
+ * selected by the user.
+ */
 @Composable
 fun SearchResultBox(searchedList: List<Any>, sharedViewModel: SharedViewModel) {
     Column(

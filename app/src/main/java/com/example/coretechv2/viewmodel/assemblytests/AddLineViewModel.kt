@@ -20,20 +20,17 @@ import com.example.coretechv2.viewmodel.SharedViewModel
 import kotlinx.coroutines.launch
 
 /**
- * ViewModel responsible for managing Gel Time Test data and UI state.
+ * ViewModel responsible for managing the state and operations required when
+ * adding a new assembly line.
  *
- * This ViewModel handles:
- * - User input for gel time readings (hours, minutes, seconds, catalyst, etc.)
- * - Loading existing gel test data or initializing new tests
- * - Saving gel time tests via API (INSERT / UPDATE)
- * - Converting time formats for database storage
- * - Managing UI state such as dropdowns and popup dialogs
- * - Handling navigation flow for test screen lifecycle
+ * This ViewModel manages item and descriptor selection, assembly step selection,
+ * line quantity entry, search functionality, popup state, and saving the new
+ * assembly line to the database.
  *
- * It interacts with:
- * - [APICall] for database communication
- * - [SharedViewModel] for shared app state (order, user, assembly header)
- * - Utility functions for time formatting (HMMSS conversion)
+ * @property dataStoreManager Provides access to persisted application settings
+ * and configuration required by the API layer.
+ * @property sharedViewModel Provides shared application state, including the
+ * currently selected item, assembly order, current user, and assembly lines.
  */
 class AddLineViewModel(private val dataStoreManager: DataStoreManager, var sharedViewModel: SharedViewModel) : ViewModel() {
     private val apiCall = APICall(dataStoreManager)
@@ -62,21 +59,34 @@ class AddLineViewModel(private val dataStoreManager: DataStoreManager, var share
         private set
     var stepName = mutableStateOf("")
         private set
-    fun stepPressed(){
+
+    /**
+     * Toggles the visibility of the assembly step selection list.
+     */
+    fun stepPressed() {
         showStepList = !showStepList
     }
-    fun clearSearchField(){
+
+    /**
+     * Clears the item search field.
+     */
+    fun clearSearchField() {
         Searchfield = ""
     }
 
-
     /**
-     * Resets the popup message visibility state.
+     * Resets the message popup close state.
      */
     fun closePopupMessage() {
         closePopupMessage.value = false
     }
 
+    /**
+     * Opens the item lookup popup.
+     *
+     * Configures the popup dimensions and assigns [ItemLookUpScreen] as
+     * its content before displaying it.
+     */
     fun openItemList() {
         popupDetails.width = 700
         popupDetails.height = 500
@@ -86,12 +96,16 @@ class AddLineViewModel(private val dataStoreManager: DataStoreManager, var share
         openItemList.value = true
     }
 
-    fun closeTestScreen(){
+    /**
+     * Resets the state used to close the add-line screen.
+     */
+    fun closeTestScreen() {
         closeTestScreen.value = false
     }
 
     /**
-     * Closes the gel test screen and triggers navigation back.
+     * Closes the item search popup and updates the search field with the
+     * currently selected item's description.
      */
     fun closeSearchBoxs() {
         Searchfield = sharedViewModel.currentItem.value.description
@@ -100,14 +114,21 @@ class AddLineViewModel(private val dataStoreManager: DataStoreManager, var share
     }
 
     /**
-     * Resets the popup trigger state.
+     * Resets the message popup open state.
+     *
+     * This method currently sets the state to `false`, allowing the popup-open
+     * event to be consumed or reset by the calling UI.
      */
     fun openPopupMessage() {
         openPopupMessage.value = false
     }
 
     /**
-     * Toggles the catalyst dropdown visibility.
+     * Retrieves all active items and descriptors from the database.
+     *
+     * Item and descriptor records are combined using a SQL `UNION ALL` query.
+     * Obsolete records are excluded. The retrieved records are used to populate
+     * both the complete item list and the initially searched item list.
      */
     fun retrieveItems() {
         viewModelScope.launch {
@@ -128,10 +149,27 @@ class AddLineViewModel(private val dataStoreManager: DataStoreManager, var share
         }
     }
 
+    /**
+     * Updates the quantity entered for the new assembly line.
+     *
+     * @param newValue The new quantity value entered by the user.
+     */
     fun onAddLineQty(newValue: String) {
         lineQty.value = newValue
     }
 
+    /**
+     * Updates and filters the item search field.
+     *
+     * The search is performed against the item code, description, category,
+     * and barcode. Multiple search terms are supported, and an item must
+     * contain all supplied terms to be included in the results.
+     *
+     * Changing the search field also clears the currently selected item in
+     * [sharedViewModel].
+     *
+     * @param newValue The new search text entered by the user.
+     */
     fun onSearchFieldChange(newValue: String) {
         Searchfield = newValue
         sharedViewModel.currentItem = mutableStateOf(ItemDescriptorItem())
@@ -163,61 +201,82 @@ class AddLineViewModel(private val dataStoreManager: DataStoreManager, var share
         }
     }
 
-    fun onStepNamesLoad(assemblyStepNames: SnapshotStateList<Any>){
+    /**
+     * Loads the assembly step names available for the current assembly.
+     *
+     * Existing step names are copied from [assemblyStepNames]. Any predefined
+     * step names from [StepNames] that are not already present are then added.
+     * The first resulting step name is selected as the current step.
+     *
+     * @param assemblyStepNames The list of step names already associated with
+     * the current assembly.
+     */
+    fun onStepNamesLoad(assemblyStepNames: SnapshotStateList<Any>) {
         stepNameList.clear()
-        for (i in 0 until assemblyStepNames.size){
+        for (i in 0 until assemblyStepNames.size) {
             stepNameList.add(assemblyStepNames[i])
         }
-        for (i in 0 until StepNames.entries.size){
-            if (!stepNameList.contains(StepNames.entries[i].toStringName())){
+        for (i in 0 until StepNames.entries.size) {
+            if (!stepNameList.contains(StepNames.entries[i].toStringName())) {
                 stepNameList.add(StepNames.entries[i].toStringName())
             }
         }
         stepName.value = stepNameList[0].toString()
     }
 
-    fun onDropDownChange(newValue: Any){
+    /**
+     * Updates the selected assembly step name and closes the step selection list.
+     *
+     * @param newValue The newly selected step name.
+     */
+    fun onDropDownChange(newValue: Any) {
         stepName.value = newValue.toString()
         showStepList = false
     }
 
-    fun currentLineNumbers(code: String):  List<APICallTables.AssemblyLines> {
+    /**
+     * Retrieves all existing assembly lines matching the supplied line code.
+     *
+     * @param code The line code used to filter the current assembly lines.
+     * @return A list containing all assembly lines whose line code matches
+     * [code].
+     */
+    fun currentLineNumbers(code: String): List<APICallTables.AssemblyLines> {
         val lines = mutableStateListOf<APICallTables.AssemblyLines>()
 
-        for (i in 0 until (sharedViewModel.currentAssemblyLines?.size ?: 1)){
-            if(sharedViewModel.currentAssemblyLines?.get(i)?.LINECODE == code) lines.add(sharedViewModel.currentAssemblyLines!![i])
+        for (i in 0 until (sharedViewModel.currentAssemblyLines?.size ?: 1)) {
+            if (sharedViewModel.currentAssemblyLines?.get(i)?.LINECODE == code) lines.add(sharedViewModel.currentAssemblyLines!![i])
         }
         return lines
     }
 
     /**
-     * Saves the current Gel Time test to the database.
+     * Saves the currently configured assembly line to the database.
      *
-     * This function:
-     * - Converts hour/minute/second into HMMSS format
-     * - Builds SQL INSERT or UPDATE query depending on save type
-     * - Sends query to backend API
-     * - Handles success or failure response
+     * The new line number is calculated from the number of existing assembly
+     * lines, with the first line using line number 10 and subsequent lines
+     * increasing by increments of 10.
      *
-     * On success:
-     * - Closes test screen
-     * - Shows success snackbar message
-     *
-     * On failure:
-     * - Shows error snackbar message
+     * On successful insertion, the screen state and input fields are reset and
+     * a success snackbar message is displayed. If the database operation fails,
+     * an error snackbar message is displayed instead.
      */
     fun onSave() {
-        Log.d("Add Line Save", "sharedViewModel.currentAssemblyLines = ${sharedViewModel.currentAssemblyLines}" )
-        Log.d("Add Line Save", "sharedViewModel.currentAssemblyLines condtion = ${sharedViewModel.currentAssemblyLines?.isEmpty() == true}" )
-        val lineNumber = if (sharedViewModel.currentAssemblyLines.isNullOrEmpty()){ 10 } else { (sharedViewModel.currentAssemblyLines?.size?.plus(1)?.times(10)!!) }
-        Log.d("Add Line Save", "lineNumber = $lineNumber" )
+        Log.d("Add Line Save", "sharedViewModel.currentAssemblyLines = ${sharedViewModel.currentAssemblyLines}")
+        Log.d("Add Line Save", "sharedViewModel.currentAssemblyLines condtion = ${sharedViewModel.currentAssemblyLines?.isEmpty() == true}")
+        val lineNumber = if (sharedViewModel.currentAssemblyLines.isNullOrEmpty()) {
+            10
+        } else {
+            (sharedViewModel.currentAssemblyLines?.size?.plus(1)?.times(10)!!)
+        }
+        Log.d("Add Line Save", "lineNumber = $lineNumber")
         viewModelScope.launch {
             val call = "INSERT INTO AssemblyLines " +
                     "(ORDERNUMBER, LINECODE, LINEDESCRIPTION, ORDERQTY, LINEUNIT, STEPNAME, LINENUMBER, CODETYPE, SYSUSERCREATED, SYSUSERMODIFIED)" +
                     "VALUES('${sharedViewModel.currentOrderNumber.value}','${sharedViewModel.currentItem.value.code}','${sharedViewModel.currentItem.value.description}', " +
                     "${lineQty.value},'${sharedViewModel.currentItem.value.unit}','${stepName.value}',${lineNumber},'${sharedViewModel.currentItem.value.type}','${sharedViewModel.currentUser.value}','${sharedViewModel.currentUser.value}')"
 
-            
+
             val response = apiCall.insertUpdateDelete(call)
             if (response == "200 OK") {
                 sharedViewModel.snackBarMessage("Line Saved successfully")
@@ -233,13 +292,10 @@ class AddLineViewModel(private val dataStoreManager: DataStoreManager, var share
     }
 
     /**
-     * Handles user cancellation of the gel test screen.
+     * Cancels adding the assembly line.
      *
-     * If the test contains data:
-     * - Shows confirmation popup before leaving without saving
-     *
-     * If no data exists:
-     * - Immediately closes the test screen
+     * Clears the item search field and line quantity before signalling that
+     * the add-line screen should be closed.
      */
     fun onCancel() {
         onSearchFieldChange("")

@@ -1,13 +1,8 @@
 package com.example.coretechv2.ui.component
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -20,13 +15,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import kotlinx.coroutines.launch
 
 /**
  * A reusable top-level app scaffold that provides:
@@ -75,28 +66,30 @@ import kotlinx.coroutines.launch
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopBar(navController: NavController,
-           title: String,
-           snackbarHostState: SnackbarHostState,
-           backshow: Boolean = false,
+fun TopBar(
+    navController: NavController,
+    title: String,
+    snackbarHostState: SnackbarHostState,
+    backshow: Boolean = false,
 
-           icon1: ImageVector = Icons.Filled.Warning,
-           icon1Description: String? = null,
-           icon1action: () -> Unit = {},
+    icon1: ImageVector = Icons.Filled.Warning,
+    icon1Description: String? = null,
+    icon1action: () -> Unit = {},
 
-           icon2: ImageVector = Icons.Filled.Warning,
-           icon2Description: String? = null,
-           icon2action: () -> Unit = {},
+    icon2: ImageVector = Icons.Filled.Warning,
+    icon2Description: String? = null,
+    icon2action: () -> Unit = {},
 
-           icon3: ImageVector = Icons.Filled.Warning,
-           icon3Description: String? = null,
-           icon3action: () -> Unit = {},
+    icon3: ImageVector = Icons.Filled.Warning,
+    icon3Description: String? = null,
+    icon3action: () -> Unit = {},
 
-           icon4: ImageVector = Icons.Filled.Warning,
-           icon4Description: String? = null,
-           icon4action: () -> Unit = {},
+    icon4: ImageVector = Icons.Filled.Warning,
+    icon4Description: String? = null,
+    icon4action: () -> Unit = {},
 
-           content: @Composable (PaddingValues) -> Unit) {
+    content: @Composable (PaddingValues) -> Unit
+) {
     val scope = rememberCoroutineScope()
 
     Scaffold(
@@ -114,8 +107,8 @@ fun TopBar(navController: NavController,
                     Text(title)
                 },
                 navigationIcon = {
-                    if (backshow){
-                        IconButton(onClick = {navController.popBackStack()}){
+                    if (backshow) {
+                        IconButton(onClick = { navController.popBackStack() }) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back"
@@ -124,32 +117,32 @@ fun TopBar(navController: NavController,
                     }
                 },
                 actions = {
-                    if (icon4 != Icons.Filled.Warning){
-                        IconButton(onClick = {icon4action()}){
+                    if (icon4 != Icons.Filled.Warning) {
+                        IconButton(onClick = { icon4action() }) {
                             Icon(
                                 imageVector = icon4,
                                 contentDescription = icon4Description
                             )
                         }
                     }
-                    if (icon3 != Icons.Filled.Warning){
-                        IconButton(onClick = {icon3action()}){
+                    if (icon3 != Icons.Filled.Warning) {
+                        IconButton(onClick = { icon3action() }) {
                             Icon(
                                 imageVector = icon3,
                                 contentDescription = icon3Description
                             )
                         }
                     }
-                    if (icon2 != Icons.Filled.Warning){
-                        IconButton(onClick = {icon2action()}){
+                    if (icon2 != Icons.Filled.Warning) {
+                        IconButton(onClick = { icon2action() }) {
                             Icon(
                                 imageVector = icon2,
                                 contentDescription = icon2Description
                             )
                         }
                     }
-                    if (icon1 != Icons.Filled.Warning){
-                        IconButton(onClick = {icon1action()}){
+                    if (icon1 != Icons.Filled.Warning) {
+                        IconButton(onClick = { icon1action() }) {
                             Icon(
                                 imageVector = icon1,
                                 contentDescription = icon1Description

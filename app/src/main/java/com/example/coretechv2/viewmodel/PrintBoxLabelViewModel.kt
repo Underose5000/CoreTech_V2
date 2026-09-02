@@ -1,6 +1,5 @@
 package com.example.coretechv2.viewmodel
 
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -8,35 +7,30 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.coretechv2.dataclasses.APICallTables
-import com.example.coretechv2.dataclasses.APICallTypes
 import com.example.coretechv2.dataclasses.ItemDescriptorItem
 import com.example.coretechv2.dataclasses.LabelElements
 import com.example.coretechv2.dataclasses.LabelStyles
 import com.example.coretechv2.dataclasses.MessageItems
 import com.example.coretechv2.dataclasses.PopupItems
-import com.example.coretechv2.dataclasses.assemblydataclasses.AdjustmentItem
-import com.example.coretechv2.dataclasses.assemblydataclasses.adjustmentHasValue
 import com.example.coretechv2.repository.APICall
 import com.example.coretechv2.repository.DataStoreManager
 import com.example.coretechv2.ui.screen.ItemLookUpScreen
-import com.example.coretechv2.viewmodel.SharedViewModel
 import kotlinx.coroutines.launch
 
 /**
- * ViewModel responsible for managing Gel Time Test data and UI state.
+ * ViewModel responsible for managing box label printing configuration.
  *
- * This ViewModel handles:
- * - User input for gel time readings (hours, minutes, seconds, catalyst, etc.)
- * - Loading existing gel test data or initializing new tests
- * - Saving gel time tests via API (INSERT / UPDATE)
- * - Converting time formats for database storage
- * - Managing UI state such as dropdowns and popup dialogs
- * - Handling navigation flow for test screen lifecycle
+ * [PrintBoxLabelViewModel] manages the item selection, label variant,
+ * quantities, batch number, kit/set configuration, and label data required
+ * to generate a box label preview.
  *
- * It interacts with:
- * - [APICall] for database communication
- * - [SharedViewModel] for shared app state (order, user, assembly header)
- * - Utility functions for time formatting (HMMSS conversion)
+ * It retrieves item and label information from the database through [APICall]
+ * and communicates shared state with [SharedViewModel].
+ *
+ * @param dataStoreManager Provides access to application settings and API
+ * configuration required by [APICall].
+ * @param sharedViewModel Shared ViewModel used to access and update state
+ * shared between application screens.
  */
 class PrintBoxLabelViewModel(private val dataStoreManager: DataStoreManager, var sharedViewModel: SharedViewModel) : ViewModel() {
     private val apiCall = APICall(dataStoreManager)
@@ -87,12 +81,21 @@ class PrintBoxLabelViewModel(private val dataStoreManager: DataStoreManager, var
         private set
 
     /**
-     * Resets the popup message visibility state.
+     * Resets the popup message close state.
+     *
+     * Sets [closePopupMessage] to false after the UI has processed the
+     * popup close event.
      */
     fun closePopupMessage() {
         closePopupMessage.value = false
     }
 
+    /**
+     * Opens the item lookup screen.
+     *
+     * Configures the popup dimensions and content before setting
+     * [openItemList] to true.
+     */
     fun openItemList() {
         popupDetails.width = 700
         popupDetails.height = 500
@@ -102,12 +105,21 @@ class PrintBoxLabelViewModel(private val dataStoreManager: DataStoreManager, var
         openItemList.value = true
     }
 
-    fun closeTestScreen(){
+    /**
+     * Resets the box label screen close state.
+     *
+     * Sets [closeTestScreen] to false after the UI has processed the
+     * screen close event.
+     */
+    fun closeTestScreen() {
         closeTestScreen.value = false
     }
 
     /**
-     * Closes the gel test screen and triggers navigation back.
+     * Closes the item search and lookup interface.
+     *
+     * Updates the search field with the description of the currently
+     * selected item, hides the search box, and closes the item lookup list.
      */
     fun closeSearchBoxs() {
         Searchfield = sharedViewModel.currentItem.value.description
@@ -116,17 +128,32 @@ class PrintBoxLabelViewModel(private val dataStoreManager: DataStoreManager, var
     }
 
     /**
-     * Resets the popup trigger state.
+     * Resets the popup message open state.
+     *
+     * Sets [openPopupMessage] to false after the UI has processed the
+     * popup open event.
      */
     fun openPopupMessage() {
         openPopupMessage.value = false
     }
 
-    fun variantPressed(){
+    /**
+     * Toggles the visibility of the label variant selection list.
+     */
+    fun variantPressed() {
         showIndexList = !showIndexList
     }
 
-    fun onVariantChange(index: Int){
+    /**
+     * Selects a label variant from the available item information.
+     *
+     * If the selected variant contains a middle name, that name is used.
+     * Otherwise, the top and bottom names are combined to create the
+     * variant name.
+     *
+     * @param index The index of the label variant to select.
+     */
+    fun onVariantChange(index: Int) {
         if (itemInfo[index].MIDDLENAME.isNotEmpty()) {
             variantName.value = itemInfo[index].MIDDLENAME
         } else {
@@ -136,6 +163,13 @@ class PrintBoxLabelViewModel(private val dataStoreManager: DataStoreManager, var
         showIndexList = false
     }
 
+    /**
+     * Retrieves active items and descriptors from the database.
+     *
+     * Obsolete items and descriptors are excluded from the results. The
+     * retrieved records are stored in both [itemsList] and
+     * [itemListSearched] for use by the item lookup interface.
+     */
     fun retrieveItems() {
         viewModelScope.launch {
             val call = "SELECT ITEMCODE AS CODE, ITEMDESCRIPTION AS DESCRIPTION, ITEMUNIT AS UNIT, ITEMSTATUS AS STATUS, ITEMBARCODE AS BARCODE, ITEMCATEGORY AS CATEGORY, " +
@@ -155,6 +189,19 @@ class PrintBoxLabelViewModel(private val dataStoreManager: DataStoreManager, var
         }
     }
 
+    /**
+     * Retrieves and prepares the label information required for a box label.
+     *
+     * The method retrieves item label information, label class information,
+     * label layout information, and dangerous goods information from the
+     * database for the currently selected item.
+     *
+     * The retrieved information is combined into [LabelElements] objects
+     * and stored in [boxLabelDataList].
+     *
+     * The initial variant name, box quantity, number of boxes, and kit/set
+     * state are also configured after the label data is loaded.
+     */
     fun onBoxLabelData() {
         viewModelScope.launch {
             boxLabelDataList.clear()
@@ -181,16 +228,37 @@ class PrintBoxLabelViewModel(private val dataStoreManager: DataStoreManager, var
                 }
                 boxQty.value = boxLabelDataList[0].itemInfo.BOXQTY.toString()
                 numberOfBoxes.value = "1"
-                kitSet.value = if(sharedViewModel.currentItem.value.type == "Descriptor Code"){true} else {false}
+                kitSet.value = if (sharedViewModel.currentItem.value.type == "Descriptor Code") {
+                    true
+                } else {
+                    false
+                }
             }
         }
     }
 
+    /**
+     * Updates the batch number used for the box label.
+     *
+     * The supplied value is also stored in
+     * [SharedViewModel.currentOrderNumber] for use by other parts of the
+     * application.
+     *
+     * @param newValue The new batch number.
+     */
     fun onBatchNumber(newValue: String) {
         batchNumber.value = newValue
         sharedViewModel.currentOrderNumber.value = newValue
     }
 
+    /**
+     * Updates whether the selected label should be treated as a kit or set.
+     *
+     * The new value is applied to [kitSet] and propagated to every
+     * [LabelElements] entry in [boxLabelDataList].
+     *
+     * @param newValue True when the label represents a kit or set.
+     */
     fun onKitSet(newValue: Boolean) {
         kitSet.value = newValue
         boxLabelDataList.forEach {
@@ -198,20 +266,47 @@ class PrintBoxLabelViewModel(private val dataStoreManager: DataStoreManager, var
         }
     }
 
+    /**
+     * Updates the quantity of items contained in each box.
+     *
+     * When a non-empty value is supplied, the quantity is converted to an
+     * integer and applied to every label element in [boxLabelDataList].
+     *
+     * @param newValue The new box quantity as text.
+     */
     fun onBoxQty(newValue: String) {
         boxQty.value = newValue
 
-        if(newValue != ""){
-        boxLabelDataList.forEach {
-            it.itemInfo.BOXQTY = boxQty.value.toInt()
-        }
+        if (newValue != "") {
+            boxLabelDataList.forEach {
+                it.itemInfo.BOXQTY = boxQty.value.toInt()
+            }
         }
     }
 
+    /**
+     * Updates the number of boxes to be labelled.
+     *
+     * @param newValue The new number of boxes as text.
+     */
     fun onNumberOfBoxes(newValue: String) {
         numberOfBoxes.value = newValue
     }
 
+    /**
+     * Updates the item search field and filters the available items.
+     *
+     * The search text is split into individual terms. An item is included in
+     * [itemListSearched] when every search term is found within its item
+     * code, description, category, or barcode.
+     *
+     * Searching is case-insensitive.
+     *
+     * If the search field is blank, the search results are cleared and the
+     * search box is hidden.
+     *
+     * @param newValue The new text entered into the search field.
+     */
     fun onSearchFieldChange(newValue: String) {
         Searchfield = newValue
         itemListSearched.clear()
@@ -242,12 +337,24 @@ class PrintBoxLabelViewModel(private val dataStoreManager: DataStoreManager, var
         }
     }
 
+    /**
+     * Confirms the current box label configuration.
+     *
+     * Displays the label preview and closes the current box label
+     * configuration screen.
+     */
     fun onOk() {
         showLabel = true
         sharedViewModel.showLabelPreview.value = true
         closeTestScreen.value = true
     }
 
+    /**
+     * Cancels the current box label configuration.
+     *
+     * Closes the box label configuration screen without displaying the
+     * label preview.
+     */
     fun onCancel() {
         closeTestScreen.value = true
     }

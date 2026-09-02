@@ -25,19 +25,37 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.coretechv2.dataclasses.NoteTypes
 import com.example.coretechv2.factory.NotesViewModelFactory
 import com.example.coretechv2.ui.component.OutlinedStyleTextField
-import com.example.coretechv2.ui.component.PopupWindow
 import com.example.coretechv2.viewmodel.NotesViewModel
 import com.example.coretechv2.viewmodel.SharedViewModel
 
+/**
+ * Displays the notes screen for a specified note type.
+ *
+ * Creates and manages a [NotesViewModel] using the provided [SharedViewModel].
+ * When the screen is first displayed, existing items are retrieved and the
+ * note field is cleared for the selected note type.
+ *
+ * The screen provides a text field for entering a note and buttons for either
+ * cancelling or saving the note. Tapping outside the text field clears the
+ * current input focus.
+ *
+ * Popup and test screen state is synchronised between the [NotesViewModel]
+ * and [SharedViewModel] to allow messages and other application-level
+ * popups to be displayed and dismissed.
+ *
+ * @param sharedViewModel Shared view model used to manage application-wide
+ * state and popup messages.
+ * @param notetype Type of note being created or edited.
+ */
 @Composable
-fun NotesScreen(sharedViewModel: SharedViewModel, notetype: NoteTypes){
+fun NotesScreen(sharedViewModel: SharedViewModel, notetype: NoteTypes) {
     val context = LocalContext.current
     val viewModel: NotesViewModel = viewModel(
         factory = NotesViewModelFactory(context, sharedViewModel),
     )
     val focusManager = LocalFocusManager.current
 
-    LaunchedEffect(Unit){
+    LaunchedEffect(Unit) {
         viewModel.retrieveItems()
         viewModel.onClear(notetype)
 
@@ -52,7 +70,7 @@ fun NotesScreen(sharedViewModel: SharedViewModel, notetype: NoteTypes){
         sharedViewModel.openMessagePopup()
         viewModel.openPopupMessage()
     }
-    if(viewModel.closeTestScreen.value){
+    if (viewModel.closeTestScreen.value) {
         sharedViewModel.closePopup()
         viewModel.closeTestScreen()
     }
@@ -84,7 +102,8 @@ fun NotesScreen(sharedViewModel: SharedViewModel, notetype: NoteTypes){
                 .padding(horizontal = 20.dp, vertical = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            OutlinedStyleTextField(value = viewModel.noteField,
+            OutlinedStyleTextField(
+                value = viewModel.noteField,
                 onValueChange = { newValue -> viewModel.onNoteField(newValue) })
 
         }

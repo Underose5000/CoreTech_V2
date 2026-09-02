@@ -1,6 +1,5 @@
 package com.example.coretechv2.viewmodel.assemblytests
 
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -18,6 +17,26 @@ import com.example.coretechv2.repository.DataStoreManager
 import com.example.coretechv2.viewmodel.SharedViewModel
 import kotlinx.coroutines.launch
 
+/**
+ * ViewModel responsible for managing viscosity test data and UI state.
+ *
+ * This ViewModel handles:
+ * - Managing viscosity test readings at different spindle speeds.
+ * - Managing the selected spindle and viscosity index range.
+ * - Calculating the viscosity index result from the selected reading range.
+ * - Loading existing viscosity test results.
+ * - Initialising new viscosity tests and determining the next test number.
+ * - Saving viscosity test results using INSERT or UPDATE operations.
+ * - Managing dropdown and popup dialog state.
+ * - Detecting unsaved changes when cancelling a test.
+ * - Handling navigation flow for the viscosity test screen lifecycle.
+ *
+ * It interacts with:
+ * - [APICall] for communication with the database through the API.
+ * - [SharedViewModel] for shared application state such as the current
+ *   assembly order, user, and save type.
+ * - Viscosity data classes for representing test readings and field types.
+ */
 class ViscosityViewModel(private val dataStoreManager: DataStoreManager, var sharedViewModel: SharedViewModel) : ViewModel() {
     private val apiCall = APICall(dataStoreManager)
     var visReading = mutableStateOf(ViscosityItem())
@@ -37,76 +56,93 @@ class ViscosityViewModel(private val dataStoreManager: DataStoreManager, var sha
 
 
     /**
-     * Closes the popup message dialog by resetting its state.
+     * Resets the popup message close state.
+     *
+     * Setting this value to `false` allows the popup close event to be
+     * consumed by the UI.
      */
-    fun closePopupMessage(){
+    fun closePopupMessage() {
         closePopupMessage.value = false
     }
 
     /**
-     * Closes the viscosity test screen and triggers navigation back.
+     * Resets the test screen close state.
+     *
+     * Setting this value to `false` allows the navigation close event to be
+     * consumed by the UI.
      */
-    fun closeTestScreen(){
+    fun closeTestScreen() {
         closeTestScreen.value = false
     }
 
     /**
-     * Resets the popup message trigger flag.
+     * Resets the popup message trigger state.
+     *
+     * This method currently sets the state to `false`, allowing the popup
+     * event to be reset after it has been handled by the UI.
      */
-    fun openPopupMessage(){
+    fun openPopupMessage() {
         openPopupMessage.value = false
     }
 
     /**
-     * Toggles the spindle dropdown visibility.
+     * Toggles the visibility of the spindle selection dropdown.
      */
-    fun spindlePressed(){
+    fun spindlePressed() {
         showSpindleList = !showSpindleList
     }
 
     /**
-     * Toggles the index range dropdown visibility.
+     * Toggles the visibility of the viscosity index range dropdown.
      */
-    fun indexPressed(){
+    fun indexPressed() {
         showindexList = !showindexList
     }
 
     /**
-     * Updates the selected value for a dropdown field and hides the dropdown.
+     * Updates a viscosity test dropdown value.
      *
-     * @param newValue The newly selected value from the dropdown.
-     * @param field The dropdown field being updated (SPINDLE, INDEX, TESTNUMBER).
+     * The supplied [field] determines whether the spindle, index range,
+     * or test number is updated. The corresponding dropdown is then
+     * hidden after the selection is made.
+     *
+     * @param newValue The newly selected value.
+     * @param field The viscosity setting being updated.
      */
-    fun onDropDownChange(newValue: String, field : VisSettings){
+    fun onDropDownChange(newValue: String, field: VisSettings) {
         visReading.value = when (field) {
             VisSettings.SPINDLE -> visReading.value.copy(spindle = newValue)
             VisSettings.INDEX -> visReading.value.copy(indexRange = newValue)
             VisSettings.TESTNUMBER -> visReading.value.copy(testNumber = newValue)
         }
-        if (field == VisSettings.SPINDLE){
+        if (field == VisSettings.SPINDLE) {
             showSpindleList = false
         }
-        if (field == VisSettings.INDEX){
+        if (field == VisSettings.INDEX) {
             showindexList = false
         }
-        if (field == VisSettings.TESTNUMBER){
+        if (field == VisSettings.TESTNUMBER) {
             showtestNumber = false
         }
     }
 
     /**
-     * Updates a viscosity reading field based on user input.
+     * Updates a viscosity reading field with a new user-entered value.
      *
-     * @param newValue The numeric value entered by the user.
-     * @param field The viscosity field being updated (e.g. VIS60, VIS30, etc.).
+     * The supplied [field] determines which viscosity reading is updated.
+     * Supported readings correspond to the spindle speed ranges represented
+     * by [VisField].
+     *
+     * @param newValue The new viscosity reading entered by the user.
+     * @param field The viscosity reading field being modified.
      */
-    fun onVisChange(newValue: String, field : VisField){
+    fun onVisChange(newValue: String, field: VisField) {
         visReading.value = when (field) {
             VisField.VIS60 -> visReading.value.copy(vis60 = newValue)
             VisField.VIS30 -> visReading.value.copy(vis30 = newValue)
             VisField.VIS12 -> visReading.value.copy(vis12 = newValue)
-            VisField.VIS06  -> visReading.value.copy(vis06 = newValue)
-            VisField.VIS03  -> visReading.value.copy(vis03 = newValue)
+            VisField.VIS06 -> visReading.value.copy(vis06 = newValue)
+            VisField.VIS03 -> visReading.value.copy(vis03 = newValue)
             VisField.VIS1_5 -> visReading.value.copy(vis1_5 = newValue)
             VisField.VIS0_6 -> visReading.value.copy(vis0_6 = newValue)
             VisField.VIS0_3 -> visReading.value.copy(vis0_3 = newValue)
@@ -114,39 +150,44 @@ class ViscosityViewModel(private val dataStoreManager: DataStoreManager, var sha
     }
 
     /**
-     * Saves the current viscosity test to the database.
+     * Calculates and saves the current viscosity test.
      *
-     * This function:
-     * - Calculates the viscosity index ratio based on selected range
-     * - Builds an INSERT or UPDATE SQL query
-     * - Sends the query to the backend API
-     * - Handles success or failure responses
+     * The viscosity index ratio is calculated using the selected index
+     * range. Supported ranges are:
+     * - `6/60`
+     * - `3/30`
+     * - `0.6/6`
+     * - `0.3/3`
      *
-     * On success:
-     * - Closes the test screen
-     * - Shows success snackbar message
+     * The calculated ratio is rounded to one decimal place and stored as
+     * the index reading.
      *
-     * On failure:
-     * - Shows error snackbar message
+     * Depending on [SharedViewModel.saveType], this method either inserts
+     * a new record into `OSTDEF_VISCOSITY_TESTS` or updates an existing
+     * record.
+     *
+     * On successful completion, the test screen is closed and a success
+     * snackbar message is displayed. If the database operation fails,
+     * an error snackbar message is displayed instead.
      */
-    fun onTestSave(){
+    fun onTestSave() {
         var ratio = 0.0
-        if (visReading.value.indexRange == "6/60"){
+        if (visReading.value.indexRange == "6/60") {
             ratio = (visReading.value.vis06.toDoubleOrNull() ?: 0.0) / (visReading.value.vis60.toDoubleOrNull() ?: 0.0)
         }
-        if (visReading.value.indexRange == "3/30"){
+        if (visReading.value.indexRange == "3/30") {
             ratio = (visReading.value.vis03.toDoubleOrNull() ?: 0.0) / (visReading.value.vis30.toDoubleOrNull() ?: 0.0)
         }
-        if (visReading.value.indexRange == "0.6/6"){
+        if (visReading.value.indexRange == "0.6/6") {
             ratio = (visReading.value.vis0_6.toDoubleOrNull() ?: 0.0) / (visReading.value.vis06.toDoubleOrNull() ?: 0.0)
         }
-        if (visReading.value.indexRange == "0.3/3"){
+        if (visReading.value.indexRange == "0.3/3") {
             ratio = (visReading.value.vis0_3.toDoubleOrNull() ?: 0.0) / (visReading.value.vis03.toDoubleOrNull() ?: 0.0)
         }
         val indexResult = kotlin.math.round(ratio * 10 * 10) / 10
         viewModelScope.launch {
             var call = ""
-            if(sharedViewModel.saveType == APICallTypes.INSERT){
+            if (sharedViewModel.saveType == APICallTypes.INSERT) {
                 call = "INSERT INTO OSTDEF_VISCOSITY_TESTS " +
                         "(ITEMCODE, ORDERNUMBER, ITEMDESCRIPTION, TESTNO, SPINDLE, INDEXREADING, READING60, READING30, READING12, READING6, READING3, READING1_5, READING0_6, READING0_3, SYSUSERCREATED, SYSUSERMODIFIED) " +
                         "VALUES('${sharedViewModel.currentAssemblyHeader?.ITEMCODE}', '${sharedViewModel.currentAssemblyHeader?.ORDERNUMBER}', '${sharedViewModel.currentAssemblyHeader?.ITEMDESCRIPTION}', ${visReading.value.testNumber}, '${visReading.value.spindle}', ${indexResult}, " +
@@ -154,7 +195,7 @@ class ViscosityViewModel(private val dataStoreManager: DataStoreManager, var sha
                         "${visReading.value.vis03.toDoubleOrNull() ?: 0.0}, ${visReading.value.vis1_5.toDoubleOrNull() ?: 0.0}, ${visReading.value.vis0_6.toDoubleOrNull() ?: 0.0},${visReading.value.vis0_3.toDoubleOrNull() ?: 0.0}, " +
                         "'${sharedViewModel.currentUser.value}', '${sharedViewModel.currentUser.value}')"
             }
-            if(sharedViewModel.saveType == APICallTypes.UPDATE){
+            if (sharedViewModel.saveType == APICallTypes.UPDATE) {
                 call = "UPDATE OSTDEF_VISCOSITY_TESTS SET  " +
                         "TESTNO = ${visReading.value.testNumber}," +
                         "SPINDLE = '${visReading.value.spindle}'," +
@@ -173,33 +214,46 @@ class ViscosityViewModel(private val dataStoreManager: DataStoreManager, var sha
 
             val response = apiCall.insertUpdateDelete(call)
 
-            if(response == "200 OK"){
+            if (response == "200 OK") {
                 closeTestScreen.value = true
                 sharedViewModel.snackBarMessage("Viscosity Saved successfully")
-            } else{
+            } else {
                 sharedViewModel.snackBarMessage("Error Saving, Please Try Again")
             }
         }
     }
 
     /**
-     * Loads an existing viscosity test into the UI or initializes a new test.
+     * Loads an existing viscosity test or initialises a new test.
      *
-     * If a test is provided:
-     * - Maps database values into UI state
-     * - Calculates correct index range from stored values
+     * When [test] is provided, the stored viscosity readings are copied
+     * into [visReading]. The index range is inferred by comparing the
+     * stored index reading against the calculated ratio for each supported
+     * reading pair.
      *
-     * If no test is provided:
-     * - Initializes default values from shared assembly header
-     * - Fetches next available test number from the database
+     * When [test] is `null`, the spindle and index range are initialised
+     * from fields on the current assembly header. The next available test
+     * number is then determined from the distinct test numbers already
+     * recorded for the current assembly order.
+     *
+     * @param test The existing viscosity test to load, or `null` when
+     * creating a new test.
      */
-    fun onClear(test: APICallTables.viscosityTest?){
+    fun onClear(test: APICallTables.viscosityTest?) {
         if (test != null) {
             var ratio = "N/A"
-            if (kotlin.math.round((test.READING6/test.READING60) * 10 * 10) / 10 == test.INDEXREADING){ ratio = "6/60"}
-            if (kotlin.math.round((test.READING3/test.READING30) * 10 * 10) / 10 == test.INDEXREADING){ ratio = "3/30"}
-            if (kotlin.math.round((test.READING0_6/test.READING6) * 10 * 10) / 10 == test.INDEXREADING){ ratio = "0.6/6"}
-            if (kotlin.math.round((test.READING0_3/test.READING3) * 10 * 10) / 10 == test.INDEXREADING){ ratio = "0.3/3"}
+            if (kotlin.math.round((test.READING6 / test.READING60) * 10 * 10) / 10 == test.INDEXREADING) {
+                ratio = "6/60"
+            }
+            if (kotlin.math.round((test.READING3 / test.READING30) * 10 * 10) / 10 == test.INDEXREADING) {
+                ratio = "3/30"
+            }
+            if (kotlin.math.round((test.READING0_6 / test.READING6) * 10 * 10) / 10 == test.INDEXREADING) {
+                ratio = "0.6/6"
+            }
+            if (kotlin.math.round((test.READING0_3 / test.READING3) * 10 * 10) / 10 == test.INDEXREADING) {
+                ratio = "0.3/3"
+            }
             visReading.value = ViscosityItem().apply {
                 sysID = test.SYSUNIQUEID.toInt()
                 spindle = test.SPINDLE
@@ -214,7 +268,7 @@ class ViscosityViewModel(private val dataStoreManager: DataStoreManager, var sha
                 vis0_6 = test.READING0_6.toString()
                 vis0_3 = test.READING0_3.toString()
             }
-        }else {
+        } else {
             visReading.value = ViscosityItem().apply {
                 spindle = sharedViewModel.currentAssemblyHeader?.ADDITIONALFIELD_3 ?: "N/A"
                 indexRange = sharedViewModel.currentAssemblyHeader?.ADDITIONALFIELD_8 ?: "N/A"
@@ -231,19 +285,37 @@ class ViscosityViewModel(private val dataStoreManager: DataStoreManager, var sha
     /**
      * Handles cancellation of the viscosity test screen.
      *
-     * If the current test contains data:
-     * - Shows a confirmation popup before leaving
+     * When editing an existing test, the current values are compared with
+     * the original database values. The stored index range is recalculated
+     * from the database readings before comparison.
      *
-     * If no data exists:
-     * - Immediately closes the test screen
+     * If any test values have changed, a confirmation popup is displayed
+     * before leaving without saving. If no values have changed, the test
+     * screen is closed immediately.
+     *
+     * When creating a new test, [visHasValue] determines whether any
+     * viscosity test values have been entered. If values exist, the user
+     * is prompted to confirm leaving without saving. Otherwise, the test
+     * screen is closed immediately.
+     *
+     * @param test The existing viscosity test being edited, or `null`
+     * when creating a new test.
      */
-    fun onCancel(test: APICallTables.viscosityTest?){
-        if(test != null) {
+    fun onCancel(test: APICallTables.viscosityTest?) {
+        if (test != null) {
             var ratio = "N/A"
-            if (kotlin.math.round((test.READING6/test.READING60) * 10 * 10) / 10 == test.INDEXREADING){ ratio = "6/60"}
-            if (kotlin.math.round((test.READING3/test.READING30) * 10 * 10) / 10 == test.INDEXREADING){ ratio = "3/30"}
-            if (kotlin.math.round((test.READING0_6/test.READING6) * 10 * 10) / 10 == test.INDEXREADING){ ratio = "0.6/6"}
-            if (kotlin.math.round((test.READING0_3/test.READING3) * 10 * 10) / 10 == test.INDEXREADING){ ratio = "0.3/3"}
+            if (kotlin.math.round((test.READING6 / test.READING60) * 10 * 10) / 10 == test.INDEXREADING) {
+                ratio = "6/60"
+            }
+            if (kotlin.math.round((test.READING3 / test.READING30) * 10 * 10) / 10 == test.INDEXREADING) {
+                ratio = "3/30"
+            }
+            if (kotlin.math.round((test.READING0_6 / test.READING6) * 10 * 10) / 10 == test.INDEXREADING) {
+                ratio = "0.6/6"
+            }
+            if (kotlin.math.round((test.READING0_3 / test.READING3) * 10 * 10) / 10 == test.INDEXREADING) {
+                ratio = "0.3/3"
+            }
             if (visReading.value.testNumber != test.TESTNO.toString() ||
                 visReading.value.spindle != test.SPINDLE ||
                 visReading.value.indexRange != ratio ||
@@ -255,7 +327,7 @@ class ViscosityViewModel(private val dataStoreManager: DataStoreManager, var sha
                 visReading.value.vis1_5 != test.READING1_5.toString() ||
                 visReading.value.vis0_6 != test.READING0_6.toString() ||
                 visReading.value.vis0_3 != test.READING0_3.toString()
-                ){
+            ) {
                 popupMessage.message = "Test Results are not saved\nleave without saving?"
                 popupMessage.messageButton1Text = "No"
                 popupMessage.onClickAction1 = {

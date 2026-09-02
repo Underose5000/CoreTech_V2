@@ -39,143 +39,230 @@ import com.example.coretechv2.dataclasses.APICallTables
  */
 @Composable
 fun GelTimeCard(results: APICallTables.gelTimeTest) {
-    Row(modifier = Modifier
-        .fillMaxSize()
-        .height(IntrinsicSize.Min)
-        .padding(7.dp)) {
-        Column(modifier = Modifier
-            .width(100.dp)
-            .fillMaxHeight(), verticalArrangement = Arrangement.Center) {
+    Row(
+        modifier = Modifier
+            .fillMaxSize()
+            .height(IntrinsicSize.Min)
+            .padding(7.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .width(100.dp)
+                .fillMaxHeight(), verticalArrangement = Arrangement.Center
+        ) {
             Text("GelTime", style = MaterialTheme.typography.titleSmall)
         }
         VerticalDivider(modifier = Modifier.fillMaxHeight())
         Spacer(Modifier.width(10.dp))
-        Column(modifier = Modifier
-            .weight(1f)
-            .fillMaxHeight(), verticalArrangement = Arrangement.Center) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight(), verticalArrangement = Arrangement.Center
+        ) {
             Text("Time: " + results.GELTIME)
         }
-        Column(modifier = Modifier
-            .weight(1f)
-            .fillMaxHeight(), verticalArrangement = Arrangement.Center) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight(), verticalArrangement = Arrangement.Center
+        ) {
             Text("Catalyst: " + results.GELCAT)
         }
-        Column(modifier = Modifier
-            .weight(1f)
-            .fillMaxHeight(), verticalArrangement = Arrangement.Center) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight(), verticalArrangement = Arrangement.Center
+        ) {
             Text("Percentage: " + results.GELCATPERCENT + "%")
         }
     }
 }
+
+/**
+ * Displays a peak exotherm test result in a structured row layout.
+ *
+ * This component shows:
+ * - Peak exotherm test type
+ * - Time taken to reach the peak
+ * - Peak temperature
+ * - Catalyst used and its percentage
+ *
+ * @param results Peak exotherm test data from [APICallTables.peakExothermTest].
+ */
 @Composable
 fun PeakExothermCard(results: APICallTables.peakExothermTest) {
-    Row(modifier = Modifier
-        .fillMaxSize()
-        .height(IntrinsicSize.Min)
-        .padding(7.dp)) {
-        Column(modifier = Modifier
-            .width(100.dp)
-            .fillMaxHeight(), verticalArrangement = Arrangement.Center) {
+    Row(
+        modifier = Modifier
+            .fillMaxSize()
+            .height(IntrinsicSize.Min)
+            .padding(7.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .width(100.dp)
+                .fillMaxHeight(), verticalArrangement = Arrangement.Center
+        ) {
             Text("Peak Exo", style = MaterialTheme.typography.titleSmall)
         }
         VerticalDivider(modifier = Modifier.fillMaxHeight())
         Spacer(Modifier.width(10.dp))
-        Column(modifier = Modifier
-            .weight(3f)
-            .fillMaxHeight(), verticalArrangement = Arrangement.Center) {
+        Column(
+            modifier = Modifier
+                .weight(3f)
+                .fillMaxHeight(), verticalArrangement = Arrangement.Center
+        ) {
             Text("Time: " + results.GELTIME)
         }
-        Column(modifier = Modifier
-            .weight(3f)
-            .fillMaxHeight(), verticalArrangement = Arrangement.Center) {
+        Column(
+            modifier = Modifier
+                .weight(3f)
+                .fillMaxHeight(), verticalArrangement = Arrangement.Center
+        ) {
             Text("Temp: " + results.PEAKTEMPERATURE + "°C")
         }
-        Column(modifier = Modifier
-            .weight(4f)
-            .fillMaxHeight(), verticalArrangement = Arrangement.Center) {
+        Column(
+            modifier = Modifier
+                .weight(4f)
+                .fillMaxHeight(), verticalArrangement = Arrangement.Center
+        ) {
             Text("Catalyst: " + results.GELCAT + " @ " + results.GELCATPERCENT + "%")
         }
     }
 }
 
+/**
+ * Displays an elongational break test result in a structured row layout.
+ *
+ * This component shows:
+ * - The number of days the test sample was set
+ * - The measured elongation percentage
+ *
+ * @param results Elongational break test data from
+ * [APICallTables.ElongationalBreakTest].
+ */
 @Composable
 fun ElongationalBreakCard(results: APICallTables.ElongationalBreakTest) {
-    Row(modifier = Modifier
-        .fillMaxSize()
-        .height(IntrinsicSize.Min)
-        .padding(7.dp)) {
-        Column(modifier = Modifier
-            .width(100.dp)
-            .fillMaxHeight(), verticalArrangement = Arrangement.Center) {
+    Row(
+        modifier = Modifier
+            .fillMaxSize()
+            .height(IntrinsicSize.Min)
+            .padding(7.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .width(100.dp)
+                .fillMaxHeight(), verticalArrangement = Arrangement.Center
+        ) {
             Text("Elongation", style = MaterialTheme.typography.titleSmall)
         }
         VerticalDivider(modifier = Modifier.fillMaxHeight())
         Spacer(Modifier.width(10.dp))
-        Column(modifier = Modifier
-            .weight(2f)
-            .fillMaxHeight(), verticalArrangement = Arrangement.Center) {
+        Column(
+            modifier = Modifier
+                .weight(2f)
+                .fillMaxHeight(), verticalArrangement = Arrangement.Center
+        ) {
             Text("Days Set: " + results.DAYSSET)
         }
-        Column(modifier = Modifier
-            .weight(3f)
-            .fillMaxHeight(), verticalArrangement = Arrangement.Center) {
+        Column(
+            modifier = Modifier
+                .weight(3f)
+                .fillMaxHeight(), verticalArrangement = Arrangement.Center
+        ) {
             Text("Elongation: " + results.ELONGATIONPERCENT + "%")
         }
     }
 }
 
+/**
+ * Displays a flammability test result in a structured row layout.
+ *
+ * This component shows:
+ * - Flammability test time
+ * - Burn length in millimetres
+ * - Number of days the test sample was set
+ *
+ * @param results Flammability test data from [APICallTables.FlammabilityTest].
+ */
 @Composable
 fun FlammabilityCard(results: APICallTables.FlammabilityTest) {
-    Row(modifier = Modifier
-        .fillMaxSize()
-        .height(IntrinsicSize.Min)
-        .padding(7.dp)) {
-        Column(modifier = Modifier
-            .width(100.dp)
-            .fillMaxHeight(), verticalArrangement = Arrangement.Center) {
+    Row(
+        modifier = Modifier
+            .fillMaxSize()
+            .height(IntrinsicSize.Min)
+            .padding(7.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .width(100.dp)
+                .fillMaxHeight(), verticalArrangement = Arrangement.Center
+        ) {
             Text("Flame", style = MaterialTheme.typography.titleSmall)
         }
         VerticalDivider(modifier = Modifier.fillMaxHeight())
         Spacer(Modifier.width(10.dp))
-        Column(modifier = Modifier
-            .weight(1f)
-            .fillMaxHeight(), verticalArrangement = Arrangement.Center) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight(), verticalArrangement = Arrangement.Center
+        ) {
             Text("Time: " + results.FLAMETIME)
         }
-        Column(modifier = Modifier
-            .weight(1f)
-            .fillMaxHeight(), verticalArrangement = Arrangement.Center) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight(), verticalArrangement = Arrangement.Center
+        ) {
             Text("Length: " + results.BURNLENGTH + "mm")
         }
-        Column(modifier = Modifier
-            .weight(1f)
-            .fillMaxHeight(), verticalArrangement = Arrangement.Center) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight(), verticalArrangement = Arrangement.Center
+        ) {
             Text("Days Set: " + results.DAYSSET)
         }
     }
 }
 
+/**
+ * Displays a resistivity test result in a structured row layout.
+ *
+ * This component shows:
+ * - The number of days the test sample was set
+ * - The measured electrical resistivity in ohms
+ *
+ * @param results Resistivity test data from [APICallTables.ResistivityTest].
+ */
 @Composable
-fun ResistivityCard(results: APICallTables.ResistivityTest){
-    Row(modifier = Modifier
-        .fillMaxSize()
-        .height(IntrinsicSize.Min)
-        .padding(7.dp)) {
-        Column(modifier = Modifier
-            .width(100.dp)
-            .fillMaxHeight(), verticalArrangement = Arrangement.Center) {
+fun ResistivityCard(results: APICallTables.ResistivityTest) {
+    Row(
+        modifier = Modifier
+            .fillMaxSize()
+            .height(IntrinsicSize.Min)
+            .padding(7.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .width(100.dp)
+                .fillMaxHeight(), verticalArrangement = Arrangement.Center
+        ) {
             Text("Resistivity", style = MaterialTheme.typography.titleSmall)
         }
         VerticalDivider(modifier = Modifier.fillMaxHeight())
         Spacer(Modifier.width(10.dp))
-        Column(modifier = Modifier
-            .weight(2f)
-            .fillMaxHeight(), verticalArrangement = Arrangement.Center) {
+        Column(
+            modifier = Modifier
+                .weight(2f)
+                .fillMaxHeight(), verticalArrangement = Arrangement.Center
+        ) {
             Text("Days Set: " + results.DAYSSET)
         }
-        Column(modifier = Modifier
-            .weight(3f)
-            .fillMaxHeight(), verticalArrangement = Arrangement.Center) {
+        Column(
+            modifier = Modifier
+                .weight(3f)
+                .fillMaxHeight(), verticalArrangement = Arrangement.Center
+        ) {
             Text("Resistivity: " + results.RESISTIVITYOHM + " Ohm")
         }
     }
@@ -202,13 +289,17 @@ fun ResistivityCard(results: APICallTables.ResistivityTest){
  */
 @Composable
 fun ViscosityCard(results: APICallTables.viscosityTest) {
-    Row(modifier = Modifier
-        .fillMaxWidth()
-        .height(IntrinsicSize.Min)
-        .padding(7.dp)) {
-        Column(modifier = Modifier
-            .width(100.dp)
-            .fillMaxHeight(), verticalArrangement = Arrangement.Center) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(IntrinsicSize.Min)
+            .padding(7.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .width(100.dp)
+                .fillMaxHeight(), verticalArrangement = Arrangement.Center
+        ) {
             Text("Viscosity", style = MaterialTheme.typography.titleSmall)
         }
         VerticalDivider(modifier = Modifier.fillMaxHeight())
@@ -366,21 +457,26 @@ fun ViscosityCard(results: APICallTables.viscosityTest) {
 @Composable
 fun AdjustmentCard(results: APICallTables.assemblyAdjustment) {
     Column(modifier = Modifier.fillMaxSize()) {
-        Row(modifier = Modifier
-            .fillMaxSize()
-            .height(IntrinsicSize.Min)
-            .padding(horizontal = 10.dp),
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .height(IntrinsicSize.Min)
+                .padding(horizontal = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier
-                .weight(2f)
-                .fillMaxHeight(), verticalArrangement = Arrangement.Center) {
+            Column(
+                modifier = Modifier
+                    .weight(2f)
+                    .fillMaxHeight(), verticalArrangement = Arrangement.Center
+            ) {
                 Text(results.LINEDESCRIPTION, style = MaterialTheme.typography.titleSmall)
                 Text(results.LINECODE, style = MaterialTheme.typography.labelSmall)
             }
-            Column(modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.End) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.End
+            ) {
                 Text("%.3f".format(results.ADJUSTQTY) + results.LINEUNIT)
             }
         }

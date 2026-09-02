@@ -1,46 +1,34 @@
 package com.example.coretechv2.repository
 
 import android.content.Context
-import android.util.Log
-import com.brother.sdk.lmprinter.*
-import com.brother.sdk.lmprinter.setting.PrintImageSettings
-import com.brother.sdk.lmprinter.setting.QLPrintSettings
-import java.io.File
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.Canvas
+import android.graphics.Color
 import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.RectF
-import android.graphics.Color
-import android.widget.Toast
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
-import androidx.compose.ui.platform.LocalContext
-import androidx.core.graphics.createBitmap
-import androidx.core.graphics.toColorInt
-import com.brother.sdk.lmprinter.*
-import com.brother.sdk.lmprinter.setting.PrintImageSettings.Orientation
-import com.brother.sdk.lmprinter.setting.PrintImageSettings.ScaleMode
-import com.brother.sdk.lmprinter.Channel
-import com.brother.sdk.lmprinter.OpenChannelError
-import com.brother.sdk.lmprinter.PrinterDriverGenerator
-import com.brother.ptouch.sdk.NetPrinter
-import com.brother.ptouch.sdk.NetworkDiscovery
-import com.brother.ptouch.sdk.NetworkDiscoveryListener
 import com.epson.ijprinter.esclabelsdk.EPSLabelPrinter
 import com.epson.ijprinter.esclabelsdk.EPSLabelPrinterDiscovery
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlin.math.abs
 
-
+/**
+ * Discovers Epson label printers available on the local network.
+ *
+ * The discovery process runs for a maximum of five seconds. If a printer is
+ * found before the timeout, the first discovered printer is returned through
+ * [callback]. If no printer is discovered within the timeout period, * [callback] is invoked with `null`.
+ *
+ * @param context Android context used to initialise the Epson printer
+ * discovery service.
+ * @param callback Callback invoked with the first discovered printer, or
+ * `null` if no printer is found within the discovery period.
+ */
 fun discoverEpsonLabelPrinter(context: Context, callback: (foundEpsonLabelPrinter: EPSLabelPrinter?) -> Unit) {
     val discovery = EPSLabelPrinterDiscovery(context)
     var called = false
@@ -71,6 +59,14 @@ fun discoverEpsonLabelPrinter(context: Context, callback: (foundEpsonLabelPrinte
     )
 }
 
+/**
+ * Creates a rotated copy of the supplied bitmap.
+ *
+ * @param source Bitmap to rotate.
+ * @param angle Rotation angle in degrees.
+ * @return A new bitmap containing the rotated image.
+ */
+
 fun rotateBitmap(source: Bitmap, angle: Float): Bitmap {
     val matrix = Matrix()
     matrix.postRotate(angle) // angle in degrees
@@ -78,6 +74,19 @@ fun rotateBitmap(source: Bitmap, angle: Float): Bitmap {
         source, 0, 0, source.width, source.height, matrix, true
     )
 }
+
+/**
+ * Replaces pixels matching a specified colour with another colour.
+ *
+ * A tolerance is applied when comparing colours, allowing pixels that are
+ * slightly different from [originalColor] to also be replaced.
+ *
+ * @param bitmap Bitmap whose colours will be modified.
+ * @param originalColor Colour to search for.
+ * @param replacementColor Colour to use in place of the original colour.
+ * @return A new mutable bitmap with the matching colours replaced.
+ */
+
 private fun replaceColorInBitmap(
     bitmap: Bitmap,
     originalColor: Int,
@@ -98,6 +107,20 @@ private fun replaceColorInBitmap(
     return mutableBitmap
 }
 
+/**
+ * Determines whether two colours are sufficiently similar.
+ *
+ * Each RGB channel is compared independently. The colours are considered
+ * similar when the difference between each corresponding RGB channel is
+ * within [tolerance].
+ *
+ * @param c1 First colour to compare.
+ * @param c2 Second colour to compare.
+ * @param tolerance Maximum permitted difference for each RGB channel.
+ * @return `true` if the colours are within the specified tolerance,
+ * otherwise `false`.
+ */
+
 fun colorsAreClose(c1: Int, c2: Int, tolerance: Int = 10): Boolean {
     val r1 = Color.red(c1)
     val g1 = Color.green(c1)
@@ -109,6 +132,23 @@ fun colorsAreClose(c1: Int, c2: Int, tolerance: Int = 10): Boolean {
             abs(g1 - g2) <= tolerance &&
             abs(b1 - b2) <= tolerance)
 }
+
+/**
+ * Prints a label image using an Epson label printer.
+ *
+ * The supplied [ImageBitmap] is converted to an Android [Bitmap], its colours
+ * are adjusted, and the image is rotated 90 degrees before being rendered
+ * onto the printer's page.
+ *
+ * Printing is performed on a background thread to avoid blocking the main
+ * application thread.
+ *
+ * @param printer Epson label printer to use for printing.
+ * @param imageBytes Image to print. If `null`, no printing is performed.
+ * @param width Custom label width used by the Epson printer settings.
+ * @param height Custom label height used by the Epson printer settings.
+ * @param numOfCopies Number of copies to print.
+ */
 
 fun printWithEpson(
     printer: EPSLabelPrinter,
@@ -134,47 +174,46 @@ fun printWithEpson(
         this[EPSLabelPrinter.KEY_PRINTING_SPEED] = 3
     }
 
-    if(imageBytes != null) {
-    Thread {
-        //val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
-        val original = imageBytes.asAndroidBitmap()
+    if (imageBytes != null) {
+        Thread {
+            //val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+            val original = imageBytes.asAndroidBitmap()
 
 
-        val originalColor = Color.rgb(64, 193, 243)
-        val replacementColor = Color.rgb(103, 220, 230)
+            val originalColor = Color.rgb(64, 193, 243)
+            val replacementColor = Color.rgb(103, 220, 230)
 
-        val colorReplacedBitmap = replaceColorInBitmap(original, originalColor, replacementColor)
+            val colorReplacedBitmap = replaceColorInBitmap(original, originalColor, replacementColor)
 
-        val rotatedBitmap = rotateBitmap(colorReplacedBitmap, 90f)
+            val rotatedBitmap = rotateBitmap(colorReplacedBitmap, 90f)
 
-        val renderer = object : EPSLabelPrinter.Renderer {
-            override fun draw(canvas: Canvas, pageIndex: Int, pageWidth: Int, pageHeight: Int, targetRect: Rect): Boolean {
-                
-                
-                
-                val paint = Paint()
-                val srcRect = RectF(0f, 0f, rotatedBitmap.width.toFloat(), rotatedBitmap.height.toFloat())
-                val dstRect = RectF(0f, 0f, pageWidth.toFloat(), pageHeight.toFloat())
-                val matrix = Matrix().apply { setRectToRect(srcRect, dstRect, Matrix.ScaleToFit.CENTER) }
-                canvas.drawBitmap(rotatedBitmap, matrix, paint)
-                return false
-            }
-        }
+            val renderer = object : EPSLabelPrinter.Renderer {
+                override fun draw(canvas: Canvas, pageIndex: Int, pageWidth: Int, pageHeight: Int, targetRect: Rect): Boolean {
 
-        try {
-            
-            val resultCode = printer.print(settings, renderer, object : EPSLabelPrinter.ProgressListener {
-                override fun onProgress(pageIndex: Int) {
-                    
+
+                    val paint = Paint()
+                    val srcRect = RectF(0f, 0f, rotatedBitmap.width.toFloat(), rotatedBitmap.height.toFloat())
+                    val dstRect = RectF(0f, 0f, pageWidth.toFloat(), pageHeight.toFloat())
+                    val matrix = Matrix().apply { setRectToRect(srcRect, dstRect, Matrix.ScaleToFit.CENTER) }
+                    canvas.drawBitmap(rotatedBitmap, matrix, paint)
+                    return false
                 }
-            })
-            
-        } catch (e: Exception) {
-            Log.e("EpsonPrint", "Exception during print", e)
-        } finally {
-            original.recycle()
-            rotatedBitmap.recycle()
-        }
-    }.start()
-}
+            }
+
+            try {
+
+                val resultCode = printer.print(settings, renderer, object : EPSLabelPrinter.ProgressListener {
+                    override fun onProgress(pageIndex: Int) {
+
+                    }
+                })
+
+            } catch (e: Exception) {
+                Log.e("EpsonPrint", "Exception during print", e)
+            } finally {
+                original.recycle()
+                rotatedBitmap.recycle()
+            }
+        }.start()
+    }
 }

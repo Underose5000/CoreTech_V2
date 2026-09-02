@@ -1,6 +1,5 @@
 package com.example.coretechv2.viewmodel.assemblytests
 
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -9,16 +8,28 @@ import androidx.lifecycle.viewModelScope
 import com.example.coretechv2.dataclasses.APICallTables
 import com.example.coretechv2.dataclasses.APICallTypes
 import com.example.coretechv2.dataclasses.MessageItems
-import com.example.coretechv2.dataclasses.assemblydataclasses.VisField
-import com.example.coretechv2.dataclasses.assemblydataclasses.VisSettings
-import com.example.coretechv2.dataclasses.assemblydataclasses.ViscosityItem
-import com.example.coretechv2.dataclasses.assemblydataclasses.visHasValue
 import com.example.coretechv2.repository.APICall
 import com.example.coretechv2.repository.DataStoreManager
 import com.example.coretechv2.viewmodel.SharedViewModel
 import kotlinx.coroutines.launch
-import kotlin.math.round
 
+/**
+ * ViewModel responsible for managing resistivity test data and UI state.
+ *
+ * This ViewModel handles:
+ * - Managing resistivity test input fields.
+ * - Managing the test number and days since the sample was set.
+ * - Loading existing resistivity test results.
+ * - Initialising new resistivity tests and determining the next test number.
+ * - Saving resistivity test results using INSERT or UPDATE operations.
+ * - Managing popup dialog state for unsaved changes.
+ * - Handling navigation flow for the test screen lifecycle.
+ *
+ * It interacts with:
+ * - [APICall] for communication with the database through the API.
+ * - [SharedViewModel] for shared application state such as the current
+ *   assembly order, user, and save type.
+ */
 class ResistivityViewModel(private val dataStoreManager: DataStoreManager, var sharedViewModel: SharedViewModel) : ViewModel() {
     private val apiCall = APICall(dataStoreManager)
     var popupMessage = MessageItems()
@@ -39,67 +50,86 @@ class ResistivityViewModel(private val dataStoreManager: DataStoreManager, var s
 
 
     /**
-     * Closes the popup message dialog by resetting its state.
+     * Resets the popup message close state.
+     *
+     * Setting this value to `false` allows the popup close event to be
+     * consumed by the UI.
      */
-    fun closePopupMessage(){
+    fun closePopupMessage() {
         closePopupMessage.value = false
     }
 
     /**
-     * Closes the viscosity test screen and triggers navigation back.
+     * Resets the test screen close state.
+     *
+     * Setting this value to `false` allows the navigation close event to be
+     * consumed by the UI.
      */
-    fun closeTestScreen(){
+    fun closeTestScreen() {
         closeTestScreen.value = false
     }
 
     /**
-     * Resets the popup message trigger flag.
+     * Resets the popup message trigger state.
+     *
+     * This method currently sets the state to `false`, allowing the popup
+     * event to be reset after it has been handled by the UI.
      */
-    fun openPopupMessage(){
+    fun openPopupMessage() {
         openPopupMessage.value = false
     }
 
     /**
-     * Toggles the spindle dropdown visibility.
+     * Updates the current test number.
+     *
+     * @param newValue The new test number entered by the user.
      */
-    fun onTestNumberChange(newValue: String){
+    fun onTestNumberChange(newValue: String) {
         testNumber = newValue
     }
 
-    fun onDaysSinceSet(newValue: String){
+    /**
+     * Updates the number of days since the sample was set.
+     *
+     * @param newValue The new days-since-set value entered by the user.
+     */
+    fun onDaysSinceSet(newValue: String) {
         daysSinceSet = newValue
     }
 
-    fun onElongationChange(newValue: String){
+    /**
+     * Updates the current resistivity measurement.
+     *
+     * @param newValue The new resistivity value entered by the user.
+     */
+    fun onElongationChange(newValue: String) {
         resistivity = newValue
     }
 
     /**
-     * Saves the current viscosity test to the database.
+     * Saves the current resistivity test results.
      *
-     * This function:
-     * - Calculates the viscosity index ratio based on selected range
-     * - Builds an INSERT or UPDATE SQL query
-     * - Sends the query to the backend API
-     * - Handles success or failure responses
+     * Depending on [SharedViewModel.saveType], this method either:
+     * - Inserts a new record into `OSTDEF_RESISTIVITY_TEST`.
+     * - Updates an existing record in `OSTDEF_RESISTIVITY_TEST`.
      *
-     * On success:
-     * - Closes the test screen
-     * - Shows success snackbar message
+     * The saved record contains the test number, days since set,
+     * resistivity measurement, assembly information, and user information.
      *
-     * On failure:
-     * - Shows error snackbar message
+     * On successful completion, the test screen is closed and a success
+     * snackbar message is displayed. If the database operation fails,
+     * an error snackbar message is displayed instead.
      */
-    fun onSave(){
+    fun onSave() {
         viewModelScope.launch {
             var call = ""
-            if(sharedViewModel.saveType == APICallTypes.INSERT){
+            if (sharedViewModel.saveType == APICallTypes.INSERT) {
                 call = "INSERT INTO OSTDEF_RESISTIVITY_TEST " +
                         "(ITEMCODE, ORDERNUMBER, ITEMDESCRIPTION, TESTNO, DAYSSET, RESISTIVITYOHM, SYSUSERCREATED, SYSUSERMODIFIED) " +
                         "VALUES('${sharedViewModel.currentAssemblyHeader?.ITEMCODE}', '${sharedViewModel.currentAssemblyHeader?.ORDERNUMBER}', '${sharedViewModel.currentAssemblyHeader?.ITEMDESCRIPTION}', $testNumber, $daysSinceSet, $resistivity, " +
                         "'${sharedViewModel.currentUser.value}', '${sharedViewModel.currentUser.value}')"
             }
-            if(sharedViewModel.saveType == APICallTypes.UPDATE){
+            if (sharedViewModel.saveType == APICallTypes.UPDATE) {
                 call = "UPDATE OSTDEF_RESISTIVITY_TEST SET " +
                         "TESTNO = $testNumber," +
                         "DAYSSET = $daysSinceSet," +
@@ -107,37 +137,39 @@ class ResistivityViewModel(private val dataStoreManager: DataStoreManager, var s
                         "SYSUSERMODIFIED = '${sharedViewModel.currentUser.value}'" +
                         "WHERE SYSUNIQUEID = $testID"
             }
-            
+
 
             val response = apiCall.insertUpdateDelete(call)
 
-            if(response == "200 OK"){
+            if (response == "200 OK") {
                 closeTestScreen.value = true
                 sharedViewModel.snackBarMessage("Resistivity Saved successfully")
-            } else{
+            } else {
                 sharedViewModel.snackBarMessage("Error Saving, Please Try Again")
             }
         }
     }
 
     /**
-     * Loads an existing viscosity test into the UI or initializes a new test.
+     * Loads an existing resistivity test or initialises a new test.
      *
-     * If a test is provided:
-     * - Maps database values into UI state
-     * - Calculates correct index range from stored values
+     * When [test] is provided, its database values are copied into the
+     * ViewModel state for editing.
      *
-     * If no test is provided:
-     * - Initializes default values from shared assembly header
-     * - Fetches next available test number from the database
+     * When [test] is `null`, the input values are cleared and the next
+     * available test number is determined by counting the distinct test
+     * numbers already recorded for the current assembly order.
+     *
+     * @param test The existing resistivity test to load, or `null` when
+     * creating a new test.
      */
-    fun onClear(test: APICallTables.ResistivityTest?){
+    fun onClear(test: APICallTables.ResistivityTest?) {
         if (test != null) {
             testNumber = test.TESTNO.toString()
             daysSinceSet = test.DAYSSET.toString()
             resistivity = test.RESISTIVITYOHM.toString()
             testID = test.SYSUNIQUEID.toString()
-        }else {
+        } else {
             viewModelScope.launch {
                 val linesCall: List<APICallTables.Count>? =
                     apiCall.query("SELECT COUNT(*) FROM (SELECT DISTINCT TESTNO FROM OSTDEF_RESISTIVITY_TEST WHERE OrderNumber = '${sharedViewModel.currentOrderNumber.value}')")
@@ -150,15 +182,21 @@ class ResistivityViewModel(private val dataStoreManager: DataStoreManager, var s
     }
 
     /**
-     * Handles cancellation of the viscosity test screen.
+     * Handles cancellation of the resistivity test screen.
      *
-     * If the current test contains data:
-     * - Shows a confirmation popup before leaving
+     * When editing an existing test, the current values are compared with
+     * the original database values. If any values have changed, a
+     * confirmation popup is displayed before leaving without saving.
      *
-     * If no data exists:
-     * - Immediately closes the test screen
+     * When creating a new test, the entered days-since-set and resistivity
+     * values are checked. If either contains data, the user is prompted to
+     * confirm leaving without saving. Otherwise, the test screen is closed
+     * immediately.
+     *
+     * @param test The existing resistivity test being edited, or `null`
+     * when creating a new test.
      */
-    fun onCancel(test: APICallTables.ResistivityTest?){
+    fun onCancel(test: APICallTables.ResistivityTest?) {
         if (test != null) {
             if (testNumber != test.TESTNO.toString() ||
                 daysSinceSet != test.DAYSSET.toString() ||
@@ -179,7 +217,7 @@ class ResistivityViewModel(private val dataStoreManager: DataStoreManager, var s
             } else {
                 closeTestScreen.value = true
             }
-        } else if (daysSinceSet != "" || resistivity != ""){
+        } else if (daysSinceSet != "" || resistivity != "") {
             popupMessage.message = "Test Results are not saved\nleave without saving?"
             popupMessage.messageButton1Text = "No"
             popupMessage.onClickAction1 = {

@@ -6,36 +6,36 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.coretechv2.repository.DataStoreManager
 import com.example.coretechv2.viewmodel.ItemLookUpViewModel
 import com.example.coretechv2.viewmodel.SharedViewModel
-import com.example.coretechv2.viewmodel.assemblytests.GelTimeViewModel
 
 /**
- * Factory class responsible for creating instances of [ItemLookUpViewModel].
+ * Factory responsible for creating instances of [ItemLookUpViewModel].
  *
  * This factory is required because [ItemLookUpViewModel] has dependencies that cannot be
  * provided by the default [ViewModelProvider], specifically:
- * - [DataStoreManager] for persistent data storage
- * - [SharedViewModel] for sharing data across multiple ViewModels
+ * - [DataStoreManager] for API and persistent data access.
+ * - [SharedViewModel] for sharing data across multiple ViewModels.
  *
- * The [Context] is used to initialise the [DataStoreManager] using the application context
- * to avoid memory leaks.
+ * The [Context] is used to initialise [DataStoreManager] with the application context
+ * to help prevent memory leaks.
  *
  * @property context The context used to initialise [DataStoreManager]. The application
- * context is used internally for safety.
+ * context is used internally.
  * @property sharedViewModel The shared ViewModel instance used to pass data between screens.
- *
- * @throws IllegalArgumentException if the requested ViewModel class is not [ItemLookUpViewModel].
  */
 
 class ItemLookUpViewModelFactory(
     private val context: Context,
     val sharedViewModel: SharedViewModel
-) : ViewModelProvider.Factory{
+) : ViewModelProvider.Factory {
 
     /**
-     * Creates a new instance of the requested ViewModel class.
+     * Creates an instance of the requested ViewModel.
+     *
+     * Initialises the required [DataStoreManager] and uses it to create
+     * an [ItemLookUpViewModel] with the provided [SharedViewModel].
      *
      * @param modelClass The class of the ViewModel to be created.
-     * @return A new instance of [ItemLookUpViewModel] cast to the requested type.
+     * @return A new [ItemLookUpViewModel] instance cast to the requested type.
      */
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
 

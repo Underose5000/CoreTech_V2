@@ -47,6 +47,33 @@ import com.example.coretechv2.ui.theme.borderColor
 import com.example.coretechv2.viewmodel.PrintBoxLabelViewModel
 import com.example.coretechv2.viewmodel.SharedViewModel
 
+/**
+ * Displays the box label printing screen.
+ *
+ * Creates and manages a [PrintBoxLabelViewModel] responsible for retrieving
+ * items, selecting an item and label variant, entering box information, and
+ * preparing the data required for printing box labels.
+ *
+ * When the screen is first displayed, the current order number and selected
+ * item are reset and the available items are retrieved. Selecting an item
+ * triggers the corresponding box label data to be loaded and closes the item
+ * search results.
+ *
+ * The screen allows the user to select a label variant when multiple variants
+ * are available, enter a batch number, specify whether the box is a kit, enter
+ * the quantity per box, and specify the number of boxes to be produced.
+ *
+ * Popup messages and label preview state are coordinated between the
+ * [PrintBoxLabelViewModel] and [SharedViewModel]. The screen returns to the
+ * previous navigation destination when the label preview is closed and the
+ * view model indicates that the screen should be closed.
+ *
+ * @param navController Navigation controller used to return to the previous
+ * screen after the label printing workflow is completed or cancelled.
+ * @param sharedViewModel Shared view model used to manage application-wide
+ * state, including the currently selected item, order number, popup messages,
+ * and label preview state.
+ */
 @Composable
 fun PrintBoxLabelsScreen(navController: NavController, sharedViewModel: SharedViewModel) {
     val context = LocalContext.current
@@ -68,12 +95,12 @@ fun PrintBoxLabelsScreen(navController: NavController, sharedViewModel: SharedVi
         }
     }
     LaunchedEffect(sharedViewModel.showLabelPreview.value) {
-        if(!sharedViewModel.showLabelPreview.value && viewModel.closeTestScreen.value){
+        if (!sharedViewModel.showLabelPreview.value && viewModel.closeTestScreen.value) {
             navController.popBackStack()
         }
     }
     LaunchedEffect(viewModel.closeTestScreen.value) {
-        if(!sharedViewModel.showLabelPreview.value && viewModel.closeTestScreen.value){
+        if (!sharedViewModel.showLabelPreview.value && viewModel.closeTestScreen.value) {
             navController.popBackStack()
         }
     }
@@ -87,10 +114,10 @@ fun PrintBoxLabelsScreen(navController: NavController, sharedViewModel: SharedVi
         sharedViewModel.openMessagePopup()
         viewModel.openPopupMessage()
     }
-   /* if (viewModel.closeTestScreen.value) {
-        navController.popBackStack()
-        viewModel.closeTestScreen()
-    }*/
+    /* if (viewModel.closeTestScreen.value) {
+         navController.popBackStack()
+         viewModel.closeTestScreen()
+     }*/
 
     Box(
         modifier = Modifier.fillMaxSize()

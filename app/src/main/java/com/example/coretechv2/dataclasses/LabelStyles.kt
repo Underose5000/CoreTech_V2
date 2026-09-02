@@ -16,31 +16,73 @@ import com.example.coretechv2.printlayouts.TwoSectionLabel
  */
 enum class LabelStyles {
 
-    ML250,ML500,ML500PL,L1,L2,L4,L20,L200,BULK, BOX, TUFFL1, TUFFL4, TUFFL20, TUFFL200, ERROR;
+    ML250, ML500, ML500PL, L1, L2, L4, L20, L200, BULK, BOX, TUFFL1, TUFFL4, TUFFL20, TUFFL200, ERROR;
 
     @Composable
     fun FunctionCall(labelElement: LabelElements) {
         when (this) {
-            ML250 -> {ThreeSectionLabel(labelElement)}
-            ML500 -> {ThreeSectionLabel(labelElement)}
-            ML500PL -> {TwoSectionLabel(labelElement)}
-            L1 -> {ThreeSectionLabel(labelElement)}
-            L2 -> {ThreeSectionLabel(labelElement)}
-            L4 -> {TwoSectionLabel(labelElement)}
-            L20 -> {ThreeSectionLabel(labelElement)}
-            L200 -> {ThreeSectionLabel(labelElement)}
-            BULK -> {SimpleLabel(labelElement)}
-            BOX -> {SimpleLabel(labelElement)}
-            TUFFL1 -> {TuffStickThreeSectionLabel(labelElement)}
-            TUFFL4 -> {TuffStickTwoSectionLabel(labelElement)}
-            TUFFL20 -> {TuffStickThreeSectionLabel(labelElement)}
-            TUFFL200 -> {TuffStickThreeSectionLabel(labelElement)}
+            ML250 -> {
+                ThreeSectionLabel(labelElement)
+            }
+
+            ML500 -> {
+                ThreeSectionLabel(labelElement)
+            }
+
+            ML500PL -> {
+                TwoSectionLabel(labelElement)
+            }
+
+            L1 -> {
+                ThreeSectionLabel(labelElement)
+            }
+
+            L2 -> {
+                ThreeSectionLabel(labelElement)
+            }
+
+            L4 -> {
+                TwoSectionLabel(labelElement)
+            }
+
+            L20 -> {
+                ThreeSectionLabel(labelElement)
+            }
+
+            L200 -> {
+                ThreeSectionLabel(labelElement)
+            }
+
+            BULK -> {
+                SimpleLabel(labelElement)
+            }
+
+            BOX -> {
+                SimpleLabel(labelElement)
+            }
+
+            TUFFL1 -> {
+                TuffStickThreeSectionLabel(labelElement)
+            }
+
+            TUFFL4 -> {
+                TuffStickTwoSectionLabel(labelElement)
+            }
+
+            TUFFL20 -> {
+                TuffStickThreeSectionLabel(labelElement)
+            }
+
+            TUFFL200 -> {
+                TuffStickThreeSectionLabel(labelElement)
+            }
+
             else -> {}
         }
     }
 
-    fun ProductIsTin(): Boolean{
-        return when (this){
+    fun ProductIsTin(): Boolean {
+        return when (this) {
             ML250 -> true
             ML500 -> true
             ML500PL -> true
@@ -53,7 +95,7 @@ enum class LabelStyles {
         }
     }
 
-    fun printerSection(): String{
+    fun printerSection(): String {
         return when (this) {
             ML250 -> "epsonCWC6510"
             ML500 -> "epsonCWC6510"
@@ -74,18 +116,18 @@ enum class LabelStyles {
     }
 
 
-companion object {
-    fun fromLabelSize(value: String?): LabelStyles {
-        return when (value) {
-            "4" -> L4
-            "500PL" -> ML500PL
-            "250" -> ML250
-            "500" -> ML500
-            "1" -> L1
-            "2" -> L2
-            "Bulk" -> BULK
-            else -> ERROR
+    companion object {
+        fun fromLabelSize(value: String?): LabelStyles {
+            return when (value) {
+                "4" -> L4
+                "500PL" -> ML500PL
+                "250" -> ML250
+                "500" -> ML500
+                "1" -> L1
+                "2" -> L2
+                "Bulk" -> BULK
+                else -> ERROR
+            }
         }
     }
-}
 }

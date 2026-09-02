@@ -7,28 +7,32 @@ import androidx.annotation.OptIn
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color.Companion.Black
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
 
+/**
+ * Displays a styled outlined button with optional icon content.
+ *
+ * The button uses a transparent background, grey border, and rounded
+ * corners to provide a consistent outlined appearance. An optional icon
+ * can be displayed alongside the button text.
+ *
+ * If [text] is blank, only the icon is displayed when an icon is supplied.
+ * If [icon] is `null`, no icon is displayed.
+ *
+ * @param modifier Optional [Modifier] used to customise the button's layout
+ * or appearance.
+ * @param text The text displayed inside the button.
+ * @param onClick Callback invoked when the button is pressed.
+ * @param icon Optional [ImageVector] displayed alongside the button text.
+ */
 @OptIn(ExperimentalGetImage::class)
 @Composable
 fun QRScanner(
@@ -48,7 +52,7 @@ fun QRScanner(
         )
     }
 
-    
+
 
 
     if (!hasPermission.value) {
@@ -198,7 +202,8 @@ fun QRScanner(
     }
     AndroidView(
         factory = {
-            previewView },
+            previewView
+        },
         modifier = Modifier.fillMaxSize()
     )
 }

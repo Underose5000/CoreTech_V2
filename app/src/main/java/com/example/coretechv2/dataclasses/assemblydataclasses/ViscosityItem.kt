@@ -1,6 +1,5 @@
 package com.example.coretechv2.dataclasses.assemblydataclasses
 
-import android.util.Log
 import androidx.compose.runtime.MutableState
 
 /**
@@ -22,9 +21,9 @@ import androidx.compose.runtime.MutableState
  * @property vis0_3 Viscosity reading at 0.3
  * @property sysID Database unique identifier (nullable for new records)
  */
-data class ViscosityItem (
+data class ViscosityItem(
     var spindle: String = "N/A",
-    var indexRange: String  = "N/A",
+    var indexRange: String = "N/A",
     var testNumber: String = "1",
     var vis60: String = "",
     var vis30: String = "",
@@ -34,14 +33,14 @@ data class ViscosityItem (
     var vis1_5: String = "",
     var vis0_6: String = "",
     var vis0_3: String = "",
-    var sysID : Int? = null
+    var sysID: Int? = null
 )
 
 
 /**
  * Defines dropdown selection fields for viscosity configuration.
  */
-enum class VisSettings{
+enum class VisSettings {
     SPINDLE, INDEX, TESTNUMBER
 }
 
@@ -70,7 +69,8 @@ fun visHasValue(item: MutableState<ViscosityItem>): Boolean {
         item.value.vis03.isNotBlank() ||
         item.value.vis1_5.isNotBlank() ||
         item.value.vis0_6.isNotBlank() ||
-        item.value.vis0_3.isNotBlank()){
+        item.value.vis0_3.isNotBlank()
+    ) {
         return true
     }
     return false

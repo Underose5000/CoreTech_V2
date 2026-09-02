@@ -51,21 +51,43 @@ import com.example.coretechv2.ui.theme.scottBlue
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
+/**
+ * Displays a three-section product label.
+ *
+ * The label is divided into three primary areas:
+ * - A left section containing product directions, helpful tips and company
+ *   contact information.
+ * - A central section containing the product branding, name, variant, size
+ *   and colour information.
+ * - A right section containing hazard information, precautions, first aid,
+ *   storage instructions, company information and the product barcode.
+ *
+ * Additional information such as batch number, packing/best-before date and
+ * a QR code may be displayed depending on the supplied label data.
+ *
+ * @param labelElement Contains the product information, label layout
+ * configuration, dangerous goods information and shared application state
+ * required to render the label.
+ */
 @Composable
 fun ThreeSectionLabel(labelElement: LabelElements) {
-    Box(modifier = Modifier
-        .width(mmToDp(labelElement.labelLayout.PAGEWIDTH))
-        .height(mmToDp(labelElement.labelLayout.PAGEHEIGHT))
-        .background(color = White)) {
+    Box(
+        modifier = Modifier
+            .width(mmToDp(labelElement.labelLayout.PAGEWIDTH))
+            .height(mmToDp(labelElement.labelLayout.PAGEHEIGHT))
+            .background(color = White)
+    ) {
         Row(modifier = Modifier.fillMaxSize(), verticalAlignment = Alignment.Bottom) {
-            Column(modifier = Modifier
-                .width(mmToDp(((labelElement.labelLayout.PAGEWIDTH - labelElement.labelLayout.MIDWIDTH) / 2)))
-                .padding(
-                    start = mmToDp(labelElement.labelLayout.PAGEPAD),
-                    top = mmToDp(labelElement.labelLayout.PAGEPAD),
-                    bottom = mmToDp(labelElement.labelLayout.PAGEPAD),
-                    end = mmToDp(labelElement.labelLayout.PAGEPAD)
-                )) {
+            Column(
+                modifier = Modifier
+                    .width(mmToDp(((labelElement.labelLayout.PAGEWIDTH - labelElement.labelLayout.MIDWIDTH) / 2)))
+                    .padding(
+                        start = mmToDp(labelElement.labelLayout.PAGEPAD),
+                        top = mmToDp(labelElement.labelLayout.PAGEPAD),
+                        bottom = mmToDp(labelElement.labelLayout.PAGEPAD),
+                        end = mmToDp(labelElement.labelLayout.PAGEPAD)
+                    )
+            ) {
                 if (labelElement.classInfo.DIRECTIONS.isNotEmpty()) {
                     Text(text = "DIRECTIONS:", style = ProductLabelSubHeader.copy(fontSize = ptToSp(labelElement.labelLayout.SUBHEADFS)))
                     Text(text = labelElement.classInfo.DIRECTIONS, style = ProductLabelBody.copy(fontSize = ptToSp(labelElement.labelLayout.BODYFS)))
@@ -75,7 +97,7 @@ fun ThreeSectionLabel(labelElement: LabelElements) {
                     Text(text = "HELPFUL TIPS:", style = ProductLabelSubHeader.copy(fontSize = ptToSp(labelElement.labelLayout.SUBHEADFS)))
                     Text(text = labelElement.classInfo.HELPTIPTIN, style = ProductLabelBody.copy(fontSize = ptToSp(labelElement.labelLayout.BODYFS)))
                     Spacer(modifier = Modifier.height(mmToDp(labelElement.labelLayout.SPACEING)))
-                } else if (labelElement.classInfo.HELPTIPPAIL.isNotEmpty()){
+                } else if (labelElement.classInfo.HELPTIPPAIL.isNotEmpty()) {
                     Text(text = "HELPFUL TIPS:", style = ProductLabelSubHeader.copy(fontSize = ptToSp(labelElement.labelLayout.SUBHEADFS)))
                     Text(text = labelElement.classInfo.HELPTIPPAIL, style = ProductLabelBody.copy(fontSize = ptToSp(labelElement.labelLayout.BODYFS)))
                     Spacer(modifier = Modifier.height(mmToDp(labelElement.labelLayout.SPACEING)))
@@ -148,22 +170,26 @@ fun ThreeSectionLabel(labelElement: LabelElements) {
                             )
                         }
                         if (labelElement.itemInfo.MIDDLENAME.isNotEmpty()) {
-                            Column(modifier = Modifier
-                                .fillMaxWidth()
-                                .align(Alignment.TopCenter)
-                                .padding(top = mmToDp(labelElement.labelLayout.MIDNAMEPOS)), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .align(Alignment.TopCenter)
+                                    .padding(top = mmToDp(labelElement.labelLayout.MIDNAMEPOS)), horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
                                 Text(
-                                    text = labelElement.itemInfo.MIDDLENAME.uppercase(),textAlign = TextAlign.Center, style = ProductLabelHeader.copy(fontSize = ptToSp(labelElement.labelLayout.BOTTOMNAMEFS), color = fontColor)
+                                    text = labelElement.itemInfo.MIDDLENAME.uppercase(),
+                                    textAlign = TextAlign.Center,
+                                    style = ProductLabelHeader.copy(fontSize = ptToSp(labelElement.labelLayout.BOTTOMNAMEFS), color = fontColor)
                                 )
                                 Text(
                                     text = DGLine(labelElement.dgInfo),
                                     modifier = Modifier
-                                        .padding(top = mmToDp(labelElement.labelLayout.DGPOS)),textAlign = TextAlign.Center,
+                                        .padding(top = mmToDp(labelElement.labelLayout.DGPOS)), textAlign = TextAlign.Center,
                                     style = ProductLabelNormal.copy(fontSize = ptToSp(labelElement.labelLayout.DGFS))
                                 )
                             }
 
-                        } else{
+                        } else {
                             Text(
                                 text = labelElement.itemInfo.TOPNAME.uppercase(),
                                 modifier = Modifier
@@ -171,17 +197,21 @@ fun ThreeSectionLabel(labelElement: LabelElements) {
                                     .align(Alignment.TopCenter),
                                 style = ProductLabelHeader.copy(fontSize = ptToSp(labelElement.labelLayout.TOPNAMEFS), color = fontColor)
                             )
-                            Column(modifier = Modifier
-                                .fillMaxWidth()
-                                .align(Alignment.TopCenter)
-                                .padding(top = mmToDp(labelElement.labelLayout.BOTTOMNAMEPOS)), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .align(Alignment.TopCenter)
+                                    .padding(top = mmToDp(labelElement.labelLayout.BOTTOMNAMEPOS)), horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
                                 Text(
-                                    text = labelElement.itemInfo.BOTTOMNAME.uppercase(),textAlign = TextAlign.Center, style = ProductLabelHeader.copy(fontSize = ptToSp(labelElement.labelLayout.BOTTOMNAMEFS), color = fontColor)
+                                    text = labelElement.itemInfo.BOTTOMNAME.uppercase(),
+                                    textAlign = TextAlign.Center,
+                                    style = ProductLabelHeader.copy(fontSize = ptToSp(labelElement.labelLayout.BOTTOMNAMEFS), color = fontColor)
                                 )
                                 Text(
                                     text = DGLine(labelElement.dgInfo),
                                     modifier = Modifier
-                                        .padding(top = mmToDp(labelElement.labelLayout.DGPOS)),textAlign = TextAlign.Center,
+                                        .padding(top = mmToDp(labelElement.labelLayout.DGPOS)), textAlign = TextAlign.Center,
                                     style = ProductLabelNormal.copy(fontSize = ptToSp(labelElement.labelLayout.DGFS))
                                 )
                             }
@@ -225,14 +255,16 @@ fun ThreeSectionLabel(labelElement: LabelElements) {
                     }
                 }
             }
-            Column(modifier = Modifier
-                .width(mmToDp(((labelElement.labelLayout.PAGEWIDTH - labelElement.labelLayout.MIDWIDTH) / 2)))
-                .padding(
-                    start = mmToDp(labelElement.labelLayout.PAGEPAD),
-                    top = mmToDp(labelElement.labelLayout.PAGEPAD),
-                    bottom = mmToDp(labelElement.labelLayout.PAGEPAD),
-                    end = mmToDp(labelElement.labelLayout.PAGEPAD)
-                )) {
+            Column(
+                modifier = Modifier
+                    .width(mmToDp(((labelElement.labelLayout.PAGEWIDTH - labelElement.labelLayout.MIDWIDTH) / 2)))
+                    .padding(
+                        start = mmToDp(labelElement.labelLayout.PAGEPAD),
+                        top = mmToDp(labelElement.labelLayout.PAGEPAD),
+                        bottom = mmToDp(labelElement.labelLayout.PAGEPAD),
+                        end = mmToDp(labelElement.labelLayout.PAGEPAD)
+                    )
+            ) {
                 if (labelElement.classInfo.PICTOGRAM1.isNotEmpty() || labelElement.classInfo.PICTOGRAM2.isNotEmpty() || labelElement.classInfo.WARNINGSIGN.isNotEmpty()) {
                     Box(
                         modifier = Modifier.fillMaxWidth(),
@@ -307,10 +339,10 @@ fun ThreeSectionLabel(labelElement: LabelElements) {
                 }
                 if (labelElement.itemInfo.ITEMBARCODE.isNotEmpty()) {
                     var codeText: String
-                    if(labelElement.itemInfo.LABELSTYLE.ProductIsTin()){
+                    if (labelElement.itemInfo.LABELSTYLE.ProductIsTin()) {
                         codeText = labelElement.itemInfo.ITEMBARCODE
-                    }else{
-                        codeText ="(01)${labelElement.itemInfo.ITEMBARCODE}(10)${labelElement.sharedViewModel.currentOrderNumber.value}"
+                    } else {
+                        codeText = "(01)${labelElement.itemInfo.ITEMBARCODE}(10)${labelElement.sharedViewModel.currentOrderNumber.value}"
                     }
                     val qrBitmap = try {
                         generateEAN13Barcode(
@@ -339,17 +371,22 @@ fun ThreeSectionLabel(labelElement: LabelElements) {
 
             }
         }
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .padding(all = mmToDp(labelElement.labelLayout.PAGEPAD)),contentAlignment = Alignment.TopEnd) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(all = mmToDp(labelElement.labelLayout.PAGEPAD)), contentAlignment = Alignment.TopEnd
+        ) {
             Column(horizontalAlignment = Alignment.End) {
                 Text(text = "Batch: #${labelElement.sharedViewModel.currentOrderNumber.value}", style = ProductLabelSubHeader.copy(fontSize = ptToSp(labelElement.labelLayout.BODYFS)))
                 val currentDate = LocalDate.now()
                 val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
                 if (labelElement.itemInfo.BESTBEFORE <= 0) {
                     Text(text = "Packed: ${currentDate.format(formatter)}", style = ProductLabelSubHeader.copy(fontSize = ptToSp(labelElement.labelLayout.BODYFS)))
-                }else{
-                    Text(text = "Best Before: ${currentDate.plusDays(labelElement.itemInfo.BESTBEFORE.toLong()).format(formatter)}", style = ProductLabelSubHeader.copy(fontSize = ptToSp(labelElement.labelLayout.BODYFS)))
+                } else {
+                    Text(
+                        text = "Best Before: ${currentDate.plusDays(labelElement.itemInfo.BESTBEFORE.toLong()).format(formatter)}",
+                        style = ProductLabelSubHeader.copy(fontSize = ptToSp(labelElement.labelLayout.BODYFS))
+                    )
 
                 }
             }
@@ -371,12 +408,30 @@ fun ThreeSectionLabel(labelElement: LabelElements) {
     }
 }
 
+/**
+ * Displays a two-section product label.
+ *
+ * The label consists of:
+ * - A central product section containing branding, product name, variant,
+ *   size and product-specific information.
+ * - A larger information section containing hazard information, precautions,
+ *   first aid, storage instructions, company details and the product barcode.
+ *
+ * Batch information, packing/best-before dates and an optional QR code are
+ * also displayed on the label.
+ *
+ * @param labelElement Contains the product information, label layout
+ * configuration, dangerous goods information and shared application state
+ * required to render the label.
+ */
 @Composable
 fun TwoSectionLabel(labelElement: LabelElements) {
-    Box(modifier = Modifier
-        .width(mmToDp(labelElement.labelLayout.PAGEWIDTH))
-        .height(mmToDp(labelElement.labelLayout.PAGEHEIGHT))
-        .background(color = White)) {
+    Box(
+        modifier = Modifier
+            .width(mmToDp(labelElement.labelLayout.PAGEWIDTH))
+            .height(mmToDp(labelElement.labelLayout.PAGEHEIGHT))
+            .background(color = White)
+    ) {
         Row(modifier = Modifier.fillMaxSize(), verticalAlignment = Alignment.Bottom) {
             Column(modifier = Modifier.width(mmToDp(labelElement.labelLayout.MIDWIDTH)), horizontalAlignment = Alignment.CenterHorizontally) {
                 Column(
@@ -432,22 +487,26 @@ fun TwoSectionLabel(labelElement: LabelElements) {
                             )
                         }
                         if (labelElement.itemInfo.MIDDLENAME.isNotEmpty()) {
-                            Column(modifier = Modifier
-                                .fillMaxWidth()
-                                .align(Alignment.TopCenter)
-                                .padding(top = mmToDp(labelElement.labelLayout.MIDNAMEPOS)), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .align(Alignment.TopCenter)
+                                    .padding(top = mmToDp(labelElement.labelLayout.MIDNAMEPOS)), horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
                                 Text(
-                                    text = labelElement.itemInfo.MIDDLENAME.uppercase(),textAlign = TextAlign.Center, style = ProductLabelHeader.copy(fontSize = ptToSp(labelElement.labelLayout.BOTTOMNAMEFS), color = fontColor)
+                                    text = labelElement.itemInfo.MIDDLENAME.uppercase(),
+                                    textAlign = TextAlign.Center,
+                                    style = ProductLabelHeader.copy(fontSize = ptToSp(labelElement.labelLayout.BOTTOMNAMEFS), color = fontColor)
                                 )
                                 Text(
                                     text = DGLine(labelElement.dgInfo),
                                     modifier = Modifier
-                                        .padding(top = mmToDp(labelElement.labelLayout.DGPOS)),textAlign = TextAlign.Center,
+                                        .padding(top = mmToDp(labelElement.labelLayout.DGPOS)), textAlign = TextAlign.Center,
                                     style = ProductLabelNormal.copy(fontSize = ptToSp(labelElement.labelLayout.DGFS))
                                 )
                             }
 
-                        } else{
+                        } else {
                             Text(
                                 text = labelElement.itemInfo.TOPNAME.uppercase(),
                                 modifier = Modifier
@@ -455,17 +514,21 @@ fun TwoSectionLabel(labelElement: LabelElements) {
                                     .align(Alignment.TopCenter),
                                 style = ProductLabelHeader.copy(fontSize = ptToSp(labelElement.labelLayout.TOPNAMEFS), color = fontColor)
                             )
-                            Column(modifier = Modifier
-                                .fillMaxWidth()
-                                .align(Alignment.TopCenter)
-                                .padding(top = mmToDp(labelElement.labelLayout.BOTTOMNAMEPOS)), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .align(Alignment.TopCenter)
+                                    .padding(top = mmToDp(labelElement.labelLayout.BOTTOMNAMEPOS)), horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
                                 Text(
-                                    text = labelElement.itemInfo.BOTTOMNAME.uppercase(),textAlign = TextAlign.Center, style = ProductLabelHeader.copy(fontSize = ptToSp(labelElement.labelLayout.BOTTOMNAMEFS), color = fontColor)
+                                    text = labelElement.itemInfo.BOTTOMNAME.uppercase(),
+                                    textAlign = TextAlign.Center,
+                                    style = ProductLabelHeader.copy(fontSize = ptToSp(labelElement.labelLayout.BOTTOMNAMEFS), color = fontColor)
                                 )
                                 Text(
                                     text = DGLine(labelElement.dgInfo),
                                     modifier = Modifier
-                                        .padding(top = mmToDp(labelElement.labelLayout.DGPOS)),textAlign = TextAlign.Center,
+                                        .padding(top = mmToDp(labelElement.labelLayout.DGPOS)), textAlign = TextAlign.Center,
                                     style = ProductLabelNormal.copy(fontSize = ptToSp(labelElement.labelLayout.DGFS))
                                 )
                             }
@@ -490,9 +553,11 @@ fun TwoSectionLabel(labelElement: LabelElements) {
                                 .then(sizeModifier),
                             style = ProductLabelSubHeader.copy(fontSize = ptToSp(labelElement.labelLayout.SIZEFS))
                         )
-                        Row(modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = mmToDp(labelElement.labelLayout.SIZEPOS + labelElement.labelLayout.SIZEFS))){
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = mmToDp(labelElement.labelLayout.SIZEPOS + labelElement.labelLayout.SIZEFS))
+                        ) {
                             Spacer(modifier = Modifier.weight(7f))
                             Column() {
                                 if (labelElement.classInfo.DIRECTIONS.isNotEmpty()) {
@@ -507,7 +572,7 @@ fun TwoSectionLabel(labelElement: LabelElements) {
                                     Text(text = "HELPFUL TIPS:", style = ProductLabelSubHeader.copy(fontSize = ptToSp(labelElement.labelLayout.SUBHEADFS)))
                                     Text(text = labelElement.classInfo.HELPTIPTIN, style = ProductLabelBody.copy(fontSize = ptToSp(labelElement.labelLayout.BODYFS)))
                                     Spacer(modifier = Modifier.height(mmToDp(labelElement.labelLayout.SPACEING)))
-                                } else if (labelElement.classInfo.HELPTIPPAIL.isNotEmpty()){
+                                } else if (labelElement.classInfo.HELPTIPPAIL.isNotEmpty()) {
                                     Text(text = "HELPFUL TIPS:", style = ProductLabelSubHeader.copy(fontSize = ptToSp(labelElement.labelLayout.SUBHEADFS)))
                                     Text(text = labelElement.classInfo.HELPTIPPAIL, style = ProductLabelBody.copy(fontSize = ptToSp(labelElement.labelLayout.BODYFS)))
                                     Spacer(modifier = Modifier.height(mmToDp(labelElement.labelLayout.SPACEING)))
@@ -534,14 +599,16 @@ fun TwoSectionLabel(labelElement: LabelElements) {
                     }
                 }
             }
-            Column(modifier = Modifier
-                .width(mmToDp(((labelElement.labelLayout.PAGEWIDTH - labelElement.labelLayout.MIDWIDTH))))
-                .padding(
-                    start = mmToDp(labelElement.labelLayout.PAGEPAD),
-                    top = mmToDp(labelElement.labelLayout.PAGEPAD),
-                    bottom = mmToDp(labelElement.labelLayout.PAGEPAD),
-                    end = mmToDp(labelElement.labelLayout.PAGEPAD)
-                )) {
+            Column(
+                modifier = Modifier
+                    .width(mmToDp(((labelElement.labelLayout.PAGEWIDTH - labelElement.labelLayout.MIDWIDTH))))
+                    .padding(
+                        start = mmToDp(labelElement.labelLayout.PAGEPAD),
+                        top = mmToDp(labelElement.labelLayout.PAGEPAD),
+                        bottom = mmToDp(labelElement.labelLayout.PAGEPAD),
+                        end = mmToDp(labelElement.labelLayout.PAGEPAD)
+                    )
+            ) {
                 if (labelElement.classInfo.PICTOGRAM1.isNotEmpty() || labelElement.classInfo.PICTOGRAM2.isNotEmpty() || labelElement.classInfo.WARNINGSIGN.isNotEmpty()) {
                     Box(
                         modifier = Modifier.fillMaxWidth(),
@@ -615,7 +682,7 @@ fun TwoSectionLabel(labelElement: LabelElements) {
                         alignment = Alignment.BottomStart
                     )
                 }
-                HorizontalDivider(modifier = Modifier.padding(top = mmToDp(labelElement.labelLayout.SPACEING/2)), color = scottBlue)
+                HorizontalDivider(modifier = Modifier.padding(top = mmToDp(labelElement.labelLayout.SPACEING / 2)), color = scottBlue)
                 Image(
                     painter = painterResource(id = R.drawable.company_logo_light),
                     contentDescription = null,
@@ -631,10 +698,10 @@ fun TwoSectionLabel(labelElement: LabelElements) {
 
                 if (labelElement.itemInfo.ITEMBARCODE.isNotEmpty()) {
                     val codeText: String
-                    if(labelElement.itemInfo.LABELSTYLE.ProductIsTin()){
+                    if (labelElement.itemInfo.LABELSTYLE.ProductIsTin()) {
                         codeText = labelElement.itemInfo.ITEMBARCODE
-                    }else{
-                        codeText ="(01)${labelElement.itemInfo.ITEMBARCODE}(10)${labelElement.sharedViewModel.currentOrderNumber.value}"
+                    } else {
+                        codeText = "(01)${labelElement.itemInfo.ITEMBARCODE}(10)${labelElement.sharedViewModel.currentOrderNumber.value}"
                     }
                     val qrBitmap = try {
                         generateEAN13Barcode(
@@ -661,17 +728,22 @@ fun TwoSectionLabel(labelElement: LabelElements) {
             }
         }
 
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .padding(all = mmToDp(labelElement.labelLayout.PAGEPAD)),contentAlignment = Alignment.TopEnd) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(all = mmToDp(labelElement.labelLayout.PAGEPAD)), contentAlignment = Alignment.TopEnd
+        ) {
             Column(horizontalAlignment = Alignment.End) {
                 Text(text = "Batch: #${labelElement.sharedViewModel.currentOrderNumber.value}", style = ProductLabelSubHeader.copy(fontSize = ptToSp(labelElement.labelLayout.BODYFS)))
                 val currentDate = LocalDate.now()
                 val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
                 if (labelElement.itemInfo.BESTBEFORE <= 0) {
                     Text(text = "Packed: ${currentDate.format(formatter)}", style = ProductLabelSubHeader.copy(fontSize = ptToSp(labelElement.labelLayout.BODYFS)))
-                }else{
-                    Text(text = "Best Before: ${currentDate.plusDays(labelElement.itemInfo.BESTBEFORE.toLong()).format(formatter)}", style = ProductLabelSubHeader.copy(fontSize = ptToSp(labelElement.labelLayout.BODYFS)))
+                } else {
+                    Text(
+                        text = "Best Before: ${currentDate.plusDays(labelElement.itemInfo.BESTBEFORE.toLong()).format(formatter)}",
+                        style = ProductLabelSubHeader.copy(fontSize = ptToSp(labelElement.labelLayout.BODYFS))
+                    )
 
                 }
                 Spacer(modifier = Modifier.height(mmToDp(labelElement.labelLayout.SPACEING)))
@@ -694,6 +766,22 @@ fun TwoSectionLabel(labelElement: LabelElements) {
     }
 }
 
+/**
+ * Displays a simplified product/box label.
+ *
+ * The simple label contains the product name, size, optional kit quantity,
+ * barcode, packing date, batch number and dangerous goods information.
+ *
+ * The barcode content is constructed using the available item barcode,
+ * batch number and box quantity where applicable.
+ *
+ * The label automatically adjusts the text sizing when a barcode is present
+ * to accommodate the additional barcode content.
+ *
+ * @param labelElement Contains the product information, label layout
+ * configuration, dangerous goods information and shared application state
+ * required to render the label.
+ */
 @Composable
 fun SimpleLabel(labelElement: LabelElements) {
     Box(
@@ -715,25 +803,35 @@ fun SimpleLabel(labelElement: LabelElements) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 var barcodePresent = false
-                if (labelElement.itemInfo.ITEMBARCODE.isNotEmpty()){
+                if (labelElement.itemInfo.ITEMBARCODE.isNotEmpty()) {
                     barcodePresent = true
                 }
                 if (labelElement.itemInfo.MIDDLENAME.isNotEmpty()) {
-                    Text(text = labelElement.itemInfo.MIDDLENAME.uppercase(), textAlign = TextAlign.Center, style = ProductLabelHeader.copy(fontSize = ptToSp(SimpleLabelResize(labelElement.labelLayout.BOTTOMNAMEFS, barcodePresent))))
+                    Text(
+                        text = labelElement.itemInfo.MIDDLENAME.uppercase(),
+                        textAlign = TextAlign.Center,
+                        style = ProductLabelHeader.copy(fontSize = ptToSp(SimpleLabelResize(labelElement.labelLayout.BOTTOMNAMEFS, barcodePresent)))
+                    )
                 } else {
                     Text(text = labelElement.itemInfo.TOPNAME.uppercase(), style = ProductLabelHeader.copy(fontSize = ptToSp(SimpleLabelResize(labelElement.labelLayout.TOPNAMEFS, barcodePresent))))
-                    Spacer(modifier = Modifier.height(mmToDp(SimpleLabelResize(labelElement.labelLayout.SPACEING, barcodePresent)/2)))
-                    Text(text = labelElement.itemInfo.BOTTOMNAME.uppercase(), textAlign = TextAlign.Center, style = ProductLabelHeader.copy(fontSize = ptToSp(SimpleLabelResize(labelElement.labelLayout.BOTTOMNAMEFS, barcodePresent))))
+                    Spacer(modifier = Modifier.height(mmToDp(SimpleLabelResize(labelElement.labelLayout.SPACEING, barcodePresent) / 2)))
+                    Text(
+                        text = labelElement.itemInfo.BOTTOMNAME.uppercase(),
+                        textAlign = TextAlign.Center,
+                        style = ProductLabelHeader.copy(fontSize = ptToSp(SimpleLabelResize(labelElement.labelLayout.BOTTOMNAMEFS, barcodePresent)))
+                    )
                 }
-                Spacer(modifier = Modifier.height(mmToDp(SimpleLabelResize(labelElement.labelLayout.SPACEING, barcodePresent)/2)))
-                Spacer(modifier = Modifier.height(mmToDp(SimpleLabelResize(labelElement.labelLayout.SPACEING, barcodePresent)/2)))
+                Spacer(modifier = Modifier.height(mmToDp(SimpleLabelResize(labelElement.labelLayout.SPACEING, barcodePresent) / 2)))
+                Spacer(modifier = Modifier.height(mmToDp(SimpleLabelResize(labelElement.labelLayout.SPACEING, barcodePresent) / 2)))
                 var kitSet = "KIT"
-                if (!labelElement.kitset){
+                if (!labelElement.kitset) {
                     kitSet = ""
                 }
                 if (labelElement.itemInfo.BOXQTY > 0) {
                     Text(
-                        text = "${labelElement.itemInfo.BOXQTY} X ${labelElement.itemInfo.SIZE} $kitSet", textAlign = TextAlign.Center, style = ProductLabelHeader.copy(fontSize = ptToSp(labelElement.labelLayout.TOPNAMEFS))
+                        text = "${labelElement.itemInfo.BOXQTY} X ${labelElement.itemInfo.SIZE} $kitSet",
+                        textAlign = TextAlign.Center,
+                        style = ProductLabelHeader.copy(fontSize = ptToSp(labelElement.labelLayout.TOPNAMEFS))
                     )
                 } else {
                     Text(
@@ -756,32 +854,32 @@ fun SimpleLabel(labelElement: LabelElements) {
 
                     Spacer(modifier = Modifier.height(mmToDp(3.0)))
 
-                        Image(
-                            bitmap = barcodeBitmap.asImageBitmap(),
-                            contentDescription = "Barcode",
-                            modifier = Modifier.height(mmToDp(14.0))
-                        )
-                        Spacer(modifier = Modifier.height(mmToDp(1.0)))
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                        ) {
-                            Spacer(modifier = Modifier.weight(1f))
-                            val currentDate = LocalDate.now()
-                            val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-                            Text(text = "Boxed: ${currentDate.format(formatter)}", style = ProductLabelNormal.copy(fontSize = ptToSp(labelElement.labelLayout.BODYFS)))
+                    Image(
+                        bitmap = barcodeBitmap.asImageBitmap(),
+                        contentDescription = "Barcode",
+                        modifier = Modifier.height(mmToDp(14.0))
+                    )
+                    Spacer(modifier = Modifier.height(mmToDp(1.0)))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                    ) {
+                        Spacer(modifier = Modifier.weight(1f))
+                        val currentDate = LocalDate.now()
+                        val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+                        Text(text = "Boxed: ${currentDate.format(formatter)}", style = ProductLabelNormal.copy(fontSize = ptToSp(labelElement.labelLayout.BODYFS)))
+                        Spacer(modifier = Modifier.width(mmToDp(10.0)))
+                        Text(text = labelElement.itemInfo.ITEMBARCODE, textAlign = TextAlign.Center, style = ProductLabelNormal.copy(fontSize = ptToSp(labelElement.labelLayout.BODYFS)))
+                        if (labelElement.sharedViewModel.currentOrderNumber.value.isNotEmpty()) {
                             Spacer(modifier = Modifier.width(mmToDp(10.0)))
-                            Text(text = labelElement.itemInfo.ITEMBARCODE, textAlign = TextAlign.Center, style = ProductLabelNormal.copy(fontSize = ptToSp(labelElement.labelLayout.BODYFS)))
-                            if (labelElement.sharedViewModel.currentOrderNumber.value.isNotEmpty()) {
-                                Spacer(modifier = Modifier.width(mmToDp(10.0)))
-                                Text(text = "Batch: #${labelElement.sharedViewModel.currentOrderNumber.value}", style = ProductLabelNormal.copy(fontSize = ptToSp(labelElement.labelLayout.BODYFS)))
-                            }
-                            Spacer(modifier = Modifier.weight(1f))
+                            Text(text = "Batch: #${labelElement.sharedViewModel.currentOrderNumber.value}", style = ProductLabelNormal.copy(fontSize = ptToSp(labelElement.labelLayout.BODYFS)))
                         }
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
 
 
-                }else{
-                    Spacer(modifier = Modifier.height(mmToDp(SimpleLabelResize(labelElement.labelLayout.SPACEING, barcodePresent)/2)))
+                } else {
+                    Spacer(modifier = Modifier.height(mmToDp(SimpleLabelResize(labelElement.labelLayout.SPACEING, barcodePresent) / 2)))
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -798,12 +896,15 @@ fun SimpleLabel(labelElement: LabelElements) {
                     }
                 }
             }
-            Row(modifier = Modifier
-                .fillMaxWidth()
-            ){
-                Column(modifier = Modifier
-                    .width(mmToDp(labelElement.labelLayout.PAGEWIDTH / 2))
-                    .fillMaxHeight()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .width(mmToDp(labelElement.labelLayout.PAGEWIDTH / 2))
+                        .fillMaxHeight()
+                ) {
                     Spacer(modifier = Modifier.height(mmToDp(2.5)))
                     Image(
                         painter = painterResource(id = R.drawable.company_logo_light),
@@ -814,19 +915,21 @@ fun SimpleLabel(labelElement: LabelElements) {
                         alignment = Alignment.BottomStart
                     )
                 }
-                Column(modifier = Modifier
-                    .width(mmToDp(labelElement.labelLayout.PAGEWIDTH / 2))
-                    .fillMaxHeight(),
-                    horizontalAlignment = Alignment.CenterHorizontally) {
-                    if (labelElement.dgInfo != null){
+                Column(
+                    modifier = Modifier
+                        .width(mmToDp(labelElement.labelLayout.PAGEWIDTH / 2))
+                        .fillMaxHeight(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    if (labelElement.dgInfo != null) {
                         Spacer(modifier = Modifier.height(mmToDp(0.5)))
-                        if(labelElement.dgInfo.DGQUANTITY > 0){
-                        Image(
-                            painter = painterResource(id = Hazards.fromString(labelElement.dgInfo.DGCLASS).hazardImage()),
-                            contentDescription = null,
-                            modifier = Modifier.size(mmToDp(labelElement.labelLayout.PICTOSIZE))
-                        )
-                        }else{
+                        if (labelElement.dgInfo.DGQUANTITY > 0) {
+                            Image(
+                                painter = painterResource(id = Hazards.fromString(labelElement.dgInfo.DGCLASS).hazardImage()),
+                                contentDescription = null,
+                                modifier = Modifier.size(mmToDp(labelElement.labelLayout.PICTOSIZE))
+                            )
+                        } else {
                             Image(
                                 painter = painterResource(id = Hazards.LIMITED_QUANTITES.hazardImage()),
                                 contentDescription = null,
@@ -834,9 +937,14 @@ fun SimpleLabel(labelElement: LabelElements) {
                             )
                         }
                         Text(DGLine(labelElement.dgInfo), style = ProductLabelBody.copy(fontSize = ptToSp(labelElement.labelLayout.SUBHEADFS)))
-                    }else{
-                        Box(modifier = Modifier.fillMaxSize()){
-                            Text(DGLine(labelElement.dgInfo), modifier = Modifier.align(Alignment.Center), textAlign = TextAlign.Center, style = ProductLabelBody.copy(fontSize = ptToSp(labelElement.labelLayout.SUBHEADFS)))
+                    } else {
+                        Box(modifier = Modifier.fillMaxSize()) {
+                            Text(
+                                DGLine(labelElement.dgInfo),
+                                modifier = Modifier.align(Alignment.Center),
+                                textAlign = TextAlign.Center,
+                                style = ProductLabelBody.copy(fontSize = ptToSp(labelElement.labelLayout.SUBHEADFS))
+                            )
                         }
                     }
 
@@ -847,21 +955,40 @@ fun SimpleLabel(labelElement: LabelElements) {
     }
 }
 
+/**
+ * Displays a three-section Tuff Stick product label.
+ *
+ * This layout is specifically designed for Tuff Stick products and includes
+ * the Tuff Stick branding, fire-retardant adhesive/sealer description,
+ * product variant and size, product directions, helpful information,
+ * dangerous goods information and hazard information.
+ *
+ * The label also includes company information, a product barcode, batch
+ * information, packing/best-before information and an optional QR code.
+ *
+ * @param labelElement Contains the product information, label layout
+ * configuration, dangerous goods information and shared application state
+ * required to render the label.
+ */
 @Composable
 fun TuffStickThreeSectionLabel(labelElement: LabelElements) {
-    Box(modifier = Modifier
-        .width(mmToDp(labelElement.labelLayout.PAGEWIDTH))
-        .height(mmToDp(labelElement.labelLayout.PAGEHEIGHT))
-        .background(color = White)) {
+    Box(
+        modifier = Modifier
+            .width(mmToDp(labelElement.labelLayout.PAGEWIDTH))
+            .height(mmToDp(labelElement.labelLayout.PAGEHEIGHT))
+            .background(color = White)
+    ) {
         Row(modifier = Modifier.fillMaxSize(), verticalAlignment = Alignment.Bottom) {
-            Column(modifier = Modifier
-                .width(mmToDp(((labelElement.labelLayout.PAGEWIDTH - labelElement.labelLayout.MIDWIDTH) / 2)))
-                .padding(
-                    start = mmToDp(labelElement.labelLayout.PAGEPAD),
-                    top = mmToDp(labelElement.labelLayout.PAGEPAD),
-                    bottom = mmToDp(labelElement.labelLayout.PAGEPAD),
-                    end = mmToDp(labelElement.labelLayout.PAGEPAD)
-                )) {
+            Column(
+                modifier = Modifier
+                    .width(mmToDp(((labelElement.labelLayout.PAGEWIDTH - labelElement.labelLayout.MIDWIDTH) / 2)))
+                    .padding(
+                        start = mmToDp(labelElement.labelLayout.PAGEPAD),
+                        top = mmToDp(labelElement.labelLayout.PAGEPAD),
+                        bottom = mmToDp(labelElement.labelLayout.PAGEPAD),
+                        end = mmToDp(labelElement.labelLayout.PAGEPAD)
+                    )
+            ) {
                 Text(text = labelElement.classInfo.HELPTIPPAIL, style = ProductLabelBody.copy(fontSize = ptToSp(labelElement.labelLayout.BODYFS)))
                 Spacer(modifier = Modifier.height(mmToDp(labelElement.labelLayout.SPACEING)))
                 Text(text = "DIRECTIONS:", style = ProductLabelSubHeader.copy(fontSize = ptToSp(labelElement.labelLayout.SUBHEADFS)))
@@ -934,14 +1061,16 @@ fun TuffStickThreeSectionLabel(labelElement: LabelElements) {
                     }
                 }
             }
-            Column(modifier = Modifier
-                .width(mmToDp(((labelElement.labelLayout.PAGEWIDTH - labelElement.labelLayout.MIDWIDTH) / 2)))
-                .padding(
-                    start = mmToDp(labelElement.labelLayout.PAGEPAD),
-                    top = mmToDp(labelElement.labelLayout.PAGEPAD),
-                    bottom = mmToDp(labelElement.labelLayout.PAGEPAD),
-                    end = mmToDp(labelElement.labelLayout.PAGEPAD)
-                )) {
+            Column(
+                modifier = Modifier
+                    .width(mmToDp(((labelElement.labelLayout.PAGEWIDTH - labelElement.labelLayout.MIDWIDTH) / 2)))
+                    .padding(
+                        start = mmToDp(labelElement.labelLayout.PAGEPAD),
+                        top = mmToDp(labelElement.labelLayout.PAGEPAD),
+                        bottom = mmToDp(labelElement.labelLayout.PAGEPAD),
+                        end = mmToDp(labelElement.labelLayout.PAGEPAD)
+                    )
+            ) {
                 if (labelElement.classInfo.PICTOGRAM1.isNotEmpty() || labelElement.classInfo.PICTOGRAM2.isNotEmpty() || labelElement.classInfo.WARNINGSIGN.isNotEmpty()) {
                     Box(
                         modifier = Modifier.fillMaxWidth(),
@@ -1007,14 +1136,19 @@ fun TuffStickThreeSectionLabel(labelElement: LabelElements) {
                     Spacer(modifier = Modifier.height(mmToDp(labelElement.labelLayout.SPACEING)))
                 }
                 Spacer(modifier = Modifier.height(mmToDp(labelElement.labelLayout.SPACEING)))
-                Text(text = DGLine(labelElement.dgInfo), modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center, style = ProductLabelSubHeader.copy(fontSize = ptToSp(labelElement.labelLayout.SUBHEADFS)))
+                Text(
+                    text = DGLine(labelElement.dgInfo),
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center,
+                    style = ProductLabelSubHeader.copy(fontSize = ptToSp(labelElement.labelLayout.SUBHEADFS))
+                )
                 Spacer(modifier = Modifier.height(mmToDp(labelElement.labelLayout.SPACEING)))
                 if (labelElement.itemInfo.ITEMBARCODE.isNotEmpty()) {
                     var codeText: String
-                    if(labelElement.itemInfo.LABELSTYLE.ProductIsTin()){
+                    if (labelElement.itemInfo.LABELSTYLE.ProductIsTin()) {
                         codeText = labelElement.itemInfo.ITEMBARCODE
-                    }else{
-                        codeText ="(01)${labelElement.itemInfo.ITEMBARCODE}(10)${labelElement.sharedViewModel.currentOrderNumber.value}"
+                    } else {
+                        codeText = "(01)${labelElement.itemInfo.ITEMBARCODE}(10)${labelElement.sharedViewModel.currentOrderNumber.value}"
                     }
                     val qrBitmap = try {
                         generateEAN13Barcode(
@@ -1044,17 +1178,22 @@ fun TuffStickThreeSectionLabel(labelElement: LabelElements) {
 
             }
         }
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .padding(all = mmToDp(labelElement.labelLayout.PAGEPAD)),contentAlignment = Alignment.TopEnd) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(all = mmToDp(labelElement.labelLayout.PAGEPAD)), contentAlignment = Alignment.TopEnd
+        ) {
             Column(horizontalAlignment = Alignment.End) {
                 Text(text = "Batch: #${labelElement.sharedViewModel.currentOrderNumber.value}", style = ProductLabelSubHeader.copy(fontSize = ptToSp(labelElement.labelLayout.BODYFS)))
                 val currentDate = LocalDate.now()
                 val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
                 if (labelElement.itemInfo.BESTBEFORE <= 0) {
                     Text(text = "Packed: ${currentDate.format(formatter)}", style = ProductLabelSubHeader.copy(fontSize = ptToSp(labelElement.labelLayout.BODYFS)))
-                }else{
-                    Text(text = "Best Before: ${currentDate.plusDays(labelElement.itemInfo.BESTBEFORE.toLong()).format(formatter)}", style = ProductLabelSubHeader.copy(fontSize = ptToSp(labelElement.labelLayout.BODYFS)))
+                } else {
+                    Text(
+                        text = "Best Before: ${currentDate.plusDays(labelElement.itemInfo.BESTBEFORE.toLong()).format(formatter)}",
+                        style = ProductLabelSubHeader.copy(fontSize = ptToSp(labelElement.labelLayout.BODYFS))
+                    )
 
                 }
             }
@@ -1076,12 +1215,29 @@ fun TuffStickThreeSectionLabel(labelElement: LabelElements) {
     }
 }
 
+/**
+ * Displays a two-section Tuff Stick product label.
+ *
+ * This layout is specifically designed for Tuff Stick products using a
+ * two-section format. It includes Tuff Stick branding, product information,
+ * hazard and safety information, helpful tips, directions, dangerous goods
+ * information, company details and the product barcode.
+ *
+ * Batch information, packing/best-before information and an optional QR code
+ * are also displayed where applicable.
+ *
+ * @param labelElement Contains the product information, label layout
+ * configuration, dangerous goods information and shared application state
+ * required to render the label.
+ */
 @Composable
 fun TuffStickTwoSectionLabel(labelElement: LabelElements) {
-    Box(modifier = Modifier
-        .width(mmToDp(labelElement.labelLayout.PAGEWIDTH))
-        .height(mmToDp(labelElement.labelLayout.PAGEHEIGHT))
-        .background(color = White)) {
+    Box(
+        modifier = Modifier
+            .width(mmToDp(labelElement.labelLayout.PAGEWIDTH))
+            .height(mmToDp(labelElement.labelLayout.PAGEHEIGHT))
+            .background(color = White)
+    ) {
         Row(modifier = Modifier.fillMaxSize(), verticalAlignment = Alignment.Bottom) {
             Column(modifier = Modifier.width(mmToDp(labelElement.labelLayout.MIDWIDTH)), horizontalAlignment = Alignment.CenterHorizontally) {
                 Column(
@@ -1136,14 +1292,16 @@ fun TuffStickTwoSectionLabel(labelElement: LabelElements) {
                     }
                 }
             }
-            Column(modifier = Modifier
-                .width(mmToDp(((labelElement.labelLayout.PAGEWIDTH - labelElement.labelLayout.MIDWIDTH))))
-                .padding(
-                    start = mmToDp(labelElement.labelLayout.PAGEPAD),
-                    top = mmToDp(labelElement.labelLayout.PAGEPAD),
-                    bottom = mmToDp(labelElement.labelLayout.PAGEPAD),
-                    end = mmToDp(labelElement.labelLayout.PAGEPAD)
-                )) {
+            Column(
+                modifier = Modifier
+                    .width(mmToDp(((labelElement.labelLayout.PAGEWIDTH - labelElement.labelLayout.MIDWIDTH))))
+                    .padding(
+                        start = mmToDp(labelElement.labelLayout.PAGEPAD),
+                        top = mmToDp(labelElement.labelLayout.PAGEPAD),
+                        bottom = mmToDp(labelElement.labelLayout.PAGEPAD),
+                        end = mmToDp(labelElement.labelLayout.PAGEPAD)
+                    )
+            ) {
                 if (labelElement.classInfo.PICTOGRAM1.isNotEmpty() || labelElement.classInfo.PICTOGRAM2.isNotEmpty() || labelElement.classInfo.WARNINGSIGN.isNotEmpty()) {
                     Box(
                         modifier = Modifier.fillMaxWidth(),
@@ -1221,10 +1379,15 @@ fun TuffStickTwoSectionLabel(labelElement: LabelElements) {
                 Spacer(modifier = Modifier.height(mmToDp(labelElement.labelLayout.SPACEING)))
 
 
-                Text(text = DGLine(labelElement.dgInfo), modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center, style = ProductLabelSubHeader.copy(fontSize = ptToSp(labelElement.labelLayout.SUBHEADFS)))
+                Text(
+                    text = DGLine(labelElement.dgInfo),
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center,
+                    style = ProductLabelSubHeader.copy(fontSize = ptToSp(labelElement.labelLayout.SUBHEADFS))
+                )
                 Spacer(modifier = Modifier.height(mmToDp(labelElement.labelLayout.SPACEING)))
 
-                HorizontalDivider(modifier = Modifier.padding(top = mmToDp(labelElement.labelLayout.SPACEING/2)), color = scottBlue)
+                HorizontalDivider(modifier = Modifier.padding(top = mmToDp(labelElement.labelLayout.SPACEING / 2)), color = scottBlue)
                 Image(
                     painter = painterResource(id = R.drawable.company_logo_light),
                     contentDescription = null,
@@ -1239,10 +1402,10 @@ fun TuffStickTwoSectionLabel(labelElement: LabelElements) {
                 )
                 if (labelElement.itemInfo.ITEMBARCODE.isNotEmpty()) {
                     var codeText: String
-                    if(labelElement.itemInfo.LABELSTYLE.ProductIsTin()){
+                    if (labelElement.itemInfo.LABELSTYLE.ProductIsTin()) {
                         codeText = labelElement.itemInfo.ITEMBARCODE
-                    }else{
-                        codeText ="(01)${labelElement.itemInfo.ITEMBARCODE}(10)${labelElement.sharedViewModel.currentOrderNumber.value}"
+                    } else {
+                        codeText = "(01)${labelElement.itemInfo.ITEMBARCODE}(10)${labelElement.sharedViewModel.currentOrderNumber.value}"
                     }
                     val qrBitmap = try {
                         generateEAN13Barcode(
@@ -1273,17 +1436,22 @@ fun TuffStickTwoSectionLabel(labelElement: LabelElements) {
             }
         }
 
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .padding(all = mmToDp(labelElement.labelLayout.PAGEPAD)),contentAlignment = Alignment.TopEnd) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(all = mmToDp(labelElement.labelLayout.PAGEPAD)), contentAlignment = Alignment.TopEnd
+        ) {
             Column(horizontalAlignment = Alignment.End) {
                 Text(text = "Batch: #${labelElement.sharedViewModel.currentOrderNumber.value}", style = ProductLabelSubHeader.copy(fontSize = ptToSp(labelElement.labelLayout.BODYFS)))
                 val currentDate = LocalDate.now()
                 val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
                 if (labelElement.itemInfo.BESTBEFORE <= 0) {
                     Text(text = "Packed: ${currentDate.format(formatter)}", style = ProductLabelSubHeader.copy(fontSize = ptToSp(labelElement.labelLayout.BODYFS)))
-                }else{
-                    Text(text = "Best Before: ${currentDate.plusDays(labelElement.itemInfo.BESTBEFORE.toLong()).format(formatter)}", style = ProductLabelSubHeader.copy(fontSize = ptToSp(labelElement.labelLayout.BODYFS)))
+                } else {
+                    Text(
+                        text = "Best Before: ${currentDate.plusDays(labelElement.itemInfo.BESTBEFORE.toLong()).format(formatter)}",
+                        style = ProductLabelSubHeader.copy(fontSize = ptToSp(labelElement.labelLayout.BODYFS))
+                    )
 
                 }
                 /*Spacer(modifier = Modifier.height(mmToDp(labelElement.labelLayout.SPACEING)))
@@ -1303,9 +1471,11 @@ fun TuffStickTwoSectionLabel(labelElement: LabelElements) {
 
             }
         }
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .padding(start = mmToDp(labelElement.labelLayout.MIDWIDTH + labelElement.labelLayout.PAGEPAD), top = mmToDp(labelElement.labelLayout.PAGEPAD))) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(start = mmToDp(labelElement.labelLayout.MIDWIDTH + labelElement.labelLayout.PAGEPAD), top = mmToDp(labelElement.labelLayout.PAGEPAD))
+        ) {
             if (labelElement.itemInfo.QRCODE.isNotEmpty()) {
                 val qrBitmap = generateQRCode(
                     text = labelElement.itemInfo.QRCODE, size = mmToPixels(labelElement.labelLayout.QRCODESIZE)
@@ -1322,31 +1492,71 @@ fun TuffStickTwoSectionLabel(labelElement: LabelElements) {
     }
 }
 
+/**
+ * Text style used for the primary headings on product labels.
+ */
 val ProductLabelHeader = TextStyle(
     fontFamily = Helvetica,
     fontWeight = FontWeight.Black
 )
+
+/**
+ * Text style used for secondary headings on product labels.
+ */
 val ProductLabelSubHeader = TextStyle(
     fontFamily = Helvetica,
     fontWeight = FontWeight.Bold
 )
+
+/**
+ * Text style used for standard body text on product labels.
+ */
 val ProductLabelBody = TextStyle(
     fontFamily = Helvetica,
     fontWeight = FontWeight.Light
 )
+
+/**
+ * Text style used for normal-weight text on product labels.
+ */
 val ProductLabelNormal = TextStyle(
     fontFamily = Helvetica,
     fontWeight = FontWeight.Normal
 )
 
+/**
+ * Formats dangerous goods information for display on a product label.
+ *
+ * When dangerous goods information is available, the returned string
+ * contains the product's UN number and packing group. When no dangerous
+ * goods information is provided, a standard classification statement
+ * is returned.
+ *
+ * @param dgInfo Dangerous goods information for the product, or `null`
+ * if the product is not classified as dangerous goods.
+ * @return A formatted dangerous goods classification string.
+ */
 fun DGLine(dgInfo: APICallTables.itemDGInfo?): String {
-    return if (dgInfo != null){
+    return if (dgInfo != null) {
         "UN ${dgInfo.UNNUMBER}    Packing Group ${dgInfo.PACKINGGROUP}"
     } else {
         "Not Classified as Dangerous Goods according to ADGC Edition 7.9 - 2024\nClassified as Hazardous according to SWA Poison Schedule S5"
     }
 }
-fun SimpleLabelResize(value: Double, barcodePresent: Boolean): Double{
+
+/**
+ * Adjusts a label layout value based on whether a barcode is present.
+ *
+ * An additional 6 units are added to the supplied value when no barcode
+ * is present, allowing the label layout to compensate for the space that
+ * would otherwise be occupied by the barcode.
+ *
+ * @param value The original layout value.
+ * @param barcodePresent Whether a barcode is present on the label.
+ * @return The original value when a barcode is present, or the original
+ * value plus 6 when no barcode is present.
+ */
+fun SimpleLabelResize(value: Double, barcodePresent: Boolean): Double {
     return if (barcodePresent) value
     else value + 6
 }

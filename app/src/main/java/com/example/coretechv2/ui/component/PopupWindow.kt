@@ -3,7 +3,6 @@ package com.example.coretechv2.ui.component
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
@@ -12,7 +11,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.example.coretechv2.dataclasses.MenuItem
 import com.example.coretechv2.dataclasses.PopupItems
 import com.example.coretechv2.ui.theme.borderColor
 
@@ -38,7 +36,7 @@ import com.example.coretechv2.ui.theme.borderColor
  * - composable content to render inside the popup
  */
 @Composable
-fun PopupWindow(item : PopupItems) {
+fun PopupWindow(item: PopupItems) {
     Box(
         modifier = Modifier
             .fillMaxSize(),

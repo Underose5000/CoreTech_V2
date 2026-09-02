@@ -6,7 +6,6 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.coretechv2.repository.DataStoreManager
 import com.example.coretechv2.viewmodel.SharedViewModel
 import com.example.coretechv2.viewmodel.assemblytests.AdjustmentsViewModel
-import com.example.coretechv2.viewmodel.assemblytests.GelTimeViewModel
 
 /**
  * Factory class responsible for creating instances of [AdjustmentsViewModel].
@@ -29,7 +28,7 @@ import com.example.coretechv2.viewmodel.assemblytests.GelTimeViewModel
 class AdjustmentsViewModelFactory(
     private val context: Context,
     val sharedViewModel: SharedViewModel
-) : ViewModelProvider.Factory{
+) : ViewModelProvider.Factory {
 
     /**
      * Creates a new instance of the requested ViewModel class.

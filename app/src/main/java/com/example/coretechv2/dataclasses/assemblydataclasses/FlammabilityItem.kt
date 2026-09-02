@@ -16,10 +16,10 @@ import androidx.compose.runtime.MutableState
  * @property second Second component of gel time
  * @property sysID Database unique identifier (nullable for new records)
  */
-data class FlammabilityItem (
-    var daysSet: String  = "",
+data class FlammabilityItem(
+    var daysSet: String = "",
     var testNumber: String = "1",
-    var burnLength : String = "",
+    var burnLength: String = "",
     var hour: String = "",
     var minute: String = "",
     var second: String = "",
@@ -47,7 +47,8 @@ fun flameHasValue(item: MutableState<FlammabilityItem>): Boolean {
         item.value.minute.isNotBlank() ||
         item.value.second.isNotBlank() ||
         item.value.burnLength.isNotBlank() ||
-        item.value.daysSet.isNotBlank()){
+        item.value.daysSet.isNotBlank()
+    ) {
         return true
     }
     return false

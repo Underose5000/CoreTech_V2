@@ -1,7 +1,5 @@
 package com.example.coretechv2.ui.screen
 
-import com.example.coretechv2.factory.ItemLookUpViewModelFactory
-import com.example.coretechv2.viewmodel.ItemLookUpViewModel
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -14,20 +12,33 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.coretechv2.factory.ItemLookUpViewModelFactory
+import com.example.coretechv2.viewmodel.ItemLookUpViewModel
 import com.example.coretechv2.viewmodel.SharedViewModel
 
+/**
+ * Displays the item lookup screen.
+ *
+ * Creates and manages an [ItemLookUpViewModel] using the current application
+ * context and shared view model. Items are retrieved when the screen is first
+ * displayed and are presented in a searchable list.
+ *
+ * Selecting an item delegates the selection to the view model. The screen also
+ * handles communication between the item lookup view model and the shared view
+ * model for displaying and closing popup messages and test screens.
+ *
+ * @param sharedViewModel Shared view model used to manage application-wide
+ * state and popup messages.
+ */
 @Composable
 fun ItemLookUpScreen(
     sharedViewModel: SharedViewModel
@@ -41,15 +52,15 @@ fun ItemLookUpScreen(
         viewModel.retrieveItems()
     }
 
-    if(viewModel.closePopupMessage.value){
+    if (viewModel.closePopupMessage.value) {
         sharedViewModel.closeMessagePopup()
         viewModel.closePopupMessage()
     }
-    if(viewModel.closeTestScreen.value){
+    if (viewModel.closeTestScreen.value) {
         sharedViewModel.closePopup()
         viewModel.closeTestScreen()
     }
-    if(viewModel.openPopupMessage.value){
+    if (viewModel.openPopupMessage.value) {
         sharedViewModel.popupMessageDetails = viewModel.popupMessage
         sharedViewModel.openMessagePopup()
         viewModel.openPopupMessage()

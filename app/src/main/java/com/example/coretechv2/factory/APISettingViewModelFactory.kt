@@ -23,7 +23,7 @@ import com.example.coretechv2.viewmodel.APISettingViewModel
  */
 class APISettingViewModelFactory(
     private val context: Context
-) : ViewModelProvider.Factory{
+) : ViewModelProvider.Factory {
 
     /**
      * Creates a new instance of the requested ViewModel class.

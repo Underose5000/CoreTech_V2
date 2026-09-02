@@ -1,15 +1,14 @@
 package com.example.coretechv2.repository
 
 import android.util.Log
-import io.ktor.client.*
+import io.ktor.client.HttpClient
 import io.ktor.client.call.body
-import io.ktor.client.engine.cio.*
+import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
@@ -18,6 +17,7 @@ import kotlinx.serialization.json.Json
 
 
 val config = "0"
+
 /**
  * Repository class responsible for communicating with the backend SQL API.
  *
@@ -75,7 +75,7 @@ class APICall(private val dataStoreManager: DataStoreManager) {
         val url = "https://$apiUrl:$apiPort/sqlquery?&format=json&exesql=1&configuration=$config&apikey=$apiKey"
 
         return try {
-            val response: HttpResponse = client.post(url){
+            val response: HttpResponse = client.post(url) {
                 contentType(ContentType.Application.Json)
                 setBody(sqlsend)
             }
@@ -85,7 +85,7 @@ class APICall(private val dataStoreManager: DataStoreManager) {
         } catch (e: ClientRequestException) {
             Log.d("APICall", "ClientRequestException: ${e.message}", e)
             null
-        } catch (e: io.ktor.serialization.JsonConvertException){
+        } catch (e: io.ktor.serialization.JsonConvertException) {
             Log.w("APICall", "JsonConvertException:\n Call: $sqlsend\n Error: ${e.message}")
             null
         } catch (e: Exception) {
@@ -120,20 +120,20 @@ class APICall(private val dataStoreManager: DataStoreManager) {
         val url = "https://$apiUrl:$apiPort/executesql?&format=json&exesql=1&configuration=$config&apikey=$apiKey"
 
         return try {
-            val response: HttpResponse = client.post(url){
+            val response: HttpResponse = client.post(url) {
                 contentType(ContentType.Application.Json)
                 setBody(sqlsend)
             }
-            
+
             response.status.toString()
 
 
         } catch (e: ClientRequestException) {
             Log.d("APICall", "ClientRequestException: ${e.message}", e)
             null
-        } catch (e: io.ktor.serialization.JsonConvertException){
+        } catch (e: io.ktor.serialization.JsonConvertException) {
             Log.w("APICall", "JsonConvertException:\n Call: $sqlsend\n Error: ${e.message}")
-                null
+            null
         } catch (e: Exception) {
             Log.e("APICall", "Exception while querying API: ${e.message}", e)
             null

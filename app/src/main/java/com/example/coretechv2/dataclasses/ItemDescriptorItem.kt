@@ -20,9 +20,9 @@ package com.example.coretechv2.dataclasses
  * @property type The type or classification of the item.
  * @property sysID The unique system identifier for the item.
  */
-data class ItemDescriptorItem (
+data class ItemDescriptorItem(
     var code: String = "",
-    var description: String  = "",
+    var description: String = "",
     var unit: String = "",
     var status: String = "",
     var barcode: String = "",
@@ -33,7 +33,7 @@ data class ItemDescriptorItem (
     var availableQty: Double? = null,
     var freeQty: Double? = null,
     var type: String = "",
-    var sysID : Int? = null
+    var sysID: Int? = null
 )
 
 

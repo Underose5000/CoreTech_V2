@@ -4,37 +4,32 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.coretechv2.repository.DataStoreManager
-import com.example.coretechv2.viewmodel.APISettingViewModel
 import com.example.coretechv2.viewmodel.SharedViewModel
 
 
 /**
- * Factory class used to create instances of [APISettingViewModel]
- * with required constructor dependencies.
+ * Factory responsible for creating instances of [SharedViewModel].
  *
- * This factory provides:
- * - Application-level [Context]
- * - [DataStoreManager] dependency injection
+ * This factory is required because [SharedViewModel] has a constructor dependency
+ * that cannot be provided automatically by the default [ViewModelProvider].
  *
- * Required because [APISettingViewModel] has a non-empty constructor
- * and cannot be automatically instantiated by the default
- * [ViewModelProvider].
+ * [DataStoreManager] is provided to [SharedViewModel] to handle API and persistent
+ * data access.
  *
- * @property context Application context used to initialize DataStoreManager.
+ * @property context The application context used to initialise [DataStoreManager].
  */
 class SharedViewModelFactory(
     private val context: Context
-) : ViewModelProvider.Factory{
+) : ViewModelProvider.Factory {
 
     /**
-     * Creates a new instance of the requested ViewModel class.
+     * Creates an instance of the requested ViewModel.
      *
-     * Initializes:
-     * - [DataStoreManager]
-     * - [APISettingViewModel]
+     * Initialises the required [DataStoreManager] and uses it to create
+     * a [SharedViewModel].
      *
-     * @param modelClass The ViewModel class being requested.
-     * @return Instance of [APISettingViewModel].
+     * @param modelClass The class of the ViewModel to be created.
+     * @return A new [SharedViewModel] instance cast to the requested type.
      */
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
 

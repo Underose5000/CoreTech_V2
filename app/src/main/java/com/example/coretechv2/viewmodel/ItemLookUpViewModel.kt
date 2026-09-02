@@ -14,20 +14,19 @@ import com.example.coretechv2.repository.DataStoreManager
 import kotlinx.coroutines.launch
 
 /**
- * ViewModel responsible for managing Gel Time Test data and UI state.
+ * ViewModel responsible for managing item and descriptor lookup data.
  *
- * This ViewModel handles:
- * - User input for gel time readings (hours, minutes, seconds, catalyst, etc.)
- * - Loading existing gel test data or initializing new tests
- * - Saving gel time tests via API (INSERT / UPDATE)
- * - Converting time formats for database storage
- * - Managing UI state such as dropdowns and popup dialogs
- * - Handling navigation flow for test screen lifecycle
+ * [ItemLookUpViewModel] retrieves item and descriptor information from the
+ * database through [APICall], maintains the list of available items, provides
+ * search functionality, and stores the currently selected item.
  *
- * It interacts with:
- * - [APICall] for database communication
- * - [SharedViewModel] for shared app state (order, user, assembly header)
- * - Utility functions for time formatting (HMMSS conversion)
+ * The ViewModel also communicates the selected item to [SharedViewModel] so
+ * that it can be accessed by other screens within the application.
+ *
+ * @param dataStoreManager Provides access to application settings and API
+ * configuration required by [APICall].
+ * @param sharedViewModel Shared ViewModel used to pass the selected item to
+ * other parts of the application.
  */
 class ItemLookUpViewModel(private val dataStoreManager: DataStoreManager, var sharedViewModel: SharedViewModel) : ViewModel() {
     private val apiCall = APICall(dataStoreManager)
@@ -39,7 +38,6 @@ class ItemLookUpViewModel(private val dataStoreManager: DataStoreManager, var sh
     var openPopupMessage = mutableStateOf(false)
         private set
 
-
     var selectedItem by mutableStateOf(ItemDescriptorItem())
         private set
     var Searchfield by mutableStateOf("")
@@ -48,43 +46,50 @@ class ItemLookUpViewModel(private val dataStoreManager: DataStoreManager, var sh
         private set
     var itemListSearched = mutableStateListOf<APICallTables.ItemDescriptor>()
         private set
+
     /**
-     * Resets the popup message visibility state.
+     * Closes the popup message.
+     *
+     * Sets [closePopupMessage] to false so that the popup can remain closed
+     * after the associated UI action has been processed.
      */
-    fun closePopupMessage(){
+    fun closePopupMessage() {
         closePopupMessage.value = false
     }
 
     /**
-     * Closes the gel test screen and triggers navigation back.
+     * Closes the item lookup/test screen.
+     *
+     * Sets [closeTestScreen] to false so that the close event can be reset
+     * after it has been handled by the UI.
      */
-    fun closeTestScreen(){
+    fun closeTestScreen() {
         closeTestScreen.value = false
     }
 
     /**
-     * Resets the popup trigger state.
+     * Resets the popup message open state.
+     *
+     * Sets [openPopupMessage] to false after the popup open event has been
+     * processed.
      */
-    fun openPopupMessage(){
+    fun openPopupMessage() {
         openPopupMessage.value = false
     }
 
-
     /**
-     * Retrieves the current list of Items and Descriptors
+     * Retrieves all non-obsolete items and descriptors from the database.
      *
-     * This function:
-     * - Calls database on API
-     * - Retrieves all items that are not obsolete
-     * - Unions all descriptors that are not obsolete
+     * Item and descriptor records are combined into a single list using a
+     * database UNION query. The resulting data is stored in [itemsList] and
+     * [itemListSearched] so that both the complete and currently displayed
+     * lists are synchronised.
      *
-     * On success:
-     * - Returns list of items/descriptors to itemList
-     *
-     * On failure:
-     * - Returns empty list to itemList
+     * The database operation is performed within [viewModelScope] to ensure
+     * that the coroutine is cancelled automatically when the ViewModel is
+     * cleared.
      */
-    fun retrieveItems(){
+    fun retrieveItems() {
         viewModelScope.launch {
             val call = "SELECT ITEMCODE AS CODE, ITEMDESCRIPTION AS DESCRIPTION, ITEMUNIT AS UNIT, ITEMSTATUS AS STATUS, ITEMBARCODE AS BARCODE, ITEMCATEGORY AS CATEGORY, " +
                     "ONHANDQTY, SUPPLYQTY, DEMANDQTY, AVAILABLEQTY, FREEQTY, 'Item Code' AS TYPE, SYSUNIQUEID FROM ITEMMASTER where ITEMSTATUS <> 'Obsolete' " +
@@ -92,21 +97,34 @@ class ItemLookUpViewModel(private val dataStoreManager: DataStoreManager, var sh
                     "SELECT DESCRIPTORCODE AS CODE, DESCRIPTORDESCRIPTION AS DESCRIPTION, DESCRIPTORUNIT AS UNIT, DESCRIPTORSTATUS AS STATUS, DESCRIPTORBARCODE AS BARCODE, DESCRIPTORCATEGORY AS CATEGORY, " +
                     "NULL AS ONHANDQTY, NULL AS SUPPLYQTY, NULL AS DEMANDQTY, NULL AS AVAILABLEQTY, NULL AS FREEQTY, 'Descriptor Code' AS TYPE, SYSUNIQUEID FROM DESCRIPTORMASTER where DESCRIPTORSTATUS <> 'Obsolete' order by 12 DESC, 1 ASC"
 
-            val itemscall : List<APICallTables.ItemDescriptor>? = apiCall.query(call)
+            val itemscall: List<APICallTables.ItemDescriptor>? = apiCall.query(call)
 
             itemsList.clear()
             itemListSearched.clear()
-            itemscall?.let{
+            itemscall?.let {
                 itemsList.addAll(it)
                 itemListSearched.addAll(it)
             }
         }
     }
 
-    fun onSearchFieldChange(newValue: String){
+    /**
+     * Updates the search field and filters the available item list.
+     *
+     * When the search field is blank, all items from [itemsList] are displayed.
+     * Otherwise, the search text is split into individual terms and an item
+     * must contain every search term within its code, description, category,
+     * or barcode to be included in [itemListSearched].
+     *
+     * Searching is case-insensitive and allows multiple search terms to be
+     * entered in any order.
+     *
+     * @param newValue The new text entered into the search field.
+     */
+    fun onSearchFieldChange(newValue: String) {
         Searchfield = newValue
         itemListSearched.clear()
-        if (newValue.isBlank()){
+        if (newValue.isBlank()) {
             itemListSearched.addAll(itemsList)
         } else {
             val searchTerms = Searchfield
@@ -132,9 +150,16 @@ class ItemLookUpViewModel(private val dataStoreManager: DataStoreManager, var sh
         }
     }
 
-
-
-    fun getSelectedItem(item: APICallTables.ItemDescriptor){
+    /**
+     * Sets the supplied item as the currently selected item.
+     *
+     * The selected item's properties are copied into [selectedItem], and a
+     * copy of the resulting item is stored in [SharedViewModel.currentItem]
+     * so that other screens can access the selected item.
+     *
+     * @param item The item or descriptor selected by the user.
+     */
+    fun getSelectedItem(item: APICallTables.ItemDescriptor) {
         selectedItem.apply {
             code = item.CODE
             description = item.DESCRIPTION

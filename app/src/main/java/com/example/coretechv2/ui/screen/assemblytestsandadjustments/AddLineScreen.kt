@@ -1,7 +1,6 @@
 package com.example.coretechv2.ui.screen.assemblytestsandadjustments
 
 import android.util.Log
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -12,7 +11,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
@@ -22,24 +20,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color.Companion.Blue
-import androidx.compose.ui.graphics.Color.Companion.Red
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.coretechv2.dataclasses.APICallTables
 import com.example.coretechv2.dataclasses.APICallTypes
-import com.example.coretechv2.dataclasses.StepNames
-import com.example.coretechv2.dataclasses.assemblydataclasses.VisSettings
 import com.example.coretechv2.factory.assemblytests.AddLineViewModelFactory
-import com.example.coretechv2.factory.assemblytests.AdjustmentsViewModelFactory
 import com.example.coretechv2.ui.component.OutlinedStyleButton
 import com.example.coretechv2.ui.component.OutlinedStyleDoubleNumberField
 import com.example.coretechv2.ui.component.OutlinedStyleTextAndButtonField
@@ -47,8 +38,31 @@ import com.example.coretechv2.ui.component.PopupWindow
 import com.example.coretechv2.ui.component.SearchResultBox
 import com.example.coretechv2.viewmodel.SharedViewModel
 import com.example.coretechv2.viewmodel.assemblytests.AddLineViewModel
-import com.example.coretechv2.viewmodel.assemblytests.AdjustmentsViewModel
 
+/**
+ * Displays the screen used to add or update an assembly line.
+ *
+ * Creates and manages an [AddLineViewModel] using the provided
+ * [SharedViewModel]. When the screen is first displayed, available items are
+ * retrieved and the supplied step names are loaded into the view model.
+ *
+ * The screen allows the user to select an item, choose an assembly step, and
+ * enter the quantity for the line. When updating an existing line, the item
+ * selection field is read-only; when adding a new line, the user can open the
+ * item selection popup.
+ *
+ * Popup messages and screen state are synchronised between the
+ * [AddLineViewModel] and [SharedViewModel]. Tapping outside an input field
+ * clears the current focus.
+ *
+ * The user can either cancel the operation or save the line using the
+ * corresponding buttons.
+ *
+ * @param sharedViewModel Shared view model used to manage application-wide
+ * state, including the current item, save type, and popup messages.
+ * @param stepNames List of available assembly step names used to populate the
+ * step selection dropdown.
+ */
 @Composable
 fun AddLineScreen(sharedViewModel: SharedViewModel, stepNames: SnapshotStateList<Any>) {
     val context = LocalContext.current
@@ -57,13 +71,13 @@ fun AddLineScreen(sharedViewModel: SharedViewModel, stepNames: SnapshotStateList
     )
     val focusManager = LocalFocusManager.current
 
-    LaunchedEffect(Unit){
+    LaunchedEffect(Unit) {
         Log.d("add Line", "LaunchedEffect(Unit) Search Field = ${viewModel.Searchfield}")
         viewModel.retrieveItems()
         viewModel.onStepNamesLoad(stepNames)
     }
 
-    LaunchedEffect(sharedViewModel.currentItem.value){
+    LaunchedEffect(sharedViewModel.currentItem.value) {
         if (sharedViewModel.currentItem.value.code.isNotEmpty()) {
             viewModel.closeSearchBoxs()
         }
@@ -78,7 +92,7 @@ fun AddLineScreen(sharedViewModel: SharedViewModel, stepNames: SnapshotStateList
         sharedViewModel.openMessagePopup()
         viewModel.openPopupMessage()
     }
-    if(viewModel.closeTestScreen.value){
+    if (viewModel.closeTestScreen.value) {
         sharedViewModel.closePopup()
         viewModel.closeTestScreen()
     }
@@ -112,17 +126,19 @@ fun AddLineScreen(sharedViewModel: SharedViewModel, stepNames: SnapshotStateList
         ) {
 
             Text(text = "Item")
-            Row(modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 if (sharedViewModel.saveType == APICallTypes.UPDATE) {
-                OutlinedStyleTextAndButtonField(
-                    value = viewModel.Searchfield,
-                    onValueChange = viewModel::onSearchFieldChange,
-                    icon = Icons.Filled.Search,
-                    onClick = {},
-                    modifier = Modifier.weight(6f),
-                    readOnly = true
-                )
+                    OutlinedStyleTextAndButtonField(
+                        value = viewModel.Searchfield,
+                        onValueChange = viewModel::onSearchFieldChange,
+                        icon = Icons.Filled.Search,
+                        onClick = {},
+                        modifier = Modifier.weight(6f),
+                        readOnly = true
+                    )
                 } else {
                     OutlinedStyleTextAndButtonField(
                         value = viewModel.Searchfield,
@@ -133,14 +149,17 @@ fun AddLineScreen(sharedViewModel: SharedViewModel, stepNames: SnapshotStateList
                     )
                 }
             }
-            Box(){
+            Box() {
                 if (viewModel.showSearchBox) {
-                SearchResultBox(viewModel.itemListSearched.toList(), sharedViewModel)
-            }}
+                    SearchResultBox(viewModel.itemListSearched.toList(), sharedViewModel)
+                }
+            }
 
         }
         Row(
-            modifier = Modifier.weight(2f).fillMaxWidth(),
+            modifier = Modifier
+                .weight(2f)
+                .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Spacer(modifier = Modifier.weight(1f))
@@ -176,12 +195,12 @@ fun AddLineScreen(sharedViewModel: SharedViewModel, stepNames: SnapshotStateList
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(text = "Qty")
-                Row(modifier = Modifier.fillMaxWidth()){
-                OutlinedStyleDoubleNumberField(
-                    modifier = Modifier.weight(1f),
-                    value = viewModel.lineQty.value,
-                    onValueChange = { newValue -> viewModel.onAddLineQty(newValue) }
-                )
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedStyleDoubleNumberField(
+                        modifier = Modifier.weight(1f),
+                        value = viewModel.lineQty.value,
+                        onValueChange = { newValue -> viewModel.onAddLineQty(newValue) }
+                    )
                 }
             }
             Spacer(modifier = Modifier.weight(1f))

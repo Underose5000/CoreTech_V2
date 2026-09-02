@@ -2,7 +2,6 @@ package com.example.coretechv2.ui.screen
 
 import android.annotation.SuppressLint
 import android.content.res.Configuration
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -90,6 +89,21 @@ import com.example.coretechv2.viewmodel.AssemblyOrderDetailsViewModel
 import com.example.coretechv2.viewmodel.SharedViewModel
 import java.text.DecimalFormat
 
+/**
+ * Displays the assembly order details screen.
+ *
+ * This screen coordinates the assembly order details, assembly lines,
+ * notes, tests, adjustments, menus, and label preview. The layout is
+ * selected dynamically based on the device orientation and screen size.
+ *
+ * The screen supports separate layouts for flip phones, phones in
+ * portrait or landscape orientation, and tablets in portrait or
+ * landscape orientation.
+ *
+ * @param navController The [NavController] used to navigate between screens.
+ * @param sharedViewModel The shared view model used to maintain application
+ * state and communicate with other screens and components.
+ */
 @Composable
 fun AssemblyOrderDetails(
     navController: NavController, sharedViewModel: SharedViewModel
@@ -107,9 +121,9 @@ fun AssemblyOrderDetails(
     val screenDensity = configuration.densityDpi
     viewModel.isTablet = false
 
-    if (screenWidthDp >=550 && screenDensity >= 500){
+    if (screenWidthDp >= 550 && screenDensity >= 500) {
         viewModel.onFlipPhone()
-    } else if (screenWidthDp >=600){
+    } else if (screenWidthDp >= 600) {
         viewModel.isTablet = true
     }
 
@@ -171,9 +185,9 @@ fun AssemblyOrderDetails(
             AssemblyOrderDetailsFlipPhoneLayout(viewModel, sharedViewModel, innerPadding, focusManager)
         } else if (viewModel.isLandscape and viewModel.isTablet) {
             AssemblyOrderDetailsTabletLandscapeLayout(viewModel, sharedViewModel, innerPadding, focusManager)
-        } else if (!viewModel.isLandscape and viewModel.isTablet){
+        } else if (!viewModel.isLandscape and viewModel.isTablet) {
             AssemblyOrderDetailsTabletPortraitLayout(viewModel, sharedViewModel, innerPadding, focusManager)
-        } else if (viewModel.isLandscape and !viewModel.isTablet){
+        } else if (viewModel.isLandscape and !viewModel.isTablet) {
             AssemblyOrderDetailsPhoneLandscapeLayout(viewModel, sharedViewModel, innerPadding, focusManager)
         } else {
             AssemblyOrderDetailsPhonePortraitLayout(viewModel, sharedViewModel, innerPadding, focusManager)
@@ -188,6 +202,16 @@ fun AssemblyOrderDetails(
     }
 }
 
+/**
+ * Displays the assembly order's individual assembly lines.
+ *
+ * Each line displays its description, line code, quantity, and unit.
+ * In normal mode, lines can be selected or batch-entered using click and
+ * long-click actions. In edit mode, the line quantity can be modified.
+ *
+ * @param viewModel The [AssemblyOrderDetailsViewModel] containing the
+ * assembly line data and editing state.
+ */
 @Composable
 fun AssemblyLines(viewModel: AssemblyOrderDetailsViewModel) {
     if (!viewModel.showAssemblyDetails.value) {
@@ -238,7 +262,8 @@ fun AssemblyLines(viewModel: AssemblyOrderDetailsViewModel) {
                                         onValueChange = { newValue -> viewModel.onEditLineChange(newValue, order, index) },
                                         TextStyle(
                                             textAlign = TextAlign.Center,
-                                            color = MaterialTheme.colorScheme.onBackground)
+                                            color = MaterialTheme.colorScheme.onBackground
+                                        )
                                     )
                                     Text(
                                         text = order.LINEUNIT,
@@ -307,7 +332,7 @@ fun AssemblyLines(viewModel: AssemblyOrderDetailsViewModel) {
                                     fontColor = MaterialTheme.colorScheme.onBackground
                                 }
                                 Text(
-                                    text = "${formatter.format((order.ORDERQTY.toDouble()/viewModel.numberOfBatches.value.toDouble()))} ${order.LINEUNIT}",
+                                    text = "${formatter.format((order.ORDERQTY.toDouble() / viewModel.numberOfBatches.value.toDouble()))} ${order.LINEUNIT}",
                                     fontSize = 20.sp,
                                     fontWeight = FontWeight(800),
                                     color = fontColor,
@@ -322,6 +347,20 @@ fun AssemblyLines(viewModel: AssemblyOrderDetailsViewModel) {
     }
 }
 
+/**
+ * Displays the detailed information for the current assembly order.
+ *
+ * The component displays order information such as the order number,
+ * item code, order quantity, completed quantity, order status, required
+ * date, batch information, catalyst settings, viscosity settings, and
+ * gel time configuration.
+ *
+ * When edit mode is enabled, editable fields are displayed for values
+ * that can be modified.
+ *
+ * @param viewModel The [AssemblyOrderDetailsViewModel] containing the
+ * assembly order information and editing state.
+ */
 @Composable
 fun AssemblyDetails(viewModel: AssemblyOrderDetailsViewModel) {
     if (viewModel.showAssemblyDetails.value) {
@@ -361,7 +400,8 @@ fun AssemblyDetails(viewModel: AssemblyOrderDetailsViewModel) {
                                 onValueChange = { newValue -> viewModel.orderQty(newValue) },
                                 TextStyle(
                                     textAlign = TextAlign.Center,
-                                    color = MaterialTheme.colorScheme.onBackground)
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
                             )
                         }
                     } else {
@@ -423,7 +463,8 @@ fun AssemblyDetails(viewModel: AssemblyOrderDetailsViewModel) {
                                 onValueChange = { newValue -> viewModel.onMaxBatchSizeChange(newValue) },
                                 TextStyle(
                                     textAlign = TextAlign.Center,
-                                    color = MaterialTheme.colorScheme.onBackground)
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
                             )
                         }
                     } else {
@@ -432,7 +473,7 @@ fun AssemblyDetails(viewModel: AssemblyOrderDetailsViewModel) {
                                 withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
                                     append("Batch Size: ")
                                 }
-                                append("%.3f".format(viewModel.batchSize.doubleValue/viewModel.numberOfBatches.value.toDouble()))
+                                append("%.3f".format(viewModel.batchSize.doubleValue / viewModel.numberOfBatches.value.toDouble()))
                                 append(" " + viewModel.batchSizeUnit.value)
 
                             },
@@ -465,7 +506,8 @@ fun AssemblyDetails(viewModel: AssemblyOrderDetailsViewModel) {
                                 onValueChange = { newValue -> viewModel.onNumberOfBatchesChange(newValue) },
                                 TextStyle(
                                     textAlign = TextAlign.Center,
-                                    color = MaterialTheme.colorScheme.onBackground)
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
                             )
                         }
                     } else {
@@ -573,8 +615,26 @@ fun AssemblyDetails(viewModel: AssemblyOrderDetailsViewModel) {
     }
 }
 
+/**
+ * Displays the notes, instructions, tests, and adjustments associated
+ * with an assembly order.
+ *
+ * When test and adjustment data is being displayed, the component shows
+ * each test and adjustment in a numbered list. Individual entries can be
+ * selected to open their corresponding editing screen or long-pressed
+ * to delete them.
+ *
+ * When test and adjustment data is hidden, the component instead displays
+ * the assembly instructions and order notes, with an option to edit the
+ * notes.
+ *
+ * @param viewModel The [AssemblyOrderDetailsViewModel] containing the
+ * assembly order notes, tests, adjustments, and UI state.
+ * @param sharedViewModel The [SharedViewModel] used to manage popup
+ * screens and shared application state.
+ */
 @Composable
-fun AssemblyNotesAndTest(viewModel: AssemblyOrderDetailsViewModel, sharedViewModel: SharedViewModel){
+fun AssemblyNotesAndTest(viewModel: AssemblyOrderDetailsViewModel, sharedViewModel: SharedViewModel) {
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -677,18 +737,23 @@ fun AssemblyNotesAndTest(viewModel: AssemblyOrderDetailsViewModel, sharedViewMod
                                     is APICallTables.viscosityTest -> {
                                         ViscosityCard(test)
                                     }
+
                                     is APICallTables.gelTimeTest -> {
                                         GelTimeCard(test)
                                     }
+
                                     is APICallTables.ElongationalBreakTest -> {
                                         ElongationalBreakCard(test)
                                     }
+
                                     is APICallTables.FlammabilityTest -> {
                                         FlammabilityCard(test)
                                     }
+
                                     is APICallTables.ResistivityTest -> {
                                         ResistivityCard(test)
                                     }
+
                                     is APICallTables.peakExothermTest -> {
                                         PeakExothermCard(test)
                                     }
@@ -776,8 +841,21 @@ fun AssemblyNotesAndTest(viewModel: AssemblyOrderDetailsViewModel, sharedViewMod
     }
 }
 
+/**
+ * Displays navigation buttons for switching between the assembly order's
+ * lines, details, notes, and testing sections.
+ *
+ * The available actions depend on the current editing mode and device
+ * layout. On phone layouts, selecting a section also controls which
+ * sections are visible.
+ *
+ * The buttons are disabled while the assembly order is in edit mode.
+ *
+ * @param viewModel The [AssemblyOrderDetailsViewModel] controlling the
+ * currently displayed section and editing state.
+ */
 @Composable
-fun AssemblyButtons(viewModel: AssemblyOrderDetailsViewModel){
+fun AssemblyButtons(viewModel: AssemblyOrderDetailsViewModel) {
     var lineButtonAction = { viewModel.hideAssemblyDetails() }
     var detailsButtonAction = { viewModel.showAssemblyDetails() }
     var notesButtonAction = { viewModel.hideTestAndAdjustments() }
@@ -854,13 +932,28 @@ fun AssemblyButtons(viewModel: AssemblyOrderDetailsViewModel){
     HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
 }
 
+/**
+ * Displays the assembly order details using the layout intended for
+ * flip-phone-sized devices.
+ *
+ * The layout presents navigation buttons and displays one section at a
+ * time. Action and add menus are displayed over the content when requested.
+ *
+ * @param viewModel The [AssemblyOrderDetailsViewModel] containing the
+ * assembly order data and UI state.
+ * @param sharedViewModel The [SharedViewModel] used by the notes, tests,
+ * adjustments, and popup components.
+ * @param innerPadding Padding supplied by the parent scaffold.
+ * @param focusManager The [FocusManager] used to clear focus when the
+ * user taps outside an input field.
+ */
 @Composable
 fun AssemblyOrderDetailsFlipPhoneLayout(
     viewModel: AssemblyOrderDetailsViewModel,
     sharedViewModel: SharedViewModel,
     innerPadding: PaddingValues,
     focusManager: FocusManager
-){
+) {
     LaunchedEffect(Unit) {
         viewModel.showAllDetails()
     }
@@ -909,13 +1002,31 @@ fun AssemblyOrderDetailsFlipPhoneLayout(
     }
 }
 
+/**
+ * Displays the assembly order details using a tablet landscape layout.
+ *
+ * The layout places the assembly details and assembly lines alongside the
+ * notes, tests, and adjustments when all details are being displayed.
+ * When the details view is hidden, the assembly lines occupy the available
+ * content area.
+ *
+ * Action and add menus are displayed over the content when requested.
+ *
+ * @param viewModel The [AssemblyOrderDetailsViewModel] containing the
+ * assembly order data and UI state.
+ * @param sharedViewModel The [SharedViewModel] used by the notes, tests,
+ * adjustments, and popup components.
+ * @param innerPadding Padding supplied by the parent scaffold.
+ * @param focusManager The [FocusManager] used to clear focus when the
+ * user taps outside an input field.
+ */
 @Composable
 fun AssemblyOrderDetailsTabletLandscapeLayout(
     viewModel: AssemblyOrderDetailsViewModel,
     sharedViewModel: SharedViewModel,
     innerPadding: PaddingValues,
     focusManager: FocusManager
-){
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -930,9 +1041,9 @@ fun AssemblyOrderDetailsTabletLandscapeLayout(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        if(viewModel.hideAllDetails.value){
-                AssemblyLines(viewModel)
-        }else {
+        if (viewModel.hideAllDetails.value) {
+            AssemblyLines(viewModel)
+        } else {
             AssemblyButtons(viewModel)
             Row(
                 modifier = Modifier.fillMaxWidth()
@@ -974,13 +1085,30 @@ fun AssemblyOrderDetailsTabletLandscapeLayout(
     }
 }
 
+/**
+ * Displays the assembly order details using a tablet portrait layout.
+ *
+ * The layout vertically arranges the assembly details and lines above
+ * the notes, tests, and adjustments. When the details view is hidden,
+ * the assembly lines occupy the available content area.
+ *
+ * Action and add menus are displayed over the content when requested.
+ *
+ * @param viewModel The [AssemblyOrderDetailsViewModel] containing the
+ * assembly order data and UI state.
+ * @param sharedViewModel The [SharedViewModel] used by the notes, tests,
+ * adjustments, and popup components.
+ * @param innerPadding Padding supplied by the parent scaffold.
+ * @param focusManager The [FocusManager] used to clear focus when the
+ * user taps outside an input field.
+ */
 @Composable
 fun AssemblyOrderDetailsTabletPortraitLayout(
     viewModel: AssemblyOrderDetailsViewModel,
     sharedViewModel: SharedViewModel,
     innerPadding: PaddingValues,
     focusManager: FocusManager
-){
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -995,12 +1123,16 @@ fun AssemblyOrderDetailsTabletPortraitLayout(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        if(viewModel.hideAllDetails.value){
+        if (viewModel.hideAllDetails.value) {
             AssemblyLines(viewModel)
-        }else {
+        } else {
             AssemblyButtons(viewModel)
             Column(
-                modifier = if (viewModel.showAssemblyDetails.value){Modifier.weight(1f)}else{Modifier.weight(2f)}
+                modifier = if (viewModel.showAssemblyDetails.value) {
+                    Modifier.weight(1f)
+                } else {
+                    Modifier.weight(2f)
+                }
             ) {
                 AssemblyDetails(viewModel)
                 AssemblyLines(viewModel)
@@ -1036,13 +1168,30 @@ fun AssemblyOrderDetailsTabletPortraitLayout(
     }
 }
 
+/**
+ * Displays the assembly order details using a phone landscape layout.
+ *
+ * The layout vertically arranges the assembly details and lines above
+ * the notes, tests, and adjustments. When the details view is hidden,
+ * the assembly lines occupy the available content area.
+ *
+ * Action and add menus are displayed over the content when requested.
+ *
+ * @param viewModel The [AssemblyOrderDetailsViewModel] containing the
+ * assembly order data and UI state.
+ * @param sharedViewModel The [SharedViewModel] used by the notes, tests,
+ * adjustments, and popup components.
+ * @param innerPadding Padding supplied by the parent scaffold.
+ * @param focusManager The [FocusManager] used to clear focus when the
+ * user taps outside an input field.
+ */
 @Composable
 fun AssemblyOrderDetailsPhoneLandscapeLayout(
     viewModel: AssemblyOrderDetailsViewModel,
     sharedViewModel: SharedViewModel,
     innerPadding: PaddingValues,
     focusManager: FocusManager
-){
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -1057,12 +1206,16 @@ fun AssemblyOrderDetailsPhoneLandscapeLayout(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        if(viewModel.hideAllDetails.value){
+        if (viewModel.hideAllDetails.value) {
             AssemblyLines(viewModel)
-        }else {
+        } else {
             AssemblyButtons(viewModel)
             Column(
-                modifier = if (viewModel.showAssemblyDetails.value){Modifier.weight(1f)}else{Modifier.weight(2f)}
+                modifier = if (viewModel.showAssemblyDetails.value) {
+                    Modifier.weight(1f)
+                } else {
+                    Modifier.weight(2f)
+                }
             ) {
                 AssemblyDetails(viewModel)
                 AssemblyLines(viewModel)
@@ -1097,13 +1250,30 @@ fun AssemblyOrderDetailsPhoneLandscapeLayout(
     }
 }
 
+/**
+ * Displays the assembly order details using a phone portrait layout.
+ *
+ * The layout displays one section at a time using the assembly navigation
+ * buttons. The available sections include assembly details, assembly lines,
+ * and notes, tests, and adjustments.
+ *
+ * Action and add menus are displayed over the content when requested.
+ *
+ * @param viewModel The [AssemblyOrderDetailsViewModel] containing the
+ * assembly order data and UI state.
+ * @param sharedViewModel The [SharedViewModel] used by the notes, tests,
+ * adjustments, and popup components.
+ * @param innerPadding Padding supplied by the parent scaffold.
+ * @param focusManager The [FocusManager] used to clear focus when the
+ * user taps outside an input field.
+ */
 @Composable
 fun AssemblyOrderDetailsPhonePortraitLayout(
     viewModel: AssemblyOrderDetailsViewModel,
     sharedViewModel: SharedViewModel,
     innerPadding: PaddingValues,
     focusManager: FocusManager
-){
+) {
     LaunchedEffect(Unit) {
         viewModel.showAllDetails()
     }
@@ -1152,7 +1322,16 @@ fun AssemblyOrderDetailsPhonePortraitLayout(
     }
 }
 
-
+/**
+ * Provides a Compose preview of the [AssemblyOrderDetails] screen.
+ *
+ * The preview creates a navigation controller and shared view model and
+ * populates them with sample order and user information. It also displays
+ * any popup or message popup that is opened by the preview state.
+ *
+ * This preview is intended for use within Android Studio and does not
+ * represent a live assembly order.
+ */
 @SuppressLint("ViewModelConstructorInComposable")
 @Preview()
 @Composable

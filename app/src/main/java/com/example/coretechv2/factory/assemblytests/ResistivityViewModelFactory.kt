@@ -5,38 +5,34 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.coretechv2.repository.DataStoreManager
 import com.example.coretechv2.viewmodel.SharedViewModel
-import com.example.coretechv2.viewmodel.assemblytests.ElongationalBreakViewModel
-import com.example.coretechv2.viewmodel.assemblytests.GelTimeViewModel
 import com.example.coretechv2.viewmodel.assemblytests.ResistivityViewModel
 
 /**
- * Factory class responsible for creating instances of [GelTimeViewModel].
+ * Factory responsible for creating instances of [ResistivityViewModel].
  *
- * This factory is required because [GelTimeViewModel] has dependencies that cannot be
- * provided by the default [ViewModelProvider], specifically:
- * - [DataStoreManager] for persistent data storage
- * - [SharedViewModel] for sharing data across multiple ViewModels
+ * This factory is required because [ResistivityViewModel] has dependencies that cannot
+ * be provided by the default [ViewModelProvider], specifically:
+ * - [DataStoreManager] for persistent data storage.
+ * - [SharedViewModel] for sharing data across multiple ViewModels.
  *
- * The [Context] is used to initialise the [DataStoreManager] using the application context
- * to avoid memory leaks.
+ * The [Context] is used to initialise [DataStoreManager] with the application context
+ * to help prevent memory leaks.
  *
  * @property context The context used to initialise [DataStoreManager]. The application
- * context is used internally for safety.
+ * context is used internally.
  * @property sharedViewModel The shared ViewModel instance used to pass data between screens.
- *
- * @throws IllegalArgumentException if the requested ViewModel class is not [GelTimeViewModel].
  */
 
 class ResistivityViewModelFactory(
     private val context: Context,
     val sharedViewModel: SharedViewModel
-) : ViewModelProvider.Factory{
+) : ViewModelProvider.Factory {
 
     /**
-     * Creates a new instance of the requested ViewModel class.
+     * Creates an instance of the requested ViewModel.
      *
      * @param modelClass The class of the ViewModel to be created.
-     * @return A new instance of [GelTimeViewModel] cast to the requested type.
+     * @return A new [ResistivityViewModel] instance cast to the requested type.
      */
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
 

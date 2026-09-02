@@ -1,6 +1,5 @@
 package com.example.coretechv2.viewmodel
 
-import kotlin.math.ceil
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -50,10 +49,23 @@ import com.example.coretechv2.ui.screen.assemblytestsandadjustments.ResistivityS
 import com.example.coretechv2.ui.screen.assemblytestsandadjustments.ViscosityScreen
 import kotlinx.coroutines.launch
 import java.time.LocalDate
-import kotlin.String
-import kotlin.collections.emptyList
-import kotlin.collections.firstOrNull
+import kotlin.math.ceil
 
+/**
+ * ViewModel responsible for managing the details and operations of an assembly order.
+ *
+ * This ViewModel retrieves and manages assembly order information, assembly lines,
+ * tests, adjustments, notes, and label information. It also handles editing,
+ * deleting, completing, and refreshing assembly orders.
+ *
+ * The ViewModel communicates with the Ostendo API through [APICall] and shares
+ * application-level state with [SharedViewModel]. It also maintains UI state for
+ * menus, popups, detail views, editing modes, and test and adjustment screens.
+ *
+ * @property dataStoreManager Provides access to stored application and API settings.
+ * @property sharedViewModel Provides shared application state and communication
+ * with other ViewModels and screens.
+ */
 class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManager, var sharedViewModel: SharedViewModel) : ViewModel() {
 
     private val apiCall = APICall(dataStoreManager)
@@ -111,7 +123,7 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
     var maxBatchSize = mutableStateOf("")
         private set
 
-    var  batchNumber = mutableStateOf("")
+    var batchNumber = mutableStateOf("")
 
     val stepNames = mutableStateListOf<Any>()
 
@@ -129,27 +141,33 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
 
     var actionMenuList: MutableList<MenuItem> = mutableListOf(
         MenuItem(
-            title = {"Refresh page"},
+            title = { "Refresh page" },
             onClick = {
                 reload()
                 showActionMenu = false
             }
         ),
         MenuItem(
-            title = {if (hideAllDetails.value){"Show Details"}else{"Hide Details"}},
+            title = {
+                if (hideAllDetails.value) {
+                    "Show Details"
+                } else {
+                    "Hide Details"
+                }
+            },
             onClick = {
-                if (!hideAllDetails.value && showAssemblyDetails.value){
+                if (!hideAllDetails.value && showAssemblyDetails.value) {
                     showAssemblyDetails.value = false
                     hideAllDetails.value = !hideAllDetails.value
                     showActionMenu = false
-                }else{
+                } else {
                     hideAllDetails.value = !hideAllDetails.value
                     showActionMenu = false
                 }
             }
         ),
         MenuItem(
-            title = {"Edit Order"},
+            title = { "Edit Order" },
             onClick = {
                 savedActionMenuList = actionMenuList.toMutableList()
                 savedAddMenuList = addMenuList.toMutableList()
@@ -157,7 +175,7 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
                 showActionMenu = false
                 actionMenuList = mutableListOf(
                     MenuItem(
-                        title = {"Save Edits"},
+                        title = { "Save Edits" },
                         onClick = {
                             actionMenuList = savedActionMenuList.toMutableList()
                             addMenuList = savedAddMenuList.toMutableList()
@@ -167,7 +185,7 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
                         }
                     ),
                     MenuItem(
-                        title = {"Delete Order"},
+                        title = { "Delete Order" },
                         onClick = {
                             actionMenuList = savedActionMenuList.toMutableList()
                             addMenuList = savedAddMenuList.toMutableList()
@@ -177,19 +195,19 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
                         }
                     ),
                     MenuItem(
-                        title = {"Cancel"},
+                        title = { "Cancel" },
                         onClick = {
                             actionMenuList = savedActionMenuList.toMutableList()
                             addMenuList = savedAddMenuList.toMutableList()
                             editMode = false
                             reload()
                             showActionMenu = false
-                    }
-                )
+                        }
+                    )
                 )
                 addMenuList = mutableListOf(
                     MenuItem(
-                        title = {"Add Line"},
+                        title = { "Add Line" },
                         onClick = {
                             popupDetails.width = 700
                             popupDetails.height = 500
@@ -204,18 +222,18 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
             },
         ),
         MenuItem(
-            title = {"Complete"},
+            title = { "Complete" },
             onClick = {
                 showActionMenu = false
                 completeOrder()
             }
         ),
 
-    )
+        )
 
     var addMenuList = listOf(
         MenuItem(
-            title = {"Viscosity Test"},
+            title = { "Viscosity Test" },
             onClick = {
                 popupDetails.width = 700
                 popupDetails.height = 500
@@ -225,10 +243,10 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
                 }
                 showPopupWindow.value = true
                 showAddMenu = false
-                      },
+            },
         ),
         MenuItem(
-            title = {"Gel Time Test"},
+            title = { "Gel Time Test" },
             onClick = {
                 popupDetails.width = 700
                 popupDetails.height = 500
@@ -241,7 +259,7 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
             },
         ),
         MenuItem(
-            title = {"Elongation Test"},
+            title = { "Elongation Test" },
             onClick = {
                 popupDetails.width = 600
                 popupDetails.height = 350
@@ -254,7 +272,7 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
             },
         ),
         MenuItem(
-            title = {"Flammability Test"},
+            title = { "Flammability Test" },
             onClick = {
                 popupDetails.width = 700
                 popupDetails.height = 500
@@ -267,7 +285,7 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
             },
         ),
         MenuItem(
-            title = {"Resistivity Test"},
+            title = { "Resistivity Test" },
             onClick = {
                 popupDetails.width = 600
                 popupDetails.height = 350
@@ -280,7 +298,7 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
             },
         ),
         MenuItem(
-            title = {"Peak Exo Test"},
+            title = { "Peak Exo Test" },
             onClick = {
                 popupDetails.width = 700
                 popupDetails.height = 500
@@ -293,7 +311,7 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
             },
         ),
         MenuItem(
-            title = {"Adjustment"},
+            title = { "Adjustment" },
             onClick = {
                 popupDetails.width = 700
                 popupDetails.height = 500
@@ -307,50 +325,86 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
         ),
     )
 
-    fun togglePopup(window: MutableState<Boolean>){
+    /**
+     * Toggles the visibility state of the supplied popup window.
+     * @param window The mutable state controlling the popup's visibility.
+     */
+    fun togglePopup(window: MutableState<Boolean>) {
         window.value = !window.value
     }
 
-    fun onFlipPhone(){
+    /**
+     * Records that the device is being used in flip-phone mode.
+     */
+    fun onFlipPhone() {
         isFlipPhone = true
     }
 
-    fun showAssemblyDetails(){
+    /**
+     * Displays the assembly details section.
+     */
+    fun showAssemblyDetails() {
         showAssemblyDetails.value = true
     }
 
-    fun hideAssemblyDetails(){
+    /**
+     * Hides the assembly details section.
+     */
+    fun hideAssemblyDetails() {
         showAssemblyDetails.value = false
     }
 
-    fun showAllDetails(){
+    /**
+     * Enables the display of all assembly details.
+     */
+    fun showAllDetails() {
         hideAllDetails.value = true
     }
 
-    fun hideAllDetails(){
+    /**
+     * Disables the display of all assembly details.
+     */
+    fun hideAllDetails() {
         hideAllDetails.value = false
     }
 
-    fun showTestAndAdjustments(){
+    /**
+     * Displays the tests and adjustments section.
+     */
+    fun showTestAndAdjustments() {
         showTestAndAdjustments.value = true
     }
 
-    fun hideTestAndAdjustments(){
+    /**
+     * Hides the tests and adjustments section.
+     */
+    fun hideTestAndAdjustments() {
         showTestAndAdjustments.value = false
     }
 
-    fun retrieveAssemblyDetails(){
+    /**
+     * Retrieves the assembly order header and assembly line details from the API.
+     *
+     * The retrieved information is used to populate the assembly order state,
+     * calculate the number of batches and batch size, identify assembly steps,
+     * and update the corresponding values in the shared ViewModel.
+     *
+     * The method also updates the assembly header with the calculated batch
+     * information.
+     */
+    fun retrieveAssemblyDetails() {
         viewModelScope.launch {
-            val assemblyHeaderCall : List<APICallTables.AssemblyHeader>? = apiCall.query("SELECT * FROM AssemblyHeader where OrderNumber = '${sharedViewModel.currentOrderNumber.value}'")
+            val assemblyHeaderCall: List<APICallTables.AssemblyHeader>? = apiCall.query("SELECT * FROM AssemblyHeader where OrderNumber = '${sharedViewModel.currentOrderNumber.value}'")
             assemblyHeader = assemblyHeaderCall ?: emptyList()
             orderQty.value = assemblyHeader.firstOrNull()?.ORDERQTY.toString()
-            if (orderQty.value.isNotEmpty() && assemblyHeader.firstOrNull()?.ADDITIONALFIELD_13?.isNotEmpty() == true){
+            if (orderQty.value.isNotEmpty() && assemblyHeader.firstOrNull()?.ADDITIONALFIELD_13?.isNotEmpty() == true) {
                 maxBatchSize.value = assemblyHeader.firstOrNull()?.ADDITIONALFIELD_13!!
-                numberOfBatches.value = ceil(orderQty.value.toDouble()/maxBatchSize.value.toDouble()).toInt().toString()
-                oldNumberOfBatches.value = ceil(orderQty.value.toDouble()/maxBatchSize.value.toDouble()).toInt().toString()
+                numberOfBatches.value = ceil(orderQty.value.toDouble() / maxBatchSize.value.toDouble()).toInt().toString()
+                oldNumberOfBatches.value = ceil(orderQty.value.toDouble() / maxBatchSize.value.toDouble()).toInt().toString()
             }
 
-            val assemblyDetailsLinesCall : List<APICallTables.AssemblyLines>? = apiCall.query("SELECT * FROM AssemblyLines where OrderNumber = '${sharedViewModel.currentOrderNumber.value}' order by LINENUMBER")
+            val assemblyDetailsLinesCall: List<APICallTables.AssemblyLines>? =
+                apiCall.query("SELECT * FROM AssemblyLines where OrderNumber = '${sharedViewModel.currentOrderNumber.value}' order by LINENUMBER")
             assemblyDetailsLines.clear()
             batchSize.doubleValue = 0.0
             for (i in 0 until (assemblyDetailsLinesCall?.size ?: 0)) {
@@ -377,14 +431,14 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
                     ADDITIONALFIELD_6 = assemblyDetailsLinesCall[i].ADDITIONALFIELD_6,
                 )
                 assemblyDetailsLines.add(assemblyDetailsLine)
-                if (assemblyDetailsLinesCall[i].STEPNAME == "Assembly"){
+                if (assemblyDetailsLinesCall[i].STEPNAME == "Assembly") {
                     batchSize.doubleValue += assemblyDetailsLinesCall[i].ORDERQTY
                 }
-                if (!stepNames.contains(assemblyDetailsLinesCall[i].STEPNAME)){
+                if (!stepNames.contains(assemblyDetailsLinesCall[i].STEPNAME)) {
                     stepNames.add(assemblyDetailsLinesCall[i].STEPNAME)
                 }
             }
-            if (batchSize.doubleValue <= 0){
+            if (batchSize.doubleValue <= 0) {
                 batchSize.doubleValue = orderQty.value.toDouble()
                 batchSizeUnit.value = assemblyHeader.first().ITEMUNIT
             }
@@ -399,41 +453,53 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
 
 
             apiCall.insertUpdateDelete(call)
-            
 
 
         }
     }
 
-    fun retrieveTestDetails(){
+    /**
+     * Retrieves all tests, adjustments, and notes associated with the current
+     * assembly order.
+     *
+     * Test records are retrieved from the relevant Ostendo test tables and grouped
+     * by test number. Adjustment records are also included so that tests and
+     * adjustments can be displayed together. The highest test or adjustment number
+     * is used to determine the number of test and adjustment groups.
+     *
+     * Notes associated with the current assembly order are also retrieved and
+     * combined into the ViewModel's notes state.
+     */
+    fun retrieveTestDetails() {
         val testCount = mutableListOf<Int>()
 
         viewModelScope.launch {
-            val viscosityTests : List<APICallTables.viscosityTest>? = apiCall.query("SELECT * FROM OSTDEF_VISCOSITY_TESTS where OrderNumber = '${sharedViewModel.currentOrderNumber.value}'")
+            val viscosityTests: List<APICallTables.viscosityTest>? = apiCall.query("SELECT * FROM OSTDEF_VISCOSITY_TESTS where OrderNumber = '${sharedViewModel.currentOrderNumber.value}'")
             testCount.addAll(viscosityTests?.map { it.TESTNO } ?: emptyList())
-            val gelTimeTests : List<APICallTables.gelTimeTest>? = apiCall.query("SELECT * FROM OSTDEF_GELTIME_TESTS where OrderNumber = '${sharedViewModel.currentOrderNumber.value}'")
+            val gelTimeTests: List<APICallTables.gelTimeTest>? = apiCall.query("SELECT * FROM OSTDEF_GELTIME_TESTS where OrderNumber = '${sharedViewModel.currentOrderNumber.value}'")
             testCount.addAll(gelTimeTests?.map { it.TESTNO } ?: emptyList())
-            val elongationTests : List<APICallTables.ElongationalBreakTest>? = apiCall.query("SELECT * FROM OSTDEF_ELONGATIONAL_TEST where OrderNumber = '${sharedViewModel.currentOrderNumber.value}'")
+            val elongationTests: List<APICallTables.ElongationalBreakTest>? = apiCall.query("SELECT * FROM OSTDEF_ELONGATIONAL_TEST where OrderNumber = '${sharedViewModel.currentOrderNumber.value}'")
             testCount.addAll(elongationTests?.map { it.TESTNO } ?: emptyList())
-            val flameTests : List<APICallTables.FlammabilityTest>? = apiCall.query("SELECT * FROM OSTDEF_FLAMMABILITY_TEST where OrderNumber = '${sharedViewModel.currentOrderNumber.value}'")
+            val flameTests: List<APICallTables.FlammabilityTest>? = apiCall.query("SELECT * FROM OSTDEF_FLAMMABILITY_TEST where OrderNumber = '${sharedViewModel.currentOrderNumber.value}'")
             testCount.addAll(flameTests?.map { it.TESTNO } ?: emptyList())
-            val resistivityTests : List<APICallTables.ResistivityTest>? = apiCall.query("SELECT * FROM OSTDEF_RESISTIVITY_TEST where OrderNumber = '${sharedViewModel.currentOrderNumber.value}'")
+            val resistivityTests: List<APICallTables.ResistivityTest>? = apiCall.query("SELECT * FROM OSTDEF_RESISTIVITY_TEST where OrderNumber = '${sharedViewModel.currentOrderNumber.value}'")
             testCount.addAll(resistivityTests?.map { it.TESTNO } ?: emptyList())
-            val peakExothermTests : List<APICallTables.peakExothermTest>? = apiCall.query("SELECT * FROM OSTDEF_PEAKEXOTHERM_TEST where OrderNumber = '${sharedViewModel.currentOrderNumber.value}'")
+            val peakExothermTests: List<APICallTables.peakExothermTest>? = apiCall.query("SELECT * FROM OSTDEF_PEAKEXOTHERM_TEST where OrderNumber = '${sharedViewModel.currentOrderNumber.value}'")
             testCount.addAll(peakExothermTests?.map { it.TESTNO } ?: emptyList())
 
 
             testCount.sortDescending()
             sharedViewModel.testCount.value = testCount.firstOrNull() ?: 0
 
-            val adjustmentLines : List<APICallTables.assemblyAdjustment>? = apiCall.query("SELECT * FROM OSTDEF_ADJUSTMENTS where OrderNumber = '${sharedViewModel.currentOrderNumber.value}'")
+            val adjustmentLines: List<APICallTables.assemblyAdjustment>? = apiCall.query("SELECT * FROM OSTDEF_ADJUSTMENTS where OrderNumber = '${sharedViewModel.currentOrderNumber.value}'")
             testCount.addAll(adjustmentLines?.map { it.ADJUSTNO } ?: emptyList())
 
-            val notesline : List<APICallTables.notes>? = apiCall.query("SELECT * FROM OSTDEF_NOTES where IDNUMBER = '${sharedViewModel.currentOrderNumber.value}' and TYPE = '${NoteTypes.ASSEMBLY.toStringName()}'")
+            val notesline: List<APICallTables.notes>? =
+                apiCall.query("SELECT * FROM OSTDEF_NOTES where IDNUMBER = '${sharedViewModel.currentOrderNumber.value}' and TYPE = '${NoteTypes.ASSEMBLY.toStringName()}'")
 
 
             val testAndAdjustmentsCount = testCount.toMutableList()
-            if (testAndAdjustmentsCount.isEmpty()){
+            if (testAndAdjustmentsCount.isEmpty()) {
                 testAndAdjustmentsCount.add(0)
             }
             testAndAdjustmentsCount.sortDescending()
@@ -477,16 +543,25 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
                 notes += notesline?.get(NN)?.NOTE
                 notes += "\n\n"
             }
-            
+
         }
     }
 
+    /**
+     * Retrieves label configuration and dangerous-goods information for the
+     * current assembly item.
+     *
+     * Product and box label layouts are constructed from the item, class,
+     * layout, and dangerous-goods information retrieved from the API. Appropriate
+     * label actions are also added to the action menu.
+     */
     fun retrieveLabelData() {
         viewModelScope.launch {
-            val itemInfoCall: List<APICallTables.assemblyLabelItemInfo>? = apiCall.query("SELECT LII.HEADERSYSUNIQUEID, LII.SYSUNIQUEID, LII.ITEMCODE, LII.TOPNAME, LII.MIDDLENAME, LII.BOTTOMNAME, LII.SIZE, LII.QRCODE, LII.VARIANT, LII.BESTBEFORE, LII.LABELSTYLE, LII.BOXQTY, IM.ITEMBARCODE FROM OSTDEF_LABELITEMINFO AS LII JOIN ITEMMASTER AS IM on LII.ITEMCODE = IM.ITEMCODE where LII.ITEMCODE = '${sharedViewModel.currentItemCode.value}'")
+            val itemInfoCall: List<APICallTables.assemblyLabelItemInfo>? =
+                apiCall.query("SELECT LII.HEADERSYSUNIQUEID, LII.SYSUNIQUEID, LII.ITEMCODE, LII.TOPNAME, LII.MIDDLENAME, LII.BOTTOMNAME, LII.SIZE, LII.QRCODE, LII.VARIANT, LII.BESTBEFORE, LII.LABELSTYLE, LII.BOXQTY, IM.ITEMBARCODE FROM OSTDEF_LABELITEMINFO AS LII JOIN ITEMMASTER AS IM on LII.ITEMCODE = IM.ITEMCODE where LII.ITEMCODE = '${sharedViewModel.currentItemCode.value}'")
             itemInfo = itemInfoCall ?: emptyList()
 
-            if(itemInfo.isNotEmpty()) {
+            if (itemInfo.isNotEmpty()) {
                 for (x in 0 until itemInfo.size) {
                     val classInfoCall: List<APICallTables.assemblyLabelClassInfo>? = apiCall.query("Select * from OSTDEF_LABELCLASSINFO where SYSUNIQUEID = '${itemInfo[x].HEADERSYSUNIQUEID}'")
                     val labelLayoutCall: List<APICallTables.assemblyLabelLayout>? = apiCall.query("Select * from OSTDEF_LABELLAYOUTINFO where LABELID = '${itemInfo[x].LABELSTYLE}'")
@@ -536,26 +611,46 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
         }
     }
 
-    fun menuPressed(){
+    /**
+     * Toggles the main action menu and closes the add menu if it is currently open.
+     */
+    fun menuPressed() {
         showAddMenu = false
         showActionMenu = !showActionMenu
     }
 
-    fun addPressed(){
+    /**
+     * Toggles the add menu and closes the main action menu if it is currently open.
+     */
+    fun addPressed() {
         showActionMenu = false
         showAddMenu = !showAddMenu
     }
 
-    fun closeMenus(){
+    /**
+     * Closes both the action menu and the add menu.
+     */
+    fun closeMenus() {
         showAddMenu = false
         showActionMenu = false
     }
 
-    fun openDetailScreen(){
+    /**
+     * Opens the assembly order detail screen.
+     *
+     * Updates the detail-screen state so that the screen is not marked for closing.
+     */
+    fun openDetailScreen() {
         closeDetailScreen.value = false
     }
 
-    fun notesPressed(){
+    /**
+     * Opens the notes entry popup for the current assembly order.
+     *
+     * The popup is configured to display the [NotesScreen] and uses the assembly
+     * note type when saving the note.
+     */
+    fun notesPressed() {
         popupDetails.width = 700
         popupDetails.height = 500
         popupDetails.content = {
@@ -566,20 +661,45 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
         showAddMenu = false
     }
 
-    fun onMaxBatchSizeChange(newValue: String){
+    /**
+     * Updates the maximum batch size with the supplied value.
+     *
+     * @param newValue The new maximum batch size.
+     */
+    fun onMaxBatchSizeChange(newValue: String) {
         maxBatchSize.value = newValue
     }
 
-    fun onNumberOfBatchesChange(newValue: String){
+    /**
+     * Updates the number of batches with the supplied value.
+     *
+     * @param newValue The new number of batches.
+     */
+    fun onNumberOfBatchesChange(newValue: String) {
         numberOfBatches.value = newValue
     }
 
-    fun orderQty(newValue: String){
+    /**
+     * Updates the assembly order quantity with the supplied value.
+     *
+     * @param newValue The new order quantity.
+     */
+    fun orderQty(newValue: String) {
         orderQty.value = newValue
     }
 
-    fun onEditLineChange(newValue: String, field : AssemblyLinesItem, line: Int){
-        
+    /**
+     * Updates the order quantity of an assembly line.
+     *
+     * The specified line is replaced with a copy containing the new order
+     * quantity.
+     *
+     * @param newValue The new order quantity for the assembly line.
+     * @param field The assembly line being edited.
+     * @param line The index of the assembly line within [assemblyDetailsLines].
+     */
+    fun onEditLineChange(newValue: String, field: AssemblyLinesItem, line: Int) {
+
         val updatedList = assemblyDetailsLines
 
         updatedList[line] = updatedList[line].copy(
@@ -587,25 +707,35 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
         )
 
         assemblyDetailsLines = updatedList
-        
+
     }
 
+    /**
+     * Saves changes made while editing the assembly order.
+     *
+     * If the assembly details section is being edited, the order quantity,
+     * number of batches, and maximum batch size are updated in the assembly
+     * header. Otherwise, the quantities of individual assembly lines are saved.
+     *
+     * A success or error message is displayed based on the API response, and
+     * the assembly order is reloaded after the operation.
+     */
     fun saveEditsChange() {
         if (showAssemblyDetails.value) {
-            if (oldNumberOfBatches.value == numberOfBatches.value){
-                numberOfBatches.value = ceil(orderQty.value.toDouble()/maxBatchSize.value.toDouble()).toInt().toString()
+            if (oldNumberOfBatches.value == numberOfBatches.value) {
+                numberOfBatches.value = ceil(orderQty.value.toDouble() / maxBatchSize.value.toDouble()).toInt().toString()
             } else {
-                maxBatchSize.value = (orderQty.value.toDouble()/numberOfBatches.value.toDouble()).toString()
+                maxBatchSize.value = (orderQty.value.toDouble() / numberOfBatches.value.toDouble()).toString()
             }
             viewModelScope.launch {
                 val call = "UPDATE AssemblyHeader SET " +
-                            "ORDERQTY = ${orderQty.value.toDouble()}, " +
-                            "ADDITIONALFIELD_12 = ${numberOfBatches.value.toInt()}, " +
-                            "ADDITIONALFIELD_13 = ${maxBatchSize.value.toDouble()}, " +
-                            "SYSUSERMODIFIED = '${sharedViewModel.currentUser.value}' " +
-                            "WHERE ORDERNUMBER = '${assemblyHeader.first().ORDERNUMBER}'"
+                        "ORDERQTY = ${orderQty.value.toDouble()}, " +
+                        "ADDITIONALFIELD_12 = ${numberOfBatches.value.toInt()}, " +
+                        "ADDITIONALFIELD_13 = ${maxBatchSize.value.toDouble()}, " +
+                        "SYSUSERMODIFIED = '${sharedViewModel.currentUser.value}' " +
+                        "WHERE ORDERNUMBER = '${assemblyHeader.first().ORDERNUMBER}'"
 
-                
+
                 val response = apiCall.insertUpdateDelete(call)
                 if (response == "200 OK") {
                     sharedViewModel.snackBarMessage("Qty Saved successfully")
@@ -640,13 +770,27 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
         }
     }
 
-    fun reload(){
-        if(!closeDetailScreen.value) {
+    /**
+     * Reloads the assembly order information when the detail screen is still open.
+     *
+     * Assembly header, assembly line, test, adjustment, and note information
+     * are refreshed from the API.
+     */
+    fun reload() {
+        if (!closeDetailScreen.value) {
             retrieveAssemblyDetails()
             retrieveTestDetails()
         }
     }
 
+    /**
+     * Toggles the checked state of an assembly line and saves the change to the API.
+     *
+     * If saving the updated checkbox state fails, the change is reverted and
+     * an error message is displayed.
+     *
+     * @param order The assembly line whose checked state is being changed.
+     */
     fun lineChecked(order: AssemblyLinesItem) {
         order.ADDITIONALFIELD_1 = !order.ADDITIONALFIELD_1
         reload()
@@ -658,7 +802,7 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
                     "LINECODE = '${order.LINECODE}' and " +
                     "ORDERNUMBER = '${order.ORDERNUMBER}'"
 
-            
+
             val response = apiCall.insertUpdateDelete(call)
             if (response != "200 OK") {
                 sharedViewModel.snackBarMessage("Error Saving Checkbox, Please Try Again")
@@ -668,14 +812,22 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
         }
     }
 
-    fun batchEntered(order: AssemblyLinesItem){
+    /**
+     * Opens a popup allowing the user to enter or update the batch number
+     * associated with an assembly line.
+     *
+     * The entered batch number is saved to the assembly line through the API.
+     *
+     * @param order The assembly line for which the batch number is being entered.
+     */
+    fun batchEntered(order: AssemblyLinesItem) {
         popupDetails.width = 450
         popupDetails.height = 200
         popupDetails.content = {
-            LaunchedEffect(Unit){
+            LaunchedEffect(Unit) {
                 batchNumber.value = order.ADDITIONALFIELD_2
             }
-            
+
             Box(
                 modifier = Modifier
                     .fillMaxSize(),
@@ -686,7 +838,7 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
                         .fillMaxSize()
                         .padding(all = 16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
+                ) {
                     Text(
                         text = "Batch Number",
                         style = MaterialTheme.typography.headlineLarge,
@@ -695,13 +847,14 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
                     )
                     OutlinedStyleTextLine(
                         value = batchNumber.value,
-                        onValueChange = { newValue -> batchNumber.value = newValue
+                        onValueChange = { newValue ->
+                            batchNumber.value = newValue
                         }
                     )
                     Row(
                         modifier = Modifier.weight(2f),
                         verticalAlignment = Alignment.CenterVertically
-                    ){
+                    ) {
                         Spacer(modifier = Modifier.weight(1f))
                         Button(
                             modifier = Modifier
@@ -723,7 +876,7 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
                                                 "LINECODE = '${order.LINECODE}' and " +
                                                 "ORDERNUMBER = '${order.ORDERNUMBER}'"
 
-                                        
+
                                         val response = apiCall.insertUpdateDelete(call)
                                         if (response == "200 OK") {
                                             sharedViewModel.closePopup()
@@ -744,7 +897,14 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
         showPopupWindow.value = true
     }
 
-    fun lineDelete(order: AssemblyLinesItem){
+    /**
+     * Opens a confirmation popup for deleting an assembly line.
+     *
+     * If confirmed, the selected assembly line is deleted from the API.
+     *
+     * @param order The assembly line to delete.
+     */
+    fun lineDelete(order: AssemblyLinesItem) {
         popupDetails.width = 450
         popupDetails.height = 230
         popupDetails.content = {
@@ -775,7 +935,7 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
                     Row(
                         modifier = Modifier.weight(2f),
                         verticalAlignment = Alignment.CenterVertically
-                    ){
+                    ) {
                         Spacer(modifier = Modifier.weight(1f))
                         Button(
                             modifier = Modifier
@@ -794,7 +954,7 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
                                             "LINECODE = '${order.LINECODE}' and " +
                                             "ORDERNUMBER = '${order.ORDERNUMBER}'"
 
-                                    
+
                                     val response = apiCall.insertUpdateDelete(call)
                                     if (response == "200 OK") {
                                         sharedViewModel.closePopup()
@@ -812,7 +972,17 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
         showPopupWindow.value = true
     }
 
-    fun testDelete(line: Any){
+    /**
+     * Opens a confirmation popup for deleting a test.
+     *
+     * The test type determines which Ostendo test table is used for the deletion.
+     * This operation is only available while the assembly order is in edit mode.
+     *
+     * @param line The test record to delete. Supported test types include
+     * viscosity, gel time, elongation, flammability, resistivity, and peak
+     * exotherm tests.
+     */
+    fun testDelete(line: Any) {
         if (editMode) {
             popupDetails.width = 450
             popupDetails.height = 230
@@ -917,7 +1087,7 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
                                                 "ORDERNUMBER = '$testOrderNumber' and " +
                                                 "SYSUNIQUEID = $testID"
 
-                                        
+
                                         val response = apiCall.insertUpdateDelete(call)
                                         if (response == "200 OK") {
                                             sharedViewModel.closePopup()
@@ -936,7 +1106,15 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
         }
     }
 
-    fun adjustmentsDelete(line: APICallTables.assemblyAdjustment){
+    /**
+     * Opens a confirmation popup for deleting an assembly adjustment.
+     *
+     * When confirmed, the adjustment is removed and the corresponding adjustment
+     * quantity is deducted from the assembly line.
+     *
+     * @param line The adjustment record to delete.
+     */
+    fun adjustmentsDelete(line: APICallTables.assemblyAdjustment) {
         popupDetails.width = 450
         popupDetails.height = 200
         popupDetails.content = {
@@ -966,7 +1144,7 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
                     Row(
                         modifier = Modifier.weight(2f),
                         verticalAlignment = Alignment.CenterVertically
-                    ){
+                    ) {
                         Spacer(modifier = Modifier.weight(1f))
                         Button(
                             modifier = Modifier
@@ -991,7 +1169,7 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
                                             "LINECODE = '${line.LINECODE}' and " +
                                             "LINENUMBER = '${line.LINENUMBER}'"
 
-                                    
+
                                     val responseCall = apiCall.insertUpdateDelete(call)
                                     val responseAssembly = apiCall.insertUpdateDelete(assemblyLinesCall)
                                     if (responseCall == "200 OK" && responseAssembly == "200 OK") {
@@ -1011,15 +1189,22 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
         showPopupWindow.value = true
     }
 
-    fun completeOrderSend(){
+    /**
+     * Completes the current assembly order by creating an assembly receipt.
+     *
+     * The receipt is created using the order quantity, item information,
+     * receipt warehouse, receipt location, receipt date, and calculated
+     * receipt unit cost.
+     *
+     * If the operation succeeds, the detail screen is marked for closing.
+     */
+    fun completeOrderSend() {
         viewModelScope.launch {
             val itemCall: List<APICallTables.ItemMaster>? = apiCall.query("SELECT * FROM ITEMMASTER WHERE ITEMCODE = '${assemblyHeader.first().ITEMCODE}'")
             val assemblyHeaderCall: List<APICallTables.AssemblyHeader>? = apiCall.query("SELECT * FROM ASSEMBLYHEADER WHERE ORDERNUMBER = '${assemblyHeader.first().ORDERNUMBER}'")
             val date = toDateFormatYYYYMMDD(LocalDate.now())
             val receiptUnitCost = assemblyHeaderCall?.first()?.PLANNEDTOTALCOSTS?.div(assemblyHeader.first().ORDERQTY)
 
-            
-            
 
             val call = "INSERT INTO ASSEMBLYRECEIPTS" +
                     "(ORDERNUMBER, ITEMCODE, RECEIPTQTY, RECEIPTUNIT, RECEIPTDATE, RECEIPTUNITCOST, RECEIPTWAREHOUSE, RECEIPTLOCATION) " +
@@ -1027,7 +1212,7 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
                     "('${assemblyHeader.first().ORDERNUMBER}','${assemblyHeader.first().ITEMCODE}',${assemblyHeader.first().ORDERQTY},'${assemblyHeader.first().ITEMUNIT}', " +
                     "'$date', '${receiptUnitCost}' ,'${itemCall?.first()?.DEFAULTRECEIPTWHOUSE}', '${itemCall?.first()?.DEFAULTRECEIPTLOCATION}')"
 
-            
+
             val response = apiCall.insertUpdateDelete(call)
             if (response == "200 OK") {
                 sharedViewModel.snackBarMessage("Order Completed")
@@ -1038,10 +1223,17 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
         }
     }
 
+    /**
+     * Checks whether the current assembly order is already marked as complete.
+     *
+     * If the order is open, it is completed immediately. If it has already been
+     * completed, a confirmation popup is displayed asking the user whether they
+     * want to continue.
+     */
     fun completeOrder() {
         if (assemblyHeader.first().ORDERSTATUS == "Open") {
             completeOrderSend()
-        } else{
+        } else {
             popupMessageDetails.width = 380
             popupMessageDetails.height = 200
             popupMessageDetails.message = "It looks like this assembly order has \n already been marked as complete.\n\nWould you like to continue?"
@@ -1059,6 +1251,12 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
         }
     }
 
+    /**
+     * Opens a confirmation popup for deleting the current assembly order.
+     *
+     * When confirmed, all assembly lines associated with the order are deleted
+     * before the assembly order header is deleted.
+     */
     fun deleteAssemblyOrder() {
         popupDetails.width = 450
         popupDetails.height = 250
@@ -1089,7 +1287,7 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
                     Row(
                         modifier = Modifier.weight(2f),
                         verticalAlignment = Alignment.CenterVertically
-                    ){
+                    ) {
                         Spacer(modifier = Modifier.weight(1f))
                         Button(
                             modifier = Modifier
@@ -1127,6 +1325,4 @@ class AssemblyOrderDetailsViewModel(private val dataStoreManager: DataStoreManag
         }
         showPopupWindow.value = true
     }
-
-
 }

@@ -1,7 +1,6 @@
 package com.example.coretechv2.ui.screen
 
 import android.Manifest
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -75,7 +74,7 @@ fun APISettingsScreen(
 
         if (granted) {
             viewModel.onCameraAccess()
-            
+
         }
     }
     LaunchedEffect(Unit) {
@@ -124,10 +123,10 @@ fun APISettingsScreen(
         )
 
         OutlinedTextField(
-                value = viewModel.newkey,
-        onValueChange = viewModel::onKeyChange,
-        label = { Text("API Key") },
-        modifier = Modifier.padding(16.dp),
+            value = viewModel.newkey,
+            onValueChange = viewModel::onKeyChange,
+            label = { Text("API Key") },
+            modifier = Modifier.padding(16.dp),
         )
 
         if (viewModel.showErrorMessage.value) {
@@ -157,13 +156,16 @@ fun APISettingsScreen(
         }
     }
 
-    if(viewModel.showScanner.value) {
+    if (viewModel.showScanner.value) {
         Box(modifier = Modifier.fillMaxSize()) {
             QRScanner { scannedCode ->
-                
-                viewModel.onQRCodeScanned(scannedCode) }
+
+                viewModel.onQRCodeScanned(scannedCode)
+            }
             Button(
-                modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 80.dp),
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 80.dp),
                 onClick = { viewModel.closeScanner() }
             ) {
                 Text("Close Scanner")

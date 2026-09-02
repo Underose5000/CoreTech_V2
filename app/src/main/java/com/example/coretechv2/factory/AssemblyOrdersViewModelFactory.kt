@@ -5,43 +5,40 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.coretechv2.repository.DataStoreManager
 import com.example.coretechv2.viewmodel.AssemblyOrdersViewModel
-import com.example.coretechv2.viewmodel.LoginViewModel
 import com.example.coretechv2.viewmodel.SharedViewModel
 
 /**
- * Factory class used to create instances of [AssemblyOrdersViewModel]
- * with required constructor dependencies.
+ * Factory responsible for creating instances of [AssemblyOrdersViewModel].
  *
- * This factory provides:
- * - Application [Context]
- * - [DataStoreManager] for API and persistent data access
+ * This factory provides the dependencies required by [AssemblyOrdersViewModel]:
+ * - [DataStoreManager] for API and persistent data access.
+ * - [SharedViewModel] for sharing application state between screens.
  *
- * Required because [AssemblyOrdersViewModel] uses constructor
- * injection and cannot be instantiated automatically by the
- * default [ViewModelProvider].
+ * A custom factory is required because [AssemblyOrdersViewModel] uses constructor
+ * dependencies that cannot be provided automatically by the default [ViewModelProvider].
  *
- * @property context Application context used to initialize DataStoreManager.
+ * @property context The application context used to initialise [DataStoreManager].
+ * @property sharedViewModel The shared ViewModel instance used to provide application state.
  */
 class AssemblyOrdersViewModelFactory(
     private val context: Context,
     val sharedViewModel: SharedViewModel
-) : ViewModelProvider.Factory{
+) : ViewModelProvider.Factory {
 
     /**
-     * Creates a new instance of the requested ViewModel class.
+     * Creates an instance of the requested ViewModel.
      *
-     * Initializes:
-     * - [DataStoreManager]
-     * - [AssemblyOrdersViewModel]
+     * Initialises the required [DataStoreManager] and uses it to create
+     * an [AssemblyOrdersViewModel] with the provided [SharedViewModel].
      *
-     * @param modelClass The ViewModel class being requested.
-     * @return Instance of [AssemblyOrdersViewModel].
+     * @param modelClass The class of the ViewModel to be created.
+     * @return A new [AssemblyOrdersViewModel] instance cast to the requested type.
      */
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
 
         val dataStoreManager =
             DataStoreManager(context.applicationContext)
 
-        return AssemblyOrdersViewModel(dataStoreManager,sharedViewModel) as T
+        return AssemblyOrdersViewModel(dataStoreManager, sharedViewModel) as T
     }
 }

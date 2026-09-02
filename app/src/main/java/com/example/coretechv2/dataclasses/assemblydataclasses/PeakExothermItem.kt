@@ -16,11 +16,11 @@ import androidx.compose.runtime.MutableState
  * @property second Second component of gel time
  * @property sysID Database unique identifier (nullable for new records)
  */
-data class PeakExothermItem (
+data class PeakExothermItem(
     var testNumber: String = "1",
-    var catPercent: String  = "2",
+    var catPercent: String = "2",
     var temperature: String = "",
-    var catalyst : String = "N/A",
+    var catalyst: String = "N/A",
     var hour: String = "",
     var minute: String = "",
     var second: String = "",
@@ -47,7 +47,8 @@ fun peakExoHasValue(item: MutableState<PeakExothermItem>): Boolean {
     if (item.value.hour.isNotBlank() ||
         item.value.minute.isNotBlank() ||
         item.value.second.isNotBlank() ||
-        item.value.temperature.isNotBlank()){
+        item.value.temperature.isNotBlank()
+    ) {
         return true
     }
     return false

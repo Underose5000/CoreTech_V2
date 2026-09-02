@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.coretechv2.repository.DataStoreManager
-import com.example.coretechv2.viewmodel.APISettingViewModel
 import com.example.coretechv2.viewmodel.LoginViewModel
 
 /**
@@ -23,7 +22,7 @@ import com.example.coretechv2.viewmodel.LoginViewModel
  */
 class LoginViewModelFactory(
     private val context: Context
-) : ViewModelProvider.Factory{
+) : ViewModelProvider.Factory {
 
     /**
      * Creates a new instance of the requested ViewModel class.

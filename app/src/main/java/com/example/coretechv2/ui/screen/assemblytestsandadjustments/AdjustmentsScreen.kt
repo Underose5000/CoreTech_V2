@@ -1,6 +1,5 @@
 package com.example.coretechv2.ui.screen.assemblytestsandadjustments
 
-import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -36,6 +35,30 @@ import com.example.coretechv2.ui.component.SearchResultBox
 import com.example.coretechv2.viewmodel.SharedViewModel
 import com.example.coretechv2.viewmodel.assemblytests.AdjustmentsViewModel
 
+/**
+ * Displays the adjustment entry screen for an assembly item.
+ *
+ * Creates and manages an [AdjustmentsViewModel] using the provided
+ * [SharedViewModel]. When the screen is first displayed, available items are
+ * retrieved and the adjustment form is initialised using the supplied
+ * adjustment record, if one is provided.
+ *
+ * The screen allows the user to select an item and enter an adjustment number
+ * and quantity. When an existing adjustment is being updated, the item
+ * selection field is read-only; otherwise, the user can open the item
+ * selection popup.
+ *
+ * The screen provides controls for clearing the current values, cancelling
+ * the operation, and saving the adjustment. Popup messages and screen state
+ * are synchronised between the [AdjustmentsViewModel] and [SharedViewModel].
+ *
+ * Tapping outside an input field clears the current focus.
+ *
+ * @param sharedViewModel Shared view model used to manage application-wide
+ * state, including the current item, save type, and popup messages.
+ * @param adjustment Existing adjustment record to edit, or `null` when creating
+ * a new adjustment.
+ */
 @Composable
 fun AdjustmentsScreen(sharedViewModel: SharedViewModel, adjustment: APICallTables.assemblyAdjustment? = null) {
     val context = LocalContext.current
@@ -44,13 +67,13 @@ fun AdjustmentsScreen(sharedViewModel: SharedViewModel, adjustment: APICallTable
     )
     val focusManager = LocalFocusManager.current
 
-    LaunchedEffect(Unit){
+    LaunchedEffect(Unit) {
         viewModel.retrieveItems()
         viewModel.onClear(adjustment)
 
     }
-    LaunchedEffect(sharedViewModel.currentItem.value){
-        
+    LaunchedEffect(sharedViewModel.currentItem.value) {
+
         viewModel.closeSearchBoxs()
     }
     if (viewModel.closePopupMessage.value) {
@@ -62,7 +85,7 @@ fun AdjustmentsScreen(sharedViewModel: SharedViewModel, adjustment: APICallTable
         sharedViewModel.openMessagePopup()
         viewModel.openPopupMessage()
     }
-    if(viewModel.closeTestScreen.value){
+    if (viewModel.closeTestScreen.value) {
         sharedViewModel.closePopup()
         viewModel.closeTestScreen()
     }
@@ -96,17 +119,19 @@ fun AdjustmentsScreen(sharedViewModel: SharedViewModel, adjustment: APICallTable
         ) {
 
             Text(text = "Item")
-            Row(modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 if (sharedViewModel.saveType == APICallTypes.UPDATE) {
-                OutlinedStyleTextAndButtonField(
-                    value = viewModel.Searchfield,
-                    onValueChange = viewModel::onSearchFieldChange,
-                    icon = Icons.Filled.Search,
-                    onClick = {},
-                    modifier = Modifier.weight(6f),
-                    readOnly = true
-                )
+                    OutlinedStyleTextAndButtonField(
+                        value = viewModel.Searchfield,
+                        onValueChange = viewModel::onSearchFieldChange,
+                        icon = Icons.Filled.Search,
+                        onClick = {},
+                        modifier = Modifier.weight(6f),
+                        readOnly = true
+                    )
                 } else {
                     OutlinedStyleTextAndButtonField(
                         value = viewModel.Searchfield,
@@ -117,10 +142,11 @@ fun AdjustmentsScreen(sharedViewModel: SharedViewModel, adjustment: APICallTable
                     )
                 }
             }
-            Box(){
+            Box() {
                 if (viewModel.showSearchBox) {
-                SearchResultBox(viewModel.itemListSearched.toList(), sharedViewModel)
-            }}
+                    SearchResultBox(viewModel.itemListSearched.toList(), sharedViewModel)
+                }
+            }
 
         }
         Row(

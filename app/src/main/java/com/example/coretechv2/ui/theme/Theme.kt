@@ -1,17 +1,20 @@
 package com.example.coretechv2.ui.theme
 
-import android.app.Activity
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 
+/**
+ * Defines the Material 3 colour scheme used when the application is displayed
+ * using the dark theme.
+ *
+ * Most colours are explicitly defined to maintain a consistent CoreTech V2
+ * appearance. Unused Material 3 colour roles are assigned [testColor] so that
+ * they are visually distinct during development.
+ */
 private val DarkColorScheme = darkColorScheme(
     primary = Color(0xFF0AA0D9),
     onPrimary = Color(0xFFFFFFFF),
@@ -64,6 +67,13 @@ private val DarkColorScheme = darkColorScheme(
     onTertiaryFixedVariant = testColor,
 )
 
+/**
+ * Defines the Material 3 colour scheme used when the application is displayed
+ * using the light theme.
+ *
+ * The colour palette uses the CoreTech V2 blue colour scheme while providing
+ * dark text and controls that remain readable against the light background.
+ */
 private val LightColorScheme = lightColorScheme(
     primary = Color(0xFF0879A6),
     onPrimary = Color(0xFFFFFFFF),
@@ -80,10 +90,22 @@ private val LightColorScheme = lightColorScheme(
     inverseOnSurface = Color(0xFFFFFFFF),
 )
 
+/**
+ * Applies the CoreTech V2 Material 3 theme to the supplied composable
+ * content.
+ *
+ * The theme automatically selects either the light or dark colour scheme
+ * based on the device's current system theme unless [darkTheme] is explicitly
+ * provided.
+ *
+ * @param darkTheme determines whether the dark colour scheme should be used.
+ * Defaults to the system's current dark-theme setting.
+ * @param content the composable content to which the CoreTech V2 theme is
+ * applied.
+ */
 @Composable
 fun CoreTechV2Theme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
     val colorScheme = if (darkTheme) {

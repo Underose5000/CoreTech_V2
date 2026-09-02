@@ -1,10 +1,9 @@
 package com.example.coretechv2.dataclasses.assemblydataclasses
 
 import androidx.compose.runtime.MutableState
-import com.example.coretechv2.dataclasses.ItemDescriptorItem
 
 
-data class AssemblyLinesItem (
+data class AssemblyLinesItem(
     val ORDERNUMBER: String,
     val STEPNAME: String,
     val STEPSEQUENCE: Int,
@@ -13,7 +12,7 @@ data class AssemblyLinesItem (
     val CODETYPE: String,
     val LINECODE: String,
     val LINEDESCRIPTION: String,
-    val LINEUNIT : String,
+    val LINEUNIT: String,
     var ORDERQTY: String,
     val TOTALISSUEDQTY: String,
     val REMAININGQTY: String,
@@ -35,9 +34,10 @@ enum class AssemblyLinesField {
 
 fun assemblyLinesHasValue(item: MutableState<AdjustmentItem>): Boolean {
     if (item.value.item != null ||
-        item.value.qty.isNotBlank()){
+        item.value.qty.isNotBlank()
+    ) {
         return true
-        }
+    }
     return false
 }
 
