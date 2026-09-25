@@ -44,6 +44,7 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusManager
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -352,8 +353,8 @@ fun AssemblyLinesData(viewModel: AssemblyOrderDetailsViewModel, order: AssemblyL
                 .fillMaxHeight()
                 .padding(16.dp), contentAlignment = Alignment.CenterEnd
         ) {
-            var fontColor = MaterialTheme.colorScheme.onBackground
-            var formatter = DecimalFormat("0.000")
+            var fontColor: Color
+            var formatter: DecimalFormat
             if (order.ORDERQTY.toDouble() < 0.004) {
                 formatter = DecimalFormat("0.0000")
                 fontColor = MaterialTheme.colorScheme.primary
@@ -667,7 +668,7 @@ fun AssemblyNotesAndTest(viewModel: AssemblyOrderDetailsViewModel, sharedViewMod
                 Text("No Tests Or Adjustments")
             }
 
-            LazyColumn() {
+            LazyColumn {
                 itemsIndexed(viewModel.testAndAdjustments) {index, values ->
                     AssemblyTestData(viewModel, sharedViewModel, values, index)
                 }
