@@ -353,6 +353,14 @@ class AssemblyOrdersViewModel(private val dataStoreManager: DataStoreManager, va
     }
 
     /**
+     * Initialises the record order lists using data from the shared ViewModel
+     * when available.
+     *
+     * If the shared ViewModel does not contain the required data, the relevant
+     * information is retrieved from the API instead.
+     */
+
+    /**
      * Retrieves all open assembly orders from the API.
      *
      * The retrieved orders are stored both locally in this ViewModel and in the

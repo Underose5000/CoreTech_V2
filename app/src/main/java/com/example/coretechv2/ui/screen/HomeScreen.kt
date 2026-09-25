@@ -62,7 +62,7 @@ fun HomeScreen(
     if (screenWidthDp >= 550 && screenDensity >= 500) {
         isFlipPhone = true
         Log.d("screen dp size", "is FLip")
-    } else if (screenWidthDp >= 600) {
+    } else if ((screenWidthDp >= 600 && !isLandscape) || (screenWidthDp >= 1000 && isLandscape)) {
         isTablet = true
         Log.d("screen dp size", "is Tablet")
     } else {
@@ -98,8 +98,16 @@ fun HomeScreen(
             sharedViewModel.currentUser.value,
             snackbarHostState
         )
+
+    } else if (isLandscape) {
+        LandscapePhoneLayout(
+            navController = navController,
+            sharedViewModel = sharedViewModel,
+            sharedViewModel.currentUser.value,
+            snackbarHostState
+        )
     } else {
-        PortraitLayout(
+        PortraitPhoneLayout(
             navController = navController,
             sharedViewModel = sharedViewModel,
             sharedViewModel.currentUser.value,
@@ -175,7 +183,7 @@ fun LandscapeTabletLayout(
                                 .padding(horizontal = 10.dp),
                             shape = RoundedCornerShape(17.dp),
                         )
-                        PrintProductLabelsButton(
+                        AssemblyRecordsButton(
                             navController = navController,
                             modifier = Modifier
                                 .fillMaxSize()
@@ -373,7 +381,7 @@ fun PortraitTabletLayout(
     currentUser: String,
     snackbarHostState: SnackbarHostState
 ) {
-    Log.d("screen dp size", "PortraitLayout being used")
+    Log.d("screen dp size", "PortraitTabletLayout being used")
     TopBar(
         navController = navController,
         title = "Home",
@@ -419,7 +427,7 @@ fun PortraitTabletLayout(
                         shape = RoundedCornerShape(12.dp)
                     )
                     Spacer(modifier = Modifier.weight(1f))
-                    PrintProductLabelsButton(
+                    AssemblyRecordsButton(
                         navController = navController,
                         modifier = Modifier
                             .fillMaxSize()
@@ -635,7 +643,7 @@ fun FlipPhoneLayout(
                         fontSize = 15
                     )
                     Spacer(modifier = Modifier.weight(1f))
-                    PrintProductLabelsButton(
+                    AssemblyRecordsButton(
                         navController = navController,
                         modifier = Modifier
                             .fillMaxSize()
@@ -796,10 +804,10 @@ fun FlipPhoneLayout(
 }
 
 /**
- * Displays the standard portrait home screen layout.
+ * Displays the standard Landscape home screen layout.
  *
  * Organises the available application functions into Assembly, Sales, Purchases,
- * and Inventory sections using a two-column arrangement. This layout is used
+ * and Inventory sections using a four-column arrangement. This layout is used
  * for standard phones that do not meet the tablet or flip-phone screen criteria.
  *
  * @param navController Navigation controller used to navigate between application screens.
@@ -808,7 +816,228 @@ fun FlipPhoneLayout(
  * @param snackbarHostState State used by the top bar to display snackbar messages.
  */
 @Composable
-fun PortraitLayout(
+fun LandscapePhoneLayout(
+    navController: NavController,
+    sharedViewModel: SharedViewModel,
+    currentUser: String,
+    snackbarHostState: SnackbarHostState
+) {
+    Log.d("screen dp size", "LandscapeLayout being used")
+    TopBar(
+        navController = navController,
+        title = "Home",
+        snackbarHostState
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(all = 20.dp)
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    "Welcome ${currentUser.lowercase().replaceFirstChar { it.uppercase() }}",
+                    fontWeight = FontWeight(800),
+                    fontSize = 25.sp,
+                    textAlign = TextAlign.Center,
+                )
+            }
+
+            Row(
+                modifier = Modifier
+                    .weight(6f)
+                    .padding(vertical = 5.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 10.dp)
+                ) {
+                    Text(
+                        "Assembly",
+                        fontWeight = FontWeight(800),
+                        fontSize = 20.sp,
+                        textAlign = TextAlign.Center,
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    AssemblyOrdersButton(
+                        navController = navController,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(5f),
+                        shape = RoundedCornerShape(12.dp),
+                        fontSize = 16,
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    AssemblyRecordsButton(
+                        navController = navController,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(5f),
+                        shape = RoundedCornerShape(12.dp),
+                        fontSize = 16,
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    PrintBoxLabelsButton(
+                        navController = navController,
+                        sharedViewModel = sharedViewModel,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(5f),
+                        shape = RoundedCornerShape(12.dp),
+                        fontSize = 16,
+                    )
+                }
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 10.dp)
+                ) {
+                    Text(
+                        "Sales",
+                        fontWeight = FontWeight(800),
+                        fontSize = 20.sp,
+                        textAlign = TextAlign.Center,
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    PackOrdersButton(
+                        navController = navController,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(5f),
+                        shape = RoundedCornerShape(12.dp),
+                        fontSize = 16,
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    DispatchOrdersButton(
+                        navController = navController,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(5f),
+                        shape = RoundedCornerShape(12.dp),
+                        fontSize = 16,
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    PrintShippingDocumentsButton(
+                        navController = navController,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(5f),
+                        shape = RoundedCornerShape(12.dp),
+                        fontSize = 16,
+                    )
+                }
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 10.dp)
+                ) {
+                    Text(
+                        "Inventory",
+                        fontWeight = FontWeight(800),
+                        fontSize = 20.sp,
+                        textAlign = TextAlign.Center,
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    ItemsListButton(
+                        navController = navController,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(5f),
+                        shape = RoundedCornerShape(12.dp),
+                        fontSize = 16,
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    StocktakeButton(
+                        navController = navController,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(5f),
+                        shape = RoundedCornerShape(12.dp),
+                        fontSize = 16,
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    RequestStockButton(
+                        navController = navController,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(5f),
+                        shape = RoundedCornerShape(12.dp),
+                        fontSize = 16,
+                    )
+                }
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 10.dp)
+                ) {
+                    Text(
+                        "Purchases",
+                        fontWeight = FontWeight(800),
+                        fontSize = 20.sp,
+                        textAlign = TextAlign.Center,
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    PurchaseOrdersButton(
+                        navController = navController,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(5f),
+                        shape = RoundedCornerShape(12.dp),
+                        fontSize = 16,
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    ReceiveGoodsButton(
+                        navController = navController,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(5f),
+                        shape = RoundedCornerShape(12.dp),
+                        fontSize = 16,
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    Spacer(modifier = Modifier.weight(5f))
+                }
+            }
+        }
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(all = 10.dp)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.End,
+        ) {
+            Row(modifier = Modifier.weight(10f)) {
+                Spacer(modifier = Modifier.weight(3f))
+                Image(
+                    painter = painterResource(id = R.drawable.homepage_graphic),
+                    contentDescription = null,
+                    modifier = Modifier.weight(3f)
+                )
+            }
+            Spacer(modifier = Modifier.weight(10f))
+        }
+    }
+
+}
+
+/**
+ * Displays the standard portrait home screen layout.
+ *
+ * Organises the available application functions into Assembly, Sales, Purchases,
+ * and Inventory sections using a single column arrangement. This layout is used
+ * for standard phones that do not meet the tablet or flip-phone screen criteria.
+ *
+ * @param navController Navigation controller used to navigate between application screens.
+ * @param sharedViewModel Shared view model containing application-wide state and data.
+ * @param currentUser Name of the currently logged-in user displayed in the welcome message.
+ * @param snackbarHostState State used by the top bar to display snackbar messages.
+ */
+@Composable
+fun PortraitPhoneLayout(
     navController: NavController,
     sharedViewModel: SharedViewModel,
     currentUser: String,
@@ -830,161 +1059,142 @@ fun PortraitLayout(
                 Text(
                     "Welcome ${currentUser.lowercase().replaceFirstChar { it.uppercase() }}",
                     fontWeight = FontWeight(800),
-                    fontSize = 30.sp,
+                    fontSize = 25.sp,
                     textAlign = TextAlign.Center,
                 )
             }
-
-            Row(
+            Column(
                 modifier = Modifier
-                    .weight(3f)
-                    .padding(vertical = 20.dp)
+                    .weight(16f)
+                    .padding(horizontal = 15.dp)
             ) {
-                Column(
+                Text(
+                    "Assembly",
+                    fontWeight = FontWeight(800),
+                    fontSize = 20.sp,
+                    textAlign = TextAlign.Center,
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                AssemblyOrdersButton(
+                    navController = navController,
                     modifier = Modifier
-                        .weight(1f)
-                        .padding(horizontal = 50.dp)
-                ) {
-                    Text(
-                        "Assembly",
-                        fontWeight = FontWeight(800),
-                        fontSize = 30.sp,
-                        textAlign = TextAlign.Center,
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                    AssemblyOrdersButton(
-                        navController = navController,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .weight(5f),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                    PrintProductLabelsButton(
-                        navController = navController,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .weight(5f),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                    PrintBoxLabelsButton(
-                        navController = navController,
-                        sharedViewModel = sharedViewModel,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .weight(5f),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                }
-                Column(
+                        .fillMaxSize()
+                        .weight(5f),
+                    shape = RoundedCornerShape(12.dp),
+                    fontSize = 16,
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                AssemblyRecordsButton(
+                    navController = navController,
                     modifier = Modifier
-                        .weight(1f)
-                        .padding(horizontal = 50.dp)
-                ) {
-                    Text(
-                        "Sales",
-                        fontWeight = FontWeight(800),
-                        fontSize = 30.sp,
-                        textAlign = TextAlign.Center,
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                    PackOrdersButton(
-                        navController = navController,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .weight(5f),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                    DispatchOrdersButton(
-                        navController = navController,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .weight(5f),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                    PrintShippingDocumentsButton(
-                        navController = navController,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .weight(5f),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                }
-            }
-            Row(
-                modifier = Modifier
-                    .weight(3f)
-                    .padding(vertical = 20.dp)
-            ) {
-                Column(
+                        .fillMaxSize()
+                        .weight(5f),
+                    shape = RoundedCornerShape(12.dp),
+                    fontSize = 16,
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                PrintBoxLabelsButton(
+                    navController = navController,
+                    sharedViewModel = sharedViewModel,
                     modifier = Modifier
-                        .weight(1f)
-                        .padding(horizontal = 50.dp)
-                ) {
-                    Text(
-                        "Purchases",
-                        fontWeight = FontWeight(800),
-                        fontSize = 30.sp,
-                        textAlign = TextAlign.Center,
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                    PurchaseOrdersButton(
-                        navController = navController,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .weight(5f),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                    ReceiveGoodsButton(
-                        navController = navController,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .weight(5f),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                    Spacer(modifier = Modifier.weight(5f))
-                }
-                Column(
+                        .fillMaxSize()
+                        .weight(5f),
+                    shape = RoundedCornerShape(12.dp),
+                    fontSize = 16,
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    "Sales",
+                    fontWeight = FontWeight(800),
+                    fontSize = 20.sp,
+                    textAlign = TextAlign.Center,
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                PackOrdersButton(
+                    navController = navController,
                     modifier = Modifier
-                        .weight(1f)
-                        .padding(horizontal = 50.dp)
-                ) {
-                    Text(
-                        "Inventory",
-                        fontWeight = FontWeight(800),
-                        fontSize = 30.sp,
-                        textAlign = TextAlign.Center,
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                    ItemsListButton(
-                        navController = navController,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .weight(5f),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                    StocktakeButton(
-                        navController = navController,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .weight(5f),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                    RequestStockButton(
-                        navController = navController,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .weight(5f),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                }
+                        .fillMaxSize()
+                        .weight(5f),
+                    shape = RoundedCornerShape(12.dp),
+                    fontSize = 16,
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                DispatchOrdersButton(
+                    navController = navController,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .weight(5f),
+                    shape = RoundedCornerShape(12.dp),
+                    fontSize = 16,
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                PrintShippingDocumentsButton(
+                    navController = navController,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .weight(5f),
+                    shape = RoundedCornerShape(12.dp),
+                    fontSize = 16,
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    "Inventory",
+                    fontWeight = FontWeight(800),
+                    fontSize = 20.sp,
+                    textAlign = TextAlign.Center,
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                ItemsListButton(
+                    navController = navController,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .weight(5f),
+                    shape = RoundedCornerShape(12.dp),
+                    fontSize = 16,
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                StocktakeButton(
+                    navController = navController,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .weight(5f),
+                    shape = RoundedCornerShape(12.dp),
+                    fontSize = 16,
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                RequestStockButton(
+                    navController = navController,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .weight(5f),
+                    shape = RoundedCornerShape(12.dp),
+                    fontSize = 16,
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    "Purchases",
+                    fontWeight = FontWeight(800),
+                    fontSize = 20.sp,
+                    textAlign = TextAlign.Center,
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                PurchaseOrdersButton(
+                    navController = navController,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .weight(5f),
+                    shape = RoundedCornerShape(12.dp),
+                    fontSize = 16,
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                ReceiveGoodsButton(
+                    navController = navController,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .weight(5f),
+                    shape = RoundedCornerShape(12.dp),
+                    fontSize = 16,
+                )
             }
         }
     }
@@ -1044,25 +1254,23 @@ fun AssemblyOrdersButton(navController: NavController, modifier: Modifier, shape
 }
 
 /**
- * Displays the Print Product Labels button.
+ * Displays a button for navigating to the Assembly Record Lookup screen.
  *
- * This functionality is currently disabled and does not perform an action
- * when pressed.
+ * Although the function name refers to product labels, the button currently
+ * displays "Record Lookup" and navigates to the assembly records screen.
  *
- * @param navController Navigation controller available for future navigation
- * to the product label printing screen.
+ * @param navController Navigation controller used to navigate to the Assembly Record Lookup screen.
  * @param modifier Modifier used to configure the button's layout and appearance.
  * @param shape Shape applied to the button's corners.
  * @param fontSize Font size used for the button label in scaled pixels.
  */
 @Composable
-fun PrintProductLabelsButton(navController: NavController, modifier: Modifier, shape: Shape, fontSize: Int = 20) {
+fun AssemblyRecordsButton(navController: NavController, modifier: Modifier, shape: Shape, fontSize: Int = 20) {
     Button(
         modifier = modifier,
         shape = shape,
         contentPadding = PaddingValues(start = 10.dp, top = 4.dp, end = 4.dp, bottom = 4.dp),
-        onClick = {},
-        enabled = false
+        onClick = {navController.navigate("assemblyrecords")},
     ) {
         Image(
             painter = painterResource(id = R.drawable.print_product_label_icon),
@@ -1072,7 +1280,7 @@ fun PrintProductLabelsButton(navController: NavController, modifier: Modifier, s
                 .weight(1f)
         )
         Text(
-            "Print Product Labels",
+            "Record Lookup",
             fontSize = fontSize.sp,
             textAlign = TextAlign.Center,
             modifier = Modifier.weight(3f)

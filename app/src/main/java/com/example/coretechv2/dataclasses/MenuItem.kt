@@ -3,20 +3,30 @@ package com.example.coretechv2.dataclasses
 import androidx.compose.ui.graphics.vector.ImageVector
 
 /**
- * Represents a menu item used in navigation drawers, dropdowns,
- * popup menus, or action lists within the UI.
+ * Represents an item displayed in a UI menu.
  *
- * Each menu item contains:
- * - A display title
- * - A click action callback
- * - An optional icon
+ * A menu item can display a title and optional icon, perform an action when
+ * selected, and optionally contain a [SwitchItem] for settings or filter
+ * controls.
  *
- * @property title Text displayed for the menu item.
+ * The item can also be configured to disable its click action while still
+ * displaying its contents. This can be useful when the menu item contains
+ * a separate interactive component, such as a switch.
+ *
+ * @property title Function that returns the text displayed for the menu item.
  * @property onClick Callback executed when the menu item is selected.
- * @property icon Optional icon displayed alongside the title.
+ * @property clickEnabled Determines whether the menu item's main click action
+ * is enabled.
+ * @property icon Function that returns the optional icon displayed alongside
+ * the menu item's title.
+ * @property switch Optional [SwitchItem] displayed alongside the menu item.
+ * When present, the switch can provide its own interaction independently of
+ * the menu item's main click action.
  */
 data class MenuItem(
-    val title: () -> String,
-    val onClick: () -> Unit,
-    val icon: ImageVector? = null,
+    val title: () -> String = {""},
+    val onClick: () -> Unit = {},
+    val clickEnabled: Boolean = true,
+    val icon: () -> ImageVector? = {null},
+    val switch: SwitchItem? = null,
 )

@@ -63,6 +63,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.coretechv2.dataclasses.APICallTables
 import com.example.coretechv2.dataclasses.APICallTypes
 import com.example.coretechv2.dataclasses.LabelStyles
+import com.example.coretechv2.dataclasses.assemblydataclasses.AssemblyLinesItem
 import com.example.coretechv2.factory.AssemblyOrderDetailsViewModelFactory
 import com.example.coretechv2.ui.component.AdjustmentCard
 import com.example.coretechv2.ui.component.ButtonMessage
@@ -205,9 +206,13 @@ fun AssemblyOrderDetails(
 /**
  * Displays the assembly order's individual assembly lines.
  *
- * Each line displays its description, line code, quantity, and unit.
- * In normal mode, lines can be selected or batch-entered using click and
- * long-click actions. In edit mode, the line quantity can be modified.
+ * In normal mode, each line displays its checked state, description, line
+ * code, calculated quantity per batch, and unit. Clicking a line toggles
+ * its checked state, while long-clicking allows the batch quantity to be
+ * entered.
+ *
+ * In edit mode, the line quantity can be modified and long-clicking a line
+ * provides an option to delete it.
  *
  * @param viewModel The [AssemblyOrderDetailsViewModel] containing the
  * assembly line data and editing state.
@@ -259,7 +264,7 @@ fun AssemblyLines(viewModel: AssemblyOrderDetailsViewModel) {
                                     OutlinedStyleDoubleNumberField(
                                         modifier = Modifier.weight(1f),
                                         value = order.ORDERQTY,
-                                        onValueChange = { newValue -> viewModel.onEditLineChange(newValue, order, index) },
+                                        onValueChange = { newValue -> viewModel.onEditLineChange(newValue,index) },
                                         TextStyle(
                                             textAlign = TextAlign.Center,
                                             color = MaterialTheme.colorScheme.onBackground
@@ -273,74 +278,11 @@ fun AssemblyLines(viewModel: AssemblyOrderDetailsViewModel) {
                                 }
                             }
                         }
+                        HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
                     } else {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .combinedClickable(
-                                    onClick = {
-                                        viewModel.lineChecked(order)
-                                    },
-                                    onLongClick = {
-                                        viewModel.batchEntered(order)
-                                    }
-                                ),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(32.dp)
-                                    .padding(start = 16.dp)
-                            ) {
-                                Icon(
-                                    imageVector = if (order.ADDITIONALFIELD_1)
-                                        Icons.Filled.CheckBox
-                                    else
-                                        Icons.Filled.CheckBoxOutlineBlank,
-                                    contentDescription = null,
-                                    modifier = Modifier.fillMaxSize()
-                                )
-                            }
-                            Box(modifier = Modifier.weight(6f)) {
-                                Column(
-                                    modifier = Modifier.padding(16.dp)
-                                ) {
-                                    Text(
-                                        text = order.LINEDESCRIPTION,
-                                        fontSize = 20.sp,
-                                        fontWeight = FontWeight(800),
-                                    )
-                                    Text(
-                                        text = order.LINECODE,
-                                    )
-                                }
-                            }
-                            Box(
-                                modifier = Modifier
-                                    .weight(4f)
-                                    .fillMaxHeight()
-                                    .padding(16.dp), contentAlignment = Alignment.CenterEnd
-                            ) {
-                                var fontColor = MaterialTheme.colorScheme.onBackground
-                                var formatter = DecimalFormat("0.000")
-                                if (order.ORDERQTY.toDouble() < 0.004) {
-                                    formatter = DecimalFormat("0.0000")
-                                    fontColor = MaterialTheme.colorScheme.primary
-                                } else {
-                                    formatter = DecimalFormat("0.000")
-                                    fontColor = MaterialTheme.colorScheme.onBackground
-                                }
-                                Text(
-                                    text = "${formatter.format((order.ORDERQTY.toDouble() / viewModel.numberOfBatches.value.toDouble()))} ${order.LINEUNIT}",
-                                    fontSize = 20.sp,
-                                    fontWeight = FontWeight(800),
-                                    color = fontColor,
-                                )
-                            }
-                        }
+                        AssemblyLinesData(viewModel, order)
                     }
-                    HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
+
                 }
             }
         }
@@ -348,15 +290,98 @@ fun AssemblyLines(viewModel: AssemblyOrderDetailsViewModel) {
 }
 
 /**
- * Displays the detailed information for the current assembly order.
+ * Displays an individual assembly line in normal, non-edit mode.
  *
- * The component displays order information such as the order number,
- * item code, order quantity, completed quantity, order status, required
- * date, batch information, catalyst settings, viscosity settings, and
- * gel time configuration.
+ * The line displays its checked state, description, line code, and quantity
+ * calculated from the line quantity divided by the number of batches.
  *
- * When edit mode is enabled, editable fields are displayed for values
- * that can be modified.
+ * Clicking the line toggles its checked state. Long-clicking the line opens
+ * the batch quantity entry action.
+ *
+ * @param viewModel The [AssemblyOrderDetailsViewModel] containing the
+ * assembly order and batch information.
+ * @param order The assembly line to display.
+ */
+@Composable
+fun AssemblyLinesData(viewModel: AssemblyOrderDetailsViewModel, order: AssemblyLinesItem) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .combinedClickable(
+                onClick = {
+                    viewModel.lineChecked(order)
+                },
+                onLongClick = {
+                    viewModel.batchEntered(order)
+                }
+            ),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .height(32.dp)
+                .padding(start = 16.dp)
+        ) {
+            Icon(
+                imageVector = if (order.ADDITIONALFIELD_1)
+                    Icons.Filled.CheckBox
+                else
+                    Icons.Filled.CheckBoxOutlineBlank,
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+        Box(modifier = Modifier.weight(6f)) {
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Text(
+                    text = order.LINEDESCRIPTION,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight(800),
+                )
+                Text(
+                    text = order.LINECODE,
+                )
+            }
+        }
+        Box(
+            modifier = Modifier
+                .weight(4f)
+                .fillMaxHeight()
+                .padding(16.dp), contentAlignment = Alignment.CenterEnd
+        ) {
+            var fontColor = MaterialTheme.colorScheme.onBackground
+            var formatter = DecimalFormat("0.000")
+            if (order.ORDERQTY.toDouble() < 0.004) {
+                formatter = DecimalFormat("0.0000")
+                fontColor = MaterialTheme.colorScheme.primary
+            } else {
+                formatter = DecimalFormat("0.000")
+                fontColor = MaterialTheme.colorScheme.onBackground
+            }
+            Text(
+                text = "${formatter.format((order.ORDERQTY.toDouble() / viewModel.numberOfBatches.value.toDouble()))} ${order.LINEUNIT}",
+                fontSize = 20.sp,
+                fontWeight = FontWeight(800),
+                color = fontColor,
+            )
+        }
+    }
+    HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
+}
+
+
+/**
+ * Displays detailed information about the current assembly order.
+ *
+ * The screen displays the order number, item code, order quantity, completed
+ * quantity, order status, required date, batch information, catalyst
+ * settings, viscosity settings, thixotropic index settings, and gel time.
+ *
+ * When edit mode is enabled, the order quantity, maximum batch size, and
+ * number of batches can be modified.
  *
  * @param viewModel The [AssemblyOrderDetailsViewModel] containing the
  * assembly order information and editing state.
@@ -617,21 +642,20 @@ fun AssemblyDetails(viewModel: AssemblyOrderDetailsViewModel) {
 
 /**
  * Displays the notes, instructions, tests, and adjustments associated
- * with an assembly order.
+ * with the current assembly order.
  *
- * When test and adjustment data is being displayed, the component shows
- * each test and adjustment in a numbered list. Individual entries can be
- * selected to open their corresponding editing screen or long-pressed
- * to delete them.
+ * When the tests and adjustments view is active, the component displays
+ * the associated tests and adjustments and allows individual records to
+ * be opened or deleted.
  *
- * When test and adjustment data is hidden, the component instead displays
- * the assembly instructions and order notes, with an option to edit the
- * notes.
+ * When the tests and adjustments view is not active, the component displays
+ * the assembly instructions and order notes. The notes can be opened for
+ * editing.
  *
  * @param viewModel The [AssemblyOrderDetailsViewModel] containing the
  * assembly order notes, tests, adjustments, and UI state.
- * @param sharedViewModel The [SharedViewModel] used to manage popup
- * screens and shared application state.
+ * @param sharedViewModel The [SharedViewModel] used to manage shared
+ * application state and popup screens.
  */
 @Composable
 fun AssemblyNotesAndTest(viewModel: AssemblyOrderDetailsViewModel, sharedViewModel: SharedViewModel) {
@@ -644,164 +668,8 @@ fun AssemblyNotesAndTest(viewModel: AssemblyOrderDetailsViewModel, sharedViewMod
             }
 
             LazyColumn() {
-                var testnumber = 1
-                items(viewModel.testAndAdjustments) { values ->
-
-                    val tests = values[0] as SnapshotStateList<*>
-                    val adjustments = values[1] as SnapshotStateList<*>
-
-                    if (!tests.isEmpty()) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(MaterialTheme.colorScheme.primaryContainer)
-                        ) {
-                            Text("Test " + testnumber, Modifier.padding(vertical = 2.dp, horizontal = 5.dp), style = MaterialTheme.typography.titleSmall)
-                        }
-                        Spacer(modifier = Modifier.height(1.dp))
-                        for (test in tests) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .combinedClickable(
-                                        onClick = {
-                                            when (test) {
-                                                is APICallTables.viscosityTest -> {
-                                                    sharedViewModel.updateSaveType(APICallTypes.UPDATE)
-                                                    viewModel.popupDetails.width = 700
-                                                    viewModel.popupDetails.height = 500
-                                                    viewModel.popupDetails.content = {
-                                                        ViscosityScreen(sharedViewModel, test)
-                                                    }
-                                                    viewModel.showPopupWindow.value = true
-                                                }
-
-                                                is APICallTables.gelTimeTest -> {
-                                                    sharedViewModel.updateSaveType(APICallTypes.UPDATE)
-                                                    viewModel.popupDetails.width = 700
-                                                    viewModel.popupDetails.height = 500
-                                                    viewModel.popupDetails.content = {
-                                                        GelTimeScreen(sharedViewModel, test)
-                                                    }
-                                                    viewModel.showPopupWindow.value = true
-                                                }
-
-                                                is APICallTables.ElongationalBreakTest -> {
-                                                    sharedViewModel.updateSaveType(APICallTypes.UPDATE)
-                                                    viewModel.popupDetails.width = 600
-                                                    viewModel.popupDetails.height = 350
-                                                    viewModel.popupDetails.content = {
-                                                        ElongationalBreakScreen(sharedViewModel, test)
-                                                    }
-                                                    viewModel.showPopupWindow.value = true
-                                                }
-
-                                                is APICallTables.FlammabilityTest -> {
-                                                    sharedViewModel.updateSaveType(APICallTypes.UPDATE)
-                                                    viewModel.popupDetails.width = 700
-                                                    viewModel.popupDetails.height = 500
-                                                    viewModel.popupDetails.content = {
-                                                        FlammabilityScreen(sharedViewModel, test)
-                                                    }
-                                                    viewModel.showPopupWindow.value = true
-                                                }
-
-                                                is APICallTables.ResistivityTest -> {
-                                                    sharedViewModel.updateSaveType(APICallTypes.UPDATE)
-                                                    viewModel.popupDetails.width = 600
-                                                    viewModel.popupDetails.height = 350
-                                                    viewModel.popupDetails.content = {
-                                                        ResistivityScreen(sharedViewModel, test)
-                                                    }
-                                                    viewModel.showPopupWindow.value = true
-                                                }
-
-                                                is APICallTables.peakExothermTest -> {
-                                                    sharedViewModel.updateSaveType(APICallTypes.UPDATE)
-                                                    viewModel.popupDetails.width = 700
-                                                    viewModel.popupDetails.height = 500
-                                                    viewModel.popupDetails.content = {
-                                                        PeakExothermScreen(sharedViewModel, test)
-                                                    }
-                                                    viewModel.showPopupWindow.value = true
-                                                }
-                                            }
-                                        },
-                                        onLongClick = {
-                                            viewModel.testDelete(test!!)
-                                        }
-                                    )
-                            )
-                            {
-                                when (test) {
-                                    is APICallTables.viscosityTest -> {
-                                        ViscosityCard(test)
-                                    }
-
-                                    is APICallTables.gelTimeTest -> {
-                                        GelTimeCard(test)
-                                    }
-
-                                    is APICallTables.ElongationalBreakTest -> {
-                                        ElongationalBreakCard(test)
-                                    }
-
-                                    is APICallTables.FlammabilityTest -> {
-                                        FlammabilityCard(test)
-                                    }
-
-                                    is APICallTables.ResistivityTest -> {
-                                        ResistivityCard(test)
-                                    }
-
-                                    is APICallTables.peakExothermTest -> {
-                                        PeakExothermCard(test)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    if (!adjustments.isEmpty()) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(MaterialTheme.colorScheme.primary)
-                        ) {
-                            Text("Adjustment " + testnumber, Modifier.padding(vertical = 2.dp, horizontal = 5.dp), style = MaterialTheme.typography.titleSmall)
-                        }
-                        Spacer(modifier = Modifier.height(5.dp))
-                        for (adjust in adjustments) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .combinedClickable(
-                                        onClick = {
-                                            when (adjust) {
-                                                is APICallTables.assemblyAdjustment -> {
-                                                    sharedViewModel.updateSaveType(APICallTypes.UPDATE)
-                                                    viewModel.popupDetails.width = 700
-                                                    viewModel.popupDetails.height = 500
-                                                    viewModel.popupDetails.content = {
-                                                        AdjustmentsScreen(sharedViewModel, adjust)
-                                                    }
-                                                    viewModel.showPopupWindow.value = true
-                                                }
-                                            }
-                                        },
-                                        onLongClick = { viewModel.adjustmentsDelete(adjust as APICallTables.assemblyAdjustment) }
-                                    )
-                            ) {
-                                when (adjust) {
-                                    is APICallTables.assemblyAdjustment -> {
-                                        AdjustmentCard(adjust)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    testnumber += 1
-                    Spacer(modifier = Modifier.height(10.dp))
-
+                itemsIndexed(viewModel.testAndAdjustments) {index, values ->
+                    AssemblyTestData(viewModel, sharedViewModel, values, index)
                 }
             }
         } else {
@@ -842,17 +710,191 @@ fun AssemblyNotesAndTest(viewModel: AssemblyOrderDetailsViewModel, sharedViewMod
 }
 
 /**
+ * Displays the tests and adjustments associated with an assembly order.
+ *
+ * Tests are displayed using their corresponding test card, while
+ * adjustments are displayed using an adjustment card. Selecting a test
+ * or adjustment opens its corresponding editing screen. Long-clicking
+ * allows the record to be deleted.
+ *
+ * @param viewModel The [AssemblyOrderDetailsViewModel] used to manage
+ * popup state and deletion actions.
+ * @param sharedViewModel The [SharedViewModel] used to manage shared
+ * state and the test or adjustment editing screens.
+ * @param values A list containing the tests and adjustments associated
+ * with a test group.
+ * @param testNumber The number displayed for the test and adjustment group.
+ */
+@Composable
+fun AssemblyTestData(viewModel: AssemblyOrderDetailsViewModel, sharedViewModel: SharedViewModel, values: SnapshotStateList<Any>, testNumber: Int){
+    val tests = values[0] as SnapshotStateList<*>
+    val adjustments = values[1] as SnapshotStateList<*>
+
+    if (!tests.isEmpty()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.primaryContainer)
+        ) {
+            Text("Test $testNumber", Modifier.padding(vertical = 2.dp, horizontal = 5.dp), style = MaterialTheme.typography.titleSmall)
+        }
+        Spacer(modifier = Modifier.height(1.dp))
+        for (test in tests) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .combinedClickable(
+                        onClick = {
+                            when (test) {
+                                is APICallTables.viscosityTest -> {
+                                    sharedViewModel.updateSaveType(APICallTypes.UPDATE)
+                                    viewModel.popupDetails.width = 700
+                                    viewModel.popupDetails.height = 500
+                                    viewModel.popupDetails.content = {
+                                        ViscosityScreen(sharedViewModel, test)
+                                    }
+                                    viewModel.showPopupWindow.value = true
+                                }
+
+                                is APICallTables.gelTimeTest -> {
+                                    sharedViewModel.updateSaveType(APICallTypes.UPDATE)
+                                    viewModel.popupDetails.width = 700
+                                    viewModel.popupDetails.height = 500
+                                    viewModel.popupDetails.content = {
+                                        GelTimeScreen(sharedViewModel, test)
+                                    }
+                                    viewModel.showPopupWindow.value = true
+                                }
+
+                                is APICallTables.ElongationalBreakTest -> {
+                                    sharedViewModel.updateSaveType(APICallTypes.UPDATE)
+                                    viewModel.popupDetails.width = 600
+                                    viewModel.popupDetails.height = 350
+                                    viewModel.popupDetails.content = {
+                                        ElongationalBreakScreen(sharedViewModel, test)
+                                    }
+                                    viewModel.showPopupWindow.value = true
+                                }
+
+                                is APICallTables.FlammabilityTest -> {
+                                    sharedViewModel.updateSaveType(APICallTypes.UPDATE)
+                                    viewModel.popupDetails.width = 700
+                                    viewModel.popupDetails.height = 500
+                                    viewModel.popupDetails.content = {
+                                        FlammabilityScreen(sharedViewModel, test)
+                                    }
+                                    viewModel.showPopupWindow.value = true
+                                }
+
+                                is APICallTables.ResistivityTest -> {
+                                    sharedViewModel.updateSaveType(APICallTypes.UPDATE)
+                                    viewModel.popupDetails.width = 600
+                                    viewModel.popupDetails.height = 350
+                                    viewModel.popupDetails.content = {
+                                        ResistivityScreen(sharedViewModel, test)
+                                    }
+                                    viewModel.showPopupWindow.value = true
+                                }
+
+                                is APICallTables.peakExothermTest -> {
+                                    sharedViewModel.updateSaveType(APICallTypes.UPDATE)
+                                    viewModel.popupDetails.width = 700
+                                    viewModel.popupDetails.height = 500
+                                    viewModel.popupDetails.content = {
+                                        PeakExothermScreen(sharedViewModel, test)
+                                    }
+                                    viewModel.showPopupWindow.value = true
+                                }
+                            }
+                        },
+                        onLongClick = {
+                            viewModel.testDelete(test!!)
+                        }
+                    )
+            )
+            {
+                when (test) {
+                    is APICallTables.viscosityTest -> {
+                        ViscosityCard(test)
+                    }
+
+                    is APICallTables.gelTimeTest -> {
+                        GelTimeCard(test)
+                    }
+
+                    is APICallTables.ElongationalBreakTest -> {
+                        ElongationalBreakCard(test)
+                    }
+
+                    is APICallTables.FlammabilityTest -> {
+                        FlammabilityCard(test)
+                    }
+
+                    is APICallTables.ResistivityTest -> {
+                        ResistivityCard(test)
+                    }
+
+                    is APICallTables.peakExothermTest -> {
+                        PeakExothermCard(test)
+                    }
+                }
+            }
+        }
+    }
+    if (!adjustments.isEmpty()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.primary)
+        ) {
+            Text("Adjustment " + testNumber, Modifier.padding(vertical = 2.dp, horizontal = 5.dp), style = MaterialTheme.typography.titleSmall)
+        }
+        Spacer(modifier = Modifier.height(5.dp))
+        for (adjust in adjustments) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .combinedClickable(
+                        onClick = {
+                            when (adjust) {
+                                is APICallTables.assemblyAdjustment -> {
+                                    sharedViewModel.updateSaveType(APICallTypes.UPDATE)
+                                    viewModel.popupDetails.width = 700
+                                    viewModel.popupDetails.height = 500
+                                    viewModel.popupDetails.content = {
+                                        AdjustmentsScreen(sharedViewModel, adjust)
+                                    }
+                                    viewModel.showPopupWindow.value = true
+                                }
+                            }
+                        },
+                        onLongClick = { viewModel.adjustmentsDelete(adjust as APICallTables.assemblyAdjustment) }
+                    )
+            ) {
+                when (adjust) {
+                    is APICallTables.assemblyAdjustment -> {
+                        AdjustmentCard(adjust)
+                    }
+                }
+            }
+        }
+    }
+    Spacer(modifier = Modifier.height(10.dp))
+}
+
+/**
  * Displays navigation buttons for switching between the assembly order's
  * lines, details, notes, and testing sections.
  *
- * The available actions depend on the current editing mode and device
- * layout. On phone layouts, selecting a section also controls which
- * sections are visible.
+ * The actions performed by the buttons depend on the current device layout.
+ * On phone and flip-phone layouts, selecting a section controls which
+ * section is displayed. On larger layouts, the buttons control the
+ * visibility of the corresponding sections.
  *
  * The buttons are disabled while the assembly order is in edit mode.
  *
  * @param viewModel The [AssemblyOrderDetailsViewModel] controlling the
- * currently displayed section and editing state.
+ * currently displayed sections and editing state.
  */
 @Composable
 fun AssemblyButtons(viewModel: AssemblyOrderDetailsViewModel) {

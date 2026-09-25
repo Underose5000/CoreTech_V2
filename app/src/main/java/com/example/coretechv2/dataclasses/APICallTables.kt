@@ -77,7 +77,33 @@ class APICallTables {
         var ADDITIONALFIELD_13: String,
         val SYSUNIQUEID: Double,
     )
-
+    @Serializable
+    data class AssemblyRecordLookup(
+        val ORDERNUMBER: String,
+        val ORDERSTATUS: String,
+        val ORDERDATE: String,
+        val ITEMCODE: String,
+        val ITEMDESCRIPTION: String,
+        val ITEMUNIT: String,
+        val ORDERQTY: Double,
+        var ADDITIONALFIELD_1: String,
+        var ADDITIONALFIELD_2: String,
+        var ADDITIONALFIELD_3: String,
+        var ADDITIONALFIELD_4: String,
+        var ADDITIONALFIELD_5: String,
+        var ADDITIONALFIELD_6: String,
+        var ADDITIONALFIELD_7: String,
+        var ADDITIONALFIELD_8: String,
+        var ADDITIONALFIELD_9: String,
+        var ADDITIONALFIELD_10: String,
+        var ADDITIONALFIELD_11: String,
+        var ADDITIONALFIELD_12: String,
+        var ADDITIONALFIELD_13: String,
+        val SYSUNIQUEID: Double,
+        val TESTSEXISTS: Int,
+        val ADJUSTSEXISTS: Int,
+        val NOTESEXISTS: Int,
+    )
 
     @Serializable
     data class AssemblyLines(
