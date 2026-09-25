@@ -1,41 +1,12 @@
 package com.example.coretechv2.repository
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.example.coretechv2.dataclasses.APICallTables
-import com.example.coretechv2.dataclasses.APICallTypes
 import com.example.coretechv2.dataclasses.NoteTypes
-import com.example.coretechv2.ui.component.AdjustmentCard
-import com.example.coretechv2.ui.component.ElongationalBreakCard
-import com.example.coretechv2.ui.component.FlammabilityCard
-import com.example.coretechv2.ui.component.GelTimeCard
-import com.example.coretechv2.ui.component.PeakExothermCard
-import com.example.coretechv2.ui.component.ResistivityCard
-import com.example.coretechv2.ui.component.ViscosityCard
-import com.example.coretechv2.ui.screen.assemblytestsandadjustments.AdjustmentsScreen
-import com.example.coretechv2.ui.screen.assemblytestsandadjustments.ElongationalBreakScreen
-import com.example.coretechv2.ui.screen.assemblytestsandadjustments.FlammabilityScreen
-import com.example.coretechv2.ui.screen.assemblytestsandadjustments.GelTimeScreen
-import com.example.coretechv2.ui.screen.assemblytestsandadjustments.PeakExothermScreen
-import com.example.coretechv2.ui.screen.assemblytestsandadjustments.ResistivityScreen
-import com.example.coretechv2.ui.screen.assemblytestsandadjustments.ViscosityScreen
-import com.example.coretechv2.viewmodel.AssemblyOrderDetailsViewModel
-import com.example.coretechv2.viewmodel.SharedViewModel
 
 
 suspend fun testAndAdjustmentLookup(dataStoreManager: DataStoreManager, orderNumber: String): Pair<SnapshotStateList<SnapshotStateList<Any>>, String> {

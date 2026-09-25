@@ -2,11 +2,11 @@ package com.example.coretechv2.repository
 
 import android.graphics.Bitmap
 import androidx.core.graphics.createBitmap
+import androidx.core.graphics.set
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.MultiFormatWriter
 import com.google.zxing.qrcode.QRCodeWriter
-import androidx.core.graphics.set
 
 val hints = mapOf(
     EncodeHintType.MARGIN to 0

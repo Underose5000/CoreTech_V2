@@ -1,7 +1,5 @@
 package com.example.coretechv2.ui.component
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -19,21 +17,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.coretechv2.dataclasses.APICallTables
-import com.example.coretechv2.dataclasses.APICallTypes
-import com.example.coretechv2.ui.screen.assemblytestsandadjustments.AdjustmentsScreen
-import com.example.coretechv2.ui.screen.assemblytestsandadjustments.ElongationalBreakScreen
-import com.example.coretechv2.ui.screen.assemblytestsandadjustments.FlammabilityScreen
-import com.example.coretechv2.ui.screen.assemblytestsandadjustments.GelTimeScreen
-import com.example.coretechv2.ui.screen.assemblytestsandadjustments.PeakExothermScreen
-import com.example.coretechv2.ui.screen.assemblytestsandadjustments.ResistivityScreen
-import com.example.coretechv2.ui.screen.assemblytestsandadjustments.ViscosityScreen
-import com.example.coretechv2.viewmodel.AssemblyOrderDetailsViewModel
-import com.example.coretechv2.viewmodel.SharedViewModel
 
 /**
  * Displays a Gel Time test result in a structured row layout.

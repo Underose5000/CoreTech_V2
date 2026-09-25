@@ -10,10 +10,8 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -23,19 +21,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.CompareArrows
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckBox
 import androidx.compose.material.icons.filled.CheckBoxOutlineBlank
-import androidx.compose.material.icons.filled.CompareArrows
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DividerDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -55,39 +47,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color.Companion.Black
-import androidx.compose.ui.graphics.Color.Companion.Blue
-import androidx.compose.ui.graphics.Color.Companion.Red
-import androidx.compose.ui.graphics.Color.Companion.Yellow
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.coretechv2.dataclasses.APICallTables
-import com.example.coretechv2.factory.AssemblyOrderDetailsViewModelFactory
 import com.example.coretechv2.factory.AssemblyOrdersRecordViewModelFactory
-import com.example.coretechv2.factory.AssemblyOrdersViewModelFactory
 import com.example.coretechv2.ui.component.AdjustmentCard
 import com.example.coretechv2.ui.component.ElongationalBreakCard
 import com.example.coretechv2.ui.component.FlammabilityCard
 import com.example.coretechv2.ui.component.GelTimeCard
 import com.example.coretechv2.ui.component.Menu
-import com.example.coretechv2.ui.component.OutlinedStyleButton
-import com.example.coretechv2.ui.component.OutlinedStyleDoubleNumberField
-import com.example.coretechv2.ui.component.OutlinedStyleTextAndButtonField
 import com.example.coretechv2.ui.component.PeakExothermCard
-import com.example.coretechv2.ui.component.PopupWindow
 import com.example.coretechv2.ui.component.ResistivityCard
-import com.example.coretechv2.ui.component.SearchResultBox
 import com.example.coretechv2.ui.component.TopBar
 import com.example.coretechv2.ui.component.ViscosityCard
-import com.example.coretechv2.viewmodel.AssemblyOrderDetailsViewModel
 import com.example.coretechv2.viewmodel.AssemblyOrdersRecordViewModel
-import com.example.coretechv2.viewmodel.AssemblyOrdersViewModel
 import com.example.coretechv2.viewmodel.SharedViewModel
 import kotlinx.coroutines.launch
 
@@ -122,7 +99,6 @@ fun AssemblyOrdersRecordLookupScreen(
     navController: NavController,
     sharedViewModel: SharedViewModel
 ) {
-    val configuration = LocalConfiguration.current
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -130,10 +106,6 @@ fun AssemblyOrdersRecordLookupScreen(
         factory = AssemblyOrdersRecordViewModelFactory(context, sharedViewModel)
     )
     val focusManager = LocalFocusManager.current
-    val isLandscape =
-        configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-    val screenWidthDp = configuration.screenWidthDp
-    val isTablet = screenWidthDp >= 600
     LaunchedEffect(Unit) {
         viewModel.clearSearchField()
         launch {

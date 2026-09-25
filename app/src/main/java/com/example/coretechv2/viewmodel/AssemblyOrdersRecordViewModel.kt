@@ -12,7 +12,6 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.coretechv2.dataclasses.APICallTables
-import com.example.coretechv2.dataclasses.ItemDescriptorItem
 import com.example.coretechv2.dataclasses.MenuItem
 import com.example.coretechv2.dataclasses.PopupItems
 import com.example.coretechv2.dataclasses.SwitchItem
@@ -23,7 +22,6 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDate
-import kotlin.collections.set
 
 /**
  * ViewModel responsible for managing assembly order records and their related
@@ -53,10 +51,6 @@ class AssemblyOrdersRecordViewModel(private val dataStoreManager: DataStoreManag
 
     private val apiCall = APICall(dataStoreManager)
     var popupDetails = PopupItems().copy()
-    var assemblyQty by mutableStateOf("")
-        private set
-    var assemblyVersion by mutableStateOf("")
-        private set
     var itemListSearched = mutableStateListOf<APICallTables.ItemDescriptor>()
         private set
     private val _snackbarEvent = MutableSharedFlow<String>()

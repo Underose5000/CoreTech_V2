@@ -10,7 +10,10 @@ import androidx.core.graphics.createBitmap
 import androidx.core.graphics.toColorInt
 import com.brother.ptouch.sdk.NetPrinter
 import com.brother.ptouch.sdk.NetworkDiscovery
-import com.brother.sdk.lmprinter.*
+import com.brother.sdk.lmprinter.Channel
+import com.brother.sdk.lmprinter.OpenChannelError
+import com.brother.sdk.lmprinter.PrinterDriverGenerator
+import com.brother.sdk.lmprinter.PrinterModel
 import com.brother.sdk.lmprinter.setting.PrintImageSettings
 import com.brother.sdk.lmprinter.setting.PrintImageSettings.Orientation
 import com.brother.sdk.lmprinter.setting.QLPrintSettings
@@ -31,7 +34,7 @@ import kotlinx.coroutines.launch
  * within the discovery period.
  */
 fun discoverBrotherPrinter(callback: (foundBrotherPrinter: NetPrinter?) -> Unit) {
-    var discovery: NetworkDiscovery? = null
+    var discovery: NetworkDiscovery?
     var printercount = 0
 
     discovery = NetworkDiscovery { printer ->
@@ -48,10 +51,8 @@ fun discoverBrotherPrinter(callback: (foundBrotherPrinter: NetPrinter?) -> Unit)
         }
         discovery.stop()
     }
-    val started = discovery.start()
-    if (!started) {
+    discovery.start()
 
-    }
 }
 
 /**
@@ -97,10 +98,6 @@ fun printBrotherImage(
 
                 val channel = Channel.newWifiChannel(printerIp)
                 val openResult = PrinterDriverGenerator.openChannel(channel)
-                val errorOpen = openResult.error
-                if (errorOpen.getCode() != OpenChannelError.ErrorCode.NoError || openResult.driver == null) {
-
-                }
                 val printerDriver = openResult.driver!!
 
                 val printSettings = QLPrintSettings(PrinterModel.QL_1110NWB).apply {
@@ -118,11 +115,9 @@ fun printBrotherImage(
                     }
                 }
 
-                val printError = printerDriver.printImage(processedBitmap, printSettings)
+                printerDriver.printImage(processedBitmap, printSettings)
 
                 printerDriver.closeChannel()
-
-            } else {
 
             }
 

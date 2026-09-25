@@ -4,11 +4,19 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.util.Log
 import androidx.annotation.OptIn
-import androidx.camera.core.*
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.ExperimentalGetImage
+import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
@@ -18,21 +26,27 @@ import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
 
 /**
- * Displays a styled outlined button with optional icon content.
+
+ * Displays a camera preview and scans QR codes using the device's back camera.
  *
- * The button uses a transparent background, grey border, and rounded
- * corners to provide a consistent outlined appearance. An optional icon
- * can be displayed alongside the button text.
+ * The scanner uses CameraX to display the camera preview and analyse incoming
+ * camera frames. Google ML Kit is used to detect barcodes and QR codes from
+ * the camera image.
  *
- * If [text] is blank, only the icon is displayed when an icon is supplied.
- * If [icon] is `null`, no icon is displayed.
+ * When a QR code is successfully detected, its raw value is passed to
+ * [onCodeScanned]. Once a code has been detected, scanning is stopped to
+ * prevent additional codes from being reported during the same scan.
  *
- * @param modifier Optional [Modifier] used to customise the button's layout
- * or appearance.
- * @param text The text displayed inside the button.
- * @param onClick Callback invoked when the button is pressed.
- * @param icon Optional [ImageVector] displayed alongside the button text.
+ * The camera is bound to the current lifecycle and is unbound when the
+ * composable leaves the composition.
+ *
+ * Camera access must already be granted before this composable is displayed.
+ * If camera permission has not been granted, the scanner does not start.
+ *
+ * @param onCodeScanned Callback invoked with the raw value of the first
+ * successfully detected QR code.
  */
+
 @OptIn(ExperimentalGetImage::class)
 @Composable
 fun QRScanner(

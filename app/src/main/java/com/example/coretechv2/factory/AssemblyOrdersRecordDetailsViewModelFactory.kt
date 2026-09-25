@@ -5,8 +5,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.coretechv2.repository.DataStoreManager
 import com.example.coretechv2.viewmodel.AssemblyOrdersRecordDetailsViewModel
-import com.example.coretechv2.viewmodel.AssemblyOrdersRecordViewModel
-import com.example.coretechv2.viewmodel.AssemblyOrdersViewModel
 import com.example.coretechv2.viewmodel.SharedViewModel
 
 /**
