@@ -11,6 +11,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavController
 import com.example.coretechv2.dataclasses.APICallTables
 import com.example.coretechv2.dataclasses.MenuItem
 import com.example.coretechv2.dataclasses.PopupItems
@@ -55,18 +56,26 @@ class AssemblyOrdersRecordViewModel(private val dataStoreManager: DataStoreManag
         private set
     private val _snackbarEvent = MutableSharedFlow<String>()
     val snackbarEvent = _snackbarEvent.asSharedFlow()
+    var newEntry by mutableStateOf(true)
     var compareOrders = mutableStateOf(false)
         private set
     var assemblyOrdersList = mutableStateListOf<APICallTables.AssemblyRecordLookup>()
         private set
     var assemblyOrderListSearched = mutableStateListOf<APICallTables.AssemblyRecordLookup>()
         private set
-    var selectedOrder by mutableStateOf<APICallTables.AssemblyRecordLookup?>(null)
-        private set
     var searchField by mutableStateOf("")
         private set
 
     var testLoading by mutableStateOf(true)
+        private set
+
+    var allTestLoading by mutableStateOf(false)
+        private set
+
+    var allTestLoaded by mutableStateOf(false)
+        private set
+
+    var testLoaded by mutableStateOf(true)
         private set
 
     var hasTest by mutableStateOf(false)
@@ -90,6 +99,7 @@ class AssemblyOrdersRecordViewModel(private val dataStoreManager: DataStoreManag
     var selectedOrderList = mutableStateListOf<String>()
     val testAndAdjustments = mutableMapOf<String, SnapshotStateList<SnapshotStateList<Any>>>()
     val notes = mutableMapOf<String, String>()
+    val showDetail = mutableStateListOf<String>()
     var showFilterMenu by mutableStateOf(false)
         private set
 
@@ -99,8 +109,10 @@ class AssemblyOrdersRecordViewModel(private val dataStoreManager: DataStoreManag
             clickEnabled = false,
             switch = SwitchItem(
                 checked = { hasTest },
-                onCheckedChange = { hasTest = !hasTest
-                                    onSearchFieldChange(searchField) },
+                onCheckedChange = {
+                    hasTest = !hasTest
+                    onSearchFieldChange(searchField)
+                },
             )
         ),
         MenuItem(
@@ -108,8 +120,10 @@ class AssemblyOrdersRecordViewModel(private val dataStoreManager: DataStoreManag
             clickEnabled = false,
             switch = SwitchItem(
                 checked = { hasAdjustments },
-                onCheckedChange = { hasAdjustments = !hasAdjustments
-                                    onSearchFieldChange(searchField) },
+                onCheckedChange = {
+                    hasAdjustments = !hasAdjustments
+                    onSearchFieldChange(searchField)
+                },
             )
         ),
         MenuItem(
@@ -117,8 +131,10 @@ class AssemblyOrdersRecordViewModel(private val dataStoreManager: DataStoreManag
             clickEnabled = false,
             switch = SwitchItem(
                 checked = { hasNotes },
-                onCheckedChange = { hasNotes = !hasNotes
-                                    onSearchFieldChange(searchField) },
+                onCheckedChange = {
+                    hasNotes = !hasNotes
+                    onSearchFieldChange(searchField)
+                },
             )
         ),
         MenuItem(
@@ -127,32 +143,42 @@ class AssemblyOrdersRecordViewModel(private val dataStoreManager: DataStoreManag
         ),
         MenuItem(
             title = { "Item Name" },
-            onClick = { searchByItemName = !searchByItemName
-                        onSearchFieldChange(searchField) },
+            onClick = {
+                searchByItemName = !searchByItemName
+                onSearchFieldChange(searchField)
+            },
             icon = { if (searchByItemName) Icons.Filled.CheckBox else Icons.Filled.CheckBoxOutlineBlank },
         ),
         MenuItem(
             title = { "Item Code" },
-            onClick = { searchByItemCode = !searchByItemCode
-                        onSearchFieldChange(searchField) },
+            onClick = {
+                searchByItemCode = !searchByItemCode
+                onSearchFieldChange(searchField)
+            },
             icon = { if (searchByItemCode) Icons.Filled.CheckBox else Icons.Filled.CheckBoxOutlineBlank },
         ),
         MenuItem(
             title = { "Order Number" },
-            onClick = { searchByOrderNumber = !searchByOrderNumber
-                        onSearchFieldChange(searchField) },
+            onClick = {
+                searchByOrderNumber = !searchByOrderNumber
+                onSearchFieldChange(searchField)
+            },
             icon = { if (searchByOrderNumber) Icons.Filled.CheckBox else Icons.Filled.CheckBoxOutlineBlank },
         ),
         MenuItem(
             title = { "Order Date" },
-            onClick = { searchByDate = !searchByDate
-                        onSearchFieldChange(searchField) },
+            onClick = {
+                searchByDate = !searchByDate
+                onSearchFieldChange(searchField)
+            },
             icon = { if (searchByDate) Icons.Filled.CheckBox else Icons.Filled.CheckBoxOutlineBlank },
         ),
         MenuItem(
             title = { "Order Qty" },
-            onClick = { searchByQty = !searchByQty
-                        onSearchFieldChange(searchField) },
+            onClick = {
+                searchByQty = !searchByQty
+                onSearchFieldChange(searchField)
+            },
             icon = { if (searchByQty) Icons.Filled.CheckBox else Icons.Filled.CheckBoxOutlineBlank },
         ),
     )
@@ -167,12 +193,63 @@ class AssemblyOrdersRecordViewModel(private val dataStoreManager: DataStoreManag
     }
 
     /**
+     * Clears all currently selected assembly orders.
+     */
+    fun clearSelectedOrderList() {
+        selectedOrderList.clear()
+    }
+
+    /**
+     * Clears the list of assembly orders with expanded detail sections.
+     */
+    fun clearShowDetail() {
+        showDetail.clear()
+    }
+
+    /**
+     * Marks the current operation as no longer being a new entry.
+     */
+    fun clearNewEntry() {
+        newEntry = false
+    }
+
+    /**
      * Toggles the assembly order comparison mode.
      *
      * When comparison mode is enabled, orders can be selected for comparison.
+     * If one or more orders are selected, their order numbers are copied to the
+     * shared ViewModel and the detail screen is opened.
+     *
+     * @param navController Navigation controller used to open the comparison detail screen.
      */
-    fun compareOrdersPressed() {
-        compareOrders.value = !compareOrders.value
+    fun compareOrdersPressed(navController: NavController) {
+        if (compareOrders.value && selectedOrderList.isNotEmpty()) {
+            navToRecordDetails(navController)
+            compareOrders.value = false
+        } else if (compareOrders.value) {
+            compareOrders.value = false
+        } else {
+            compareOrders.value = true
+        }
+    }
+
+    /**
+     * Navigates to the assembly order details screen using the currently selected
+     * assembly orders.
+     *
+     * The selected order numbers are sorted in descending order and copied into
+     * [SharedViewModel.compareList] so they can be accessed by the destination
+     * screen. Any existing entries in the shared comparison list are removed
+     * before the selected orders are added.
+     *
+     * @param navController [NavController] used to navigate to the assembly order
+     * details screen.
+     */
+    fun navToRecordDetails(navController: NavController){
+        selectedOrderList.sortDescending()
+        sharedViewModel.compareList.clear()
+        sharedViewModel.compareList.addAll(selectedOrderList)
+        navController.navigate("assemblyrecordsdetails")
     }
 
     /**
@@ -180,7 +257,7 @@ class AssemblyOrdersRecordViewModel(private val dataStoreManager: DataStoreManag
      *
      * @param order The order number to add to the comparison list.
      */
-    fun addSelectedOrder(order: String){
+    fun addSelectedOrder(order: String) {
         selectedOrderList.add(order)
     }
 
@@ -189,8 +266,26 @@ class AssemblyOrdersRecordViewModel(private val dataStoreManager: DataStoreManag
      *
      * @param order The order number to remove from the comparison list.
      */
-    fun removeSelectedOrder(order: String){
+    fun removeSelectedOrder(order: String) {
         selectedOrderList.remove(order)
+    }
+
+    /**
+     * Marks an assembly order as having its detail section expanded.
+     *
+     * @param order The order number whose detail section should be shown.
+     */
+    fun addShowDetail(order: String) {
+        showDetail.add(order)
+    }
+
+    /**
+     * Removes an assembly order from the list of expanded detail sections.
+     *
+     * @param order The order number whose detail section should be hidden.
+     */
+    fun removeShowDetail(order: String) {
+        showDetail.remove(order)
     }
 
     /**
@@ -201,6 +296,13 @@ class AssemblyOrdersRecordViewModel(private val dataStoreManager: DataStoreManag
      */
     fun menuPressed() {
         showFilterMenu = !showFilterMenu
+    }
+
+    /**
+     * Closes the assembly order filter menu.
+     */
+    fun menuClose() {
+        showFilterMenu = false
     }
 
 
@@ -242,10 +344,10 @@ class AssemblyOrdersRecordViewModel(private val dataStoreManager: DataStoreManag
         if (newValue.isBlank() && !hasTest && !hasAdjustments && !hasNotes) {
             Log.d("search", "filtered by has")
             assemblyOrderListSearched.addAll(assemblyOrdersList)
-        } else if (newValue.isBlank() ) {
+        } else if (newValue.isBlank()) {
             assemblyOrderListSearched.addAll(
                 assemblyOrdersList.filter { order ->
-                        (!hasTest || order.TESTSEXISTS == 1) && (!hasAdjustments || order.ADJUSTSEXISTS == 1) && (!hasNotes || order.NOTESEXISTS == 1)
+                    (!hasTest || order.TESTSEXISTS == 1) && (!hasAdjustments || order.ADJUSTSEXISTS == 1) && (!hasNotes || order.NOTESEXISTS == 1)
                 }
             )
             Log.d("search", "No filter")
@@ -253,38 +355,29 @@ class AssemblyOrdersRecordViewModel(private val dataStoreManager: DataStoreManag
             assemblyOrderListSearched.addAll(
                 assemblyOrdersList.filter { order ->
                     searchTerms.all { term ->
-                                (searchByItemName && order.ITEMDESCRIPTION.contains(term, ignoreCase = true))  ||
-                                        (searchByItemCode && order.ITEMCODE.contains(term, ignoreCase = true)) ||
-                                        (searchByOrderNumber && order.ORDERNUMBER.contains(term, ignoreCase = true)) ||
-                                        (searchByDate && order.ORDERDATE.contains(term, ignoreCase = true))
+                        (searchByItemName && order.ITEMDESCRIPTION.contains(term, ignoreCase = true)) ||
+                                (searchByItemCode && order.ITEMCODE.contains(term, ignoreCase = true)) ||
+                                (searchByOrderNumber && order.ORDERNUMBER.contains(term, ignoreCase = true)) ||
+                                (searchByDate && order.ORDERDATE.contains(term, ignoreCase = true))
 
                     }
                 }
             )
-        }else {
+        } else {
             Log.d("search", "filtered by Search")
             assemblyOrderListSearched.addAll(
                 assemblyOrdersList.filter { order ->
                     ((!hasTest || order.TESTSEXISTS == 1) && (!hasAdjustments || order.ADJUSTSEXISTS == 1) && (!hasNotes || order.NOTESEXISTS == 1)) &&
                             (searchTerms.all { term ->
-                        (searchByItemName && order.ITEMDESCRIPTION.contains(term, ignoreCase = true))  ||
-                                (searchByItemCode && order.ITEMCODE.contains(term, ignoreCase = true)) ||
-                                (searchByOrderNumber && order.ORDERNUMBER.contains(term, ignoreCase = true)) ||
-                                (searchByDate && order.ORDERDATE.contains(term, ignoreCase = true))
+                                (searchByItemName && order.ITEMDESCRIPTION.contains(term, ignoreCase = true)) ||
+                                        (searchByItemCode && order.ITEMCODE.contains(term, ignoreCase = true)) ||
+                                        (searchByOrderNumber && order.ORDERNUMBER.contains(term, ignoreCase = true)) ||
+                                        (searchByDate && order.ORDERDATE.contains(term, ignoreCase = true))
 
-                    })
+                            })
                 }
             )
         }
-    }
-
-    /**
-     * Sets the assembly order currently selected by the user.
-     *
-     * @param order The assembly order to set as the current selection.
-     */
-    fun getSelectedOrder(order: APICallTables.AssemblyRecordLookup) {
-        selectedOrder = order
     }
 
     /**
@@ -301,10 +394,10 @@ class AssemblyOrdersRecordViewModel(private val dataStoreManager: DataStoreManag
      *
      * The loading state is updated when the request has completed.
      */
-    fun retrieveAssemblyOrders() {
-        val searchDate = LocalDate.now().minusMonths(1)
-        viewModelScope.launch {
-            val assemblyOrdersListCall: List<APICallTables.AssemblyRecordLookup>? = apiCall.query("SELECT " +
+    suspend fun retrieveAssemblyOrders() {
+        val searchDate = LocalDate.now().minusYears(1).minusMonths(6)
+        val assemblyOrdersListCall: List<APICallTables.AssemblyRecordLookup>? = apiCall.query(
+            "SELECT " +
                     "AH.ORDERNUMBER, AH.ORDERSTATUS, AH.ORDERDATE, AH.ITEMCODE, AH.ITEMDESCRIPTION, AH.ITEMUNIT, " +
                     "AH.ORDERQTY, AH.ADDITIONALFIELD_1, AH.ADDITIONALFIELD_2, AH.ADDITIONALFIELD_3, " +
                     "AH.ADDITIONALFIELD_4, AH.ADDITIONALFIELD_5, AH.ADDITIONALFIELD_6, AH.ADDITIONALFIELD_7, " +
@@ -325,19 +418,19 @@ class AssemblyOrdersRecordViewModel(private val dataStoreManager: DataStoreManag
                     "   EXISTS (SELECT 1 FROM OSTDEF_NOTES NOTE WHERE NOTE.IDNUMBER = AH.OrderNumber) " +
                     "THEN 1 ELSE 0 END AS NOTESEXISTS " +
                     "FROM AssemblyHeader AH WHERE AH.ORDERDATE >= '$searchDate' ORDER BY AH.OrderNumber DESC"
-            )
+        )
 
-            assemblyOrdersList.clear()
-            assemblyOrdersListCall?.let {
-                assemblyOrdersList.addAll(it)
-            }
-            assemblyOrderListSearched.clear()
-            assemblyOrdersList.let {
-                assemblyOrderListSearched.addAll(it)
-            }
-            onSearchFieldChange(searchField)
-            testLoading = false
+        assemblyOrdersList.clear()
+        assemblyOrdersListCall?.let {
+            assemblyOrdersList.addAll(it)
         }
+        assemblyOrderListSearched.clear()
+        assemblyOrdersList.let {
+            assemblyOrderListSearched.addAll(it)
+        }
+        onSearchFieldChange(searchField)
+        testLoading = false
+        retrieveTestDetails()
     }
 
     /**
@@ -352,9 +445,10 @@ class AssemblyOrdersRecordViewModel(private val dataStoreManager: DataStoreManag
      * started to retrieve the tests, adjustments, and notes associated with
      * those orders.
      */
-    fun retrieveAllAssemblyOrders() {
-        viewModelScope.launch {
-            val assemblyOrdersListCall: List<APICallTables.AssemblyRecordLookup>? = apiCall.query("SELECT " +
+    suspend fun retrieveAllAssemblyOrders() {
+        allTestLoading = true
+        val assemblyOrdersListCall: List<APICallTables.AssemblyRecordLookup>? = apiCall.query(
+            "SELECT " +
                     "AH.ORDERNUMBER, AH.ORDERSTATUS, AH.ORDERDATE, AH.ITEMCODE, AH.ITEMDESCRIPTION, AH.ITEMUNIT, " +
                     "AH.ORDERQTY, AH.ADDITIONALFIELD_1, AH.ADDITIONALFIELD_2, AH.ADDITIONALFIELD_3, " +
                     "AH.ADDITIONALFIELD_4, AH.ADDITIONALFIELD_5, AH.ADDITIONALFIELD_6, AH.ADDITIONALFIELD_7, " +
@@ -375,14 +469,15 @@ class AssemblyOrdersRecordViewModel(private val dataStoreManager: DataStoreManag
                     "   EXISTS (SELECT 1 FROM OSTDEF_NOTES NOTE WHERE NOTE.IDNUMBER = AH.OrderNumber) " +
                     "THEN 1 ELSE 0 END AS NOTESEXISTS " +
                     "FROM AssemblyHeader AH ORDER BY AH.OrderNumber DESC"
-            )
-            assemblyOrdersList.clear()
-            assemblyOrdersListCall?.let {
-                assemblyOrdersList.addAll(it)
-            }
-            onSearchFieldChange(searchField)
-            retrieveTestDetails()
+        )
+        assemblyOrdersList.clear()
+        assemblyOrdersListCall?.let {
+            assemblyOrdersList.addAll(it)
         }
+        onSearchFieldChange(searchField)
+        allTestLoading = false
+        allTestLoaded = true
+        retrieveTestDetails()
     }
 
     /**
@@ -398,17 +493,42 @@ class AssemblyOrdersRecordViewModel(private val dataStoreManager: DataStoreManag
      *
      * Orders without tests, adjustments, or notes are skipped.
      */
-    fun retrieveTestDetails() {
-        viewModelScope.launch {
-            testAndAdjustments.clear()
-            for (i in 0 until assemblyOrdersList.size){
-                if (assemblyOrdersList[i].TESTSEXISTS == 1 || assemblyOrdersList[i].ADJUSTSEXISTS == 1 || assemblyOrdersList[i].NOTESEXISTS == 1){
+    suspend fun retrieveTestDetails() {
+        Log.d("test", "Started")
+        testAndAdjustments.clear()
+        if (assemblyOrdersList.isNotEmpty()) {
+            for (i in 0 until assemblyOrdersList.size) {
+                Log.d("test", "Loop Started at $i")
+                if (assemblyOrdersList[i].TESTSEXISTS == 1 || assemblyOrdersList[i].ADJUSTSEXISTS == 1 || assemblyOrdersList[i].NOTESEXISTS == 1) {
                     val (newTestAndAdjustments, newNotes) = testAndAdjustmentLookup(dataStoreManager, assemblyOrdersList[i].ORDERNUMBER)
+                    Log.d(
+                        "test",
+                        "newTestAndAdjustments size = ${newTestAndAdjustments.size}\ntestAndAdjustments size = ${testAndAdjustments.size}\nassemblyOrdersList size = ${assemblyOrdersList.size}\n"
+                    )
                     testAndAdjustments[assemblyOrdersList[i].ORDERNUMBER] = newTestAndAdjustments
                     notes[assemblyOrdersList[i].ORDERNUMBER] = newNotes
                 }
             }
         }
+    }
+
+    /**
+     * Retrieves test, adjustment, and note data for a single assembly order when
+     * that data has not already been loaded.
+     *
+     * The request is skipped when the order has no related test, adjustment, or
+     * note data, or when the order's related data has already been retrieved.
+     *
+     * @param order The assembly order whose related detail data should be retrieved.
+     */
+    suspend fun retrieveTestDetail(order: APICallTables.AssemblyRecordLookup) {
+        testLoaded = false
+        if ((!testAndAdjustments.contains(order.ORDERNUMBER)) && (order.TESTSEXISTS == 1 || order.ADJUSTSEXISTS == 1 || order.NOTESEXISTS == 1)) {
+            val (newTestAndAdjustments, newNotes) = testAndAdjustmentLookup(dataStoreManager, order.ORDERNUMBER)
+            testAndAdjustments[order.ORDERNUMBER] = newTestAndAdjustments
+            notes[order.ORDERNUMBER] = newNotes
+        }
+        testLoaded = true
     }
 }
 

@@ -1,6 +1,5 @@
 package com.example.coretechv2.ui.screen
 
-import android.content.res.Configuration
 import android.util.Log
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
@@ -19,6 +18,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.CompareArrows
 import androidx.compose.material.icons.filled.Check
@@ -46,10 +47,11 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -67,37 +69,51 @@ import com.example.coretechv2.ui.component.ViscosityCard
 import com.example.coretechv2.viewmodel.AssemblyOrdersRecordViewModel
 import com.example.coretechv2.viewmodel.SharedViewModel
 import kotlinx.coroutines.launch
+import kotlin.collections.contains
 
 /**
  * Displays the assembly order record lookup screen.
  *
- * This screen retrieves and displays assembly orders from the Ostendo API
- * and provides functionality for searching, filtering, selecting, and
- * comparing assembly orders.
+ * This screen retrieves assembly orders from the Ostendo API and displays
+ * them in a searchable, filterable list. It provides functionality for
+ * selecting orders for comparison, expanding individual order details,
+ * and navigating to the assembly order detail screen.
  *
- * The screen provides:
- * - A search field for filtering assembly orders.
- * - Filters for tests, adjustments, notes, item name, item code,
- *   order number, order date, and order quantity.
- * - A refresh action for retrieving recent assembly orders.
- * - A comparison mode for selecting multiple assembly orders.
- * - A long-press action for opening an assembly order's detail screen.
- * - An expandable detail section showing tests, adjustments, and notes.
- * - Loading feedback while assembly order data is being retrieved.
+ * The screen provides the following functionality:
+ * - Searching assembly orders by item description, item code, order number,
+ *   order date, and other enabled search fields.
+ * - Filtering orders based on whether they contain tests, adjustments,
+ *   or notes.
+ * - Refreshing the currently loaded assembly orders.
+ * - Selecting multiple orders for comparison.
+ * - Opening an individual assembly order's detail screen using a long press.
+ * - Expanding and collapsing order details.
+ * - Displaying associated test records using their corresponding test cards.
+ * - Displaying adjustment records and assembly notes.
+ * - Loading additional assembly orders when requested.
+ * - Displaying loading indicators while assembly order or test data is retrieved.
+ * - Displaying a filter menu for configuring search and filter options.
  *
- * Assembly order state and filtering are managed by
- * [AssemblyOrdersRecordViewModel]. Shared navigation and order information
- * are managed through [SharedViewModel].
+ * Assembly order data, search state, filter settings, selected orders,
+ * expanded details, and loading states are managed by
+ * [AssemblyOrdersRecordViewModel].
  *
- * @param navController Navigation controller used to navigate to the
- * assembly order detail screen.
- * @param sharedViewModel Shared ViewModel containing state used between
- * assembly order screens.
+ * Shared application state, including the currently selected order number
+ * and item code, is managed through [SharedViewModel].
+ *
+ * Navigation is handled using the supplied [NavController]. Snackbar messages
+ * emitted by the ViewModel are displayed through the screen's
+ * [SnackbarHostState].
+ *
+ * @param navController Navigation controller used to navigate between the
+ * assembly order lookup screen and the assembly order detail screen.
+ * @param sharedViewModel Shared ViewModel containing application state used
+ * by the assembly order screens.
  */
 @Composable
 fun AssemblyOrdersRecordLookupScreen(
     navController: NavController,
-    sharedViewModel: SharedViewModel
+    sharedViewModel: SharedViewModel,
 ) {
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
@@ -107,31 +123,25 @@ fun AssemblyOrdersRecordLookupScreen(
     )
     val focusManager = LocalFocusManager.current
     LaunchedEffect(Unit) {
-        viewModel.clearSearchField()
-        launch {
-            viewModel.retrieveAssemblyOrders()
+        viewModel.clearSelectedOrderList()
+        viewModel.clearShowDetail()
+        if (viewModel.newEntry){
+            viewModel.clearSearchField()
+            viewModel.clearNewEntry()
         }
-        launch {
-            viewModel.retrieveAllAssemblyOrders()
-        }
+        viewModel.retrieveAssemblyOrders()
+
     }
+
     LaunchedEffect(Unit) {
         viewModel.snackbarEvent.collect { message ->
             snackbarHostState.showSnackbar(message)
         }
     }
 
-    LaunchedEffect(sharedViewModel.navBack.value) {
-        if (sharedViewModel.navBack.value) {
-            viewModel.retrieveAssemblyOrders()
-            sharedViewModel.navBack.value = false
-        }
-    }
-
-
     TopBar(
         navController = navController,
-        title = "Assembly Orders",
+        title = "Assembly Records",
         snackbarHostState = snackbarHostState,
         backshow = true,
         icon1 = Icons.Filled.FilterList,
@@ -143,10 +153,10 @@ fun AssemblyOrdersRecordLookupScreen(
             Icons.AutoMirrored.Filled.CompareArrows
         },
         icon2Description = "Compare Records",
-        icon2action = { viewModel.compareOrdersPressed() },
+        icon2action = { viewModel.compareOrdersPressed(navController) },
         icon3 = Icons.Filled.Refresh,
         icon3Description = "Refresh Records",
-        icon3action = { viewModel.retrieveAssemblyOrders() },
+        icon3action = { scope.launch {viewModel.retrieveAssemblyOrders()} },
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -169,12 +179,21 @@ fun AssemblyOrdersRecordLookupScreen(
                 label = { Text("Search") },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
+                    .padding(16.dp),
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Search
+                ),
+                keyboardActions = KeyboardActions(
+                    onSearch = {
+                        focusManager.clearFocus()
+                    }
+                )
             )
             if (viewModel.testLoading) {
-                Column(modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
@@ -191,7 +210,6 @@ fun AssemblyOrdersRecordLookupScreen(
                         .weight(1f)
                 ) {
                     items(viewModel.assemblyOrderListSearched) { order ->
-                        var showDetail by remember { mutableStateOf(false) }
                         val background = if (viewModel.selectedOrderList.contains(order.ORDERNUMBER)) {
                             MaterialTheme.colorScheme.surfaceBright
                         } else {
@@ -204,7 +222,11 @@ fun AssemblyOrdersRecordLookupScreen(
                                 .combinedClickable(
                                     enabled = order.TESTSEXISTS == 1 || order.ADJUSTSEXISTS == 1 || order.NOTESEXISTS == 1 || viewModel.compareOrders.value,
                                     interactionSource = remember { MutableInteractionSource() },
-                                    indication = if (viewModel.compareOrders.value) { null } else {LocalIndication.current},
+                                    indication = if (viewModel.compareOrders.value) {
+                                        null
+                                    } else {
+                                        LocalIndication.current
+                                    },
                                     onClick = {
                                         if (viewModel.compareOrders.value) {
                                             if (viewModel.selectedOrderList.contains(order.ORDERNUMBER)) {
@@ -213,19 +235,27 @@ fun AssemblyOrdersRecordLookupScreen(
                                                 viewModel.addSelectedOrder(order.ORDERNUMBER)
                                             }
                                         } else {
-                                            sharedViewModel.currentOrderNumber.value = order.ORDERNUMBER
-                                            showDetail = !showDetail
+                                            scope.launch {viewModel.retrieveTestDetail(order)}
+                                            if (viewModel.showDetail.contains(order.ORDERNUMBER)) {
+                                                viewModel.removeShowDetail(order.ORDERNUMBER)
+                                            } else {
+                                                viewModel.addShowDetail(order.ORDERNUMBER)
+                                            }
                                         }
                                     },
                                     onLongClick = {
-                                        if (viewModel.compareOrders.value) {
-                                            sharedViewModel.currentOrderNumber.value = order.ORDERNUMBER
-                                            showDetail = !showDetail
+                                        if (!(order.TESTSEXISTS == 1 || order.ADJUSTSEXISTS == 1 || order.NOTESEXISTS == 1)){
+                                            Log.d("Hidden","Nothing is meant to happen here")
+                                        }else if (viewModel.compareOrders.value) {
+                                            if (viewModel.showDetail.contains(order.ORDERNUMBER)) {
+                                                viewModel.removeShowDetail(order.ORDERNUMBER)
+                                            } else {
+                                                viewModel.addShowDetail(order.ORDERNUMBER)
+                                            }
                                         } else {
-                                            viewModel.getSelectedOrder(order)
-                                            sharedViewModel.currentOrderNumber.value = order.ORDERNUMBER
-                                            sharedViewModel.currentItemCode.value = order.ITEMCODE
-                                            navController.navigate("assemblyorderdetail")
+                                            viewModel.clearSelectedOrderList()
+                                            viewModel.addSelectedOrder(order.ORDERNUMBER)
+                                            viewModel.navToRecordDetails(navController)
                                         }
                                     }
                                 )
@@ -260,7 +290,7 @@ fun AssemblyOrdersRecordLookupScreen(
                                 horizontalArrangement = Arrangement.Center,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(text = "Adjustments")
+                                Text(text = "Adjusts")
                                 Icon(
                                     imageVector = if (order.ADJUSTSEXISTS == 1)
                                         Icons.Filled.CheckBox
@@ -286,7 +316,21 @@ fun AssemblyOrdersRecordLookupScreen(
                                 )
                             }
                         }
-                        if (showDetail) {
+                        if (viewModel.showDetail.contains(order.ORDERNUMBER) && !viewModel.testLoaded && !viewModel.testAndAdjustments.contains(order.ORDERNUMBER)){
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .weight(1f),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(40.dp),
+                                    strokeWidth = 5.dp
+                                )
+                                Text("Loading Test", style = MaterialTheme.typography.titleMedium)
+                            }
+                        } else if (viewModel.showDetail.contains(order.ORDERNUMBER)) {
                             Row(
                                 modifier = Modifier
                                     .fillMaxSize()
@@ -418,10 +462,55 @@ fun AssemblyOrdersRecordLookupScreen(
 
                         HorizontalDivider(Modifier, DividerDefaults.Thickness, MaterialTheme.colorScheme.outline)
                     }
+                    items(1) { _ ->
+                        if (viewModel.allTestLoading) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(150.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(40.dp),
+                                    strokeWidth = 5.dp
+                                )
+                                Text("Loading Assemblies", style = MaterialTheme.typography.titleMedium)
+                            }
+                        } else if(viewModel.allTestLoaded){
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(100.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Text("End of Records", Modifier.padding(vertical = 2.dp, horizontal = 5.dp), style = MaterialTheme.typography.titleLarge)
+                            }
+                        }else {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(100.dp)
+                                    .clickable(onClick = { scope.launch { viewModel.retrieveAllAssemblyOrders() }}),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Text("Load More", Modifier.padding(vertical = 2.dp, horizontal = 5.dp), style = MaterialTheme.typography.titleLarge)
+                            }
+                        }
+                    }
                 }
             }
         }
         if (viewModel.showFilterMenu) {
+            Box(modifier = Modifier
+                .fillMaxSize()
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null ,
+                    onClick = { viewModel.menuClose() })
+            ){
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -430,6 +519,7 @@ fun AssemblyOrdersRecordLookupScreen(
             ) {
                 Menu(menuList = viewModel.filtersMenuList, width = 250)
             }
+        }
         }
     }
 }

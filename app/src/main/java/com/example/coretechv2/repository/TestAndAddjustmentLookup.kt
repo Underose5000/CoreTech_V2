@@ -2,13 +2,39 @@ package com.example.coretechv2.repository
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.snapshots.SnapshotStateMap
 import com.example.coretechv2.dataclasses.APICallTables
 import com.example.coretechv2.dataclasses.NoteTypes
 
-
+/**
+ * Retrieves all test, adjustment, and note information associated with an
+ * assembly order.
+ *
+ * The function queries each supported test table, the assembly adjustments
+ * table, and the assembly notes table. Test and adjustment records are grouped
+ * by their test/adjustment number and returned as a nested state list.
+ *
+ * The returned test and adjustment structure contains one entry for each
+ * test/adjustment number. Each entry contains:
+ * - A list containing the test records associated with that number.
+ * - A list containing the adjustment records associated with that number.
+ *
+ * The highest test or adjustment number found determines the number of entries
+ * created. If no tests or adjustments are found, an empty result structure is
+ * returned.
+ *
+ * Notes associated with the assembly order are combined into a single string,
+ * with two newline characters separating individual notes.
+ *
+ * @param dataStoreManager Provides access to the stored API configuration.
+ * @param orderNumber The assembly order number for which related data is retrieved.
+ * @return A [Pair] containing the grouped test and adjustment records and the
+ *         combined assembly notes.
+ */
 suspend fun testAndAdjustmentLookup(dataStoreManager: DataStoreManager, orderNumber: String): Pair<SnapshotStateList<SnapshotStateList<Any>>, String> {
     val apiCall = APICall(dataStoreManager)
     val testCount = mutableListOf<Int>()
@@ -85,4 +111,112 @@ suspend fun testAndAdjustmentLookup(dataStoreManager: DataStoreManager, orderNum
             notes += "\n\n"
         }
     return Pair(testAndAdjustments, notes)
+}
+
+/**
+ * Retrieves all test, adjustment, and note information associated with an
+ * assembly order using maps keyed by test/adjustment number.
+ *
+ * Each test number is used as a key in the returned maps. The [Triple] contains:
+ * - A map of test numbers to their associated test records.
+ * - A map of adjustment numbers to their associated adjustment records.
+ * - A single string containing all assembly notes.
+ *
+ * Test records from the supported test tables are combined into a single
+ * [List] for each test number. Adjustment records are stored separately as a
+ * list for each adjustment number.
+ *
+ * The highest test or adjustment number found determines the range of keys
+ * generated. If no tests or adjustments are found, no test/adjustment entries
+ * are generated.
+ *
+ * Notes associated with the assembly order are combined into a single string,
+ * with two newline characters separating individual notes.
+ *
+ * @param dataStoreManager Provides access to the stored API configuration.
+ * @param orderNumber The assembly order number for which related data is retrieved.
+ * @return A [Triple] containing:
+ *         - A [SnapshotStateMap] mapping test numbers to their test records.
+ *         - A [SnapshotStateMap] mapping adjustment numbers to their adjustment records.
+ *         - A [String] containing the combined assembly notes.
+ */
+suspend fun testAndAdjustmentLookupCall(dataStoreManager: DataStoreManager, orderNumber: String): Triple<SnapshotStateMap<Int, Any>, SnapshotStateMap<Int, List<APICallTables.assemblyAdjustment>>, String> {
+    val apiCall = APICall(dataStoreManager)
+    val testCount = mutableListOf<Int>()
+    val testAndAdjustments = mutableStateListOf<SnapshotStateList<Any>>()
+    val tests = mutableStateMapOf<Int,Any>()
+    val adjustments = mutableStateMapOf<Int,List<APICallTables.assemblyAdjustment>>()
+    var notes by mutableStateOf("")
+
+    val viscosityTests: List<APICallTables.viscosityTest>? = apiCall.query("SELECT * FROM OSTDEF_VISCOSITY_TESTS where OrderNumber = '$orderNumber'")
+    testCount.addAll(viscosityTests?.map { it.TESTNO } ?: emptyList())
+
+    val gelTimeTests: List<APICallTables.gelTimeTest>? = apiCall.query("SELECT * FROM OSTDEF_GELTIME_TESTS where OrderNumber = '$orderNumber'")
+    testCount.addAll(gelTimeTests?.map { it.TESTNO } ?: emptyList())
+
+    val elongationTests: List<APICallTables.ElongationalBreakTest>? = apiCall.query("SELECT * FROM OSTDEF_ELONGATIONAL_TEST where OrderNumber = '$orderNumber'")
+    testCount.addAll(elongationTests?.map { it.TESTNO } ?: emptyList())
+
+    val flameTests: List<APICallTables.FlammabilityTest>? = apiCall.query("SELECT * FROM OSTDEF_FLAMMABILITY_TEST where OrderNumber = '$orderNumber'")
+    testCount.addAll(flameTests?.map { it.TESTNO } ?: emptyList())
+
+    val resistivityTests: List<APICallTables.ResistivityTest>? = apiCall.query("SELECT * FROM OSTDEF_RESISTIVITY_TEST where OrderNumber = '$orderNumber'")
+    testCount.addAll(resistivityTests?.map { it.TESTNO } ?: emptyList())
+
+    val peakExothermTests: List<APICallTables.peakExothermTest>? = apiCall.query("SELECT * FROM OSTDEF_PEAKEXOTHERM_TEST where OrderNumber = '$orderNumber'")
+    testCount.addAll(peakExothermTests?.map { it.TESTNO } ?: emptyList())
+
+    val adjustmentLines: List<APICallTables.assemblyAdjustment>? = apiCall.query("SELECT * FROM OSTDEF_ADJUSTMENTS where OrderNumber = '$orderNumber'")
+    testCount.addAll(adjustmentLines?.map { it.ADJUSTNO } ?: emptyList())
+
+    val notesline: List<APICallTables.notes>? =
+        apiCall.query("SELECT * FROM OSTDEF_NOTES where IDNUMBER = '$orderNumber' and TYPE = '${NoteTypes.ASSEMBLY.toStringName()}'")
+
+
+    val testAndAdjustmentsCount = testCount.toMutableList()
+    if (testAndAdjustmentsCount.isEmpty()) {
+        testAndAdjustmentsCount.add(0)
+    }
+    testAndAdjustmentsCount.sortDescending()
+
+
+    testAndAdjustments.clear()
+    for (testValue in 0 until testAndAdjustmentsCount.first()) {
+        val test = mutableStateListOf<Any>()
+        val adjust = mutableStateListOf<APICallTables.assemblyAdjustment>()
+        val index = testValue + 1
+
+        for (tn in 0 until (viscosityTests?.size ?: 0)) {
+            if (viscosityTests?.get(tn)?.TESTNO == index) test.add(viscosityTests[tn])
+        }
+        for (tn in 0 until (gelTimeTests?.size ?: 0)) {
+            if (gelTimeTests?.get(tn)?.TESTNO == index) test.add(gelTimeTests[tn])
+        }
+        for (tn in 0 until (elongationTests?.size ?: 0)) {
+            if (elongationTests?.get(tn)?.TESTNO == index) test.add(elongationTests[tn])
+        }
+        for (tn in 0 until (flameTests?.size ?: 0)) {
+            if (flameTests?.get(tn)?.TESTNO == index) test.add(flameTests[tn])
+        }
+        for (tn in 0 until (resistivityTests?.size ?: 0)) {
+            if (resistivityTests?.get(tn)?.TESTNO == index) test.add(resistivityTests[tn])
+        }
+        for (tn in 0 until (peakExothermTests?.size ?: 0)) {
+            if (peakExothermTests?.get(tn)?.TESTNO == index) test.add(peakExothermTests[tn])
+        }
+        for (tn in 0 until (adjustmentLines?.size ?: 0)) {
+            if (adjustmentLines?.get(tn)?.ADJUSTNO == index) adjust.add(adjustmentLines[tn])
+        }
+
+        tests[index] = test
+        adjustments[index] = adjust
+
+    }
+
+    notes = ""
+    for (NN in 0 until (notesline?.size ?: 0)) {
+        notes += notesline?.get(NN)?.NOTE
+        notes += "\n\n"
+    }
+    return Triple(tests, adjustments, notes)
 }

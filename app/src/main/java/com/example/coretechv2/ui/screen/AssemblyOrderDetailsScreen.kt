@@ -737,7 +737,7 @@ fun AssemblyTestData(viewModel: AssemblyOrderDetailsViewModel, sharedViewModel: 
                 .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.primaryContainer)
         ) {
-            Text("Test $testNumber", Modifier.padding(vertical = 2.dp, horizontal = 5.dp), style = MaterialTheme.typography.titleSmall)
+            Text("Test " + (testNumber + 1), Modifier.padding(vertical = 2.dp, horizontal = 5.dp), style = MaterialTheme.typography.titleSmall)
         }
         Spacer(modifier = Modifier.height(1.dp))
         for (test in tests) {
@@ -848,7 +848,7 @@ fun AssemblyTestData(viewModel: AssemblyOrderDetailsViewModel, sharedViewModel: 
                 .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.primary)
         ) {
-            Text("Adjustment " + testNumber, Modifier.padding(vertical = 2.dp, horizontal = 5.dp), style = MaterialTheme.typography.titleSmall)
+            Text("Adjustment " + (testNumber + 1), Modifier.padding(vertical = 2.dp, horizontal = 5.dp), style = MaterialTheme.typography.titleSmall)
         }
         Spacer(modifier = Modifier.height(5.dp))
         for (adjust in adjustments) {

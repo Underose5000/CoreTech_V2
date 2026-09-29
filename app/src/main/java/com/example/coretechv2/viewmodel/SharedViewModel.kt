@@ -79,7 +79,7 @@ class SharedViewModel(private val dataStoreManager: DataStoreManager) : ViewMode
 
     var saveType by mutableStateOf(APICallTypes.INSERT)
         private set
-    var testCount = mutableStateOf(0)
+    var compareList = mutableListOf<String>()
 
     /**
      * Opens the general popup.

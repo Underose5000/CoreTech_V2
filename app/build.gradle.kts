@@ -18,7 +18,7 @@ android {
         applicationId = "com.example.coretechv2"
         minSdk = 31
         targetSdk = 36
-        versionCode = 4
+        versionCode = 6
         versionName = "2.0.$versionCode"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

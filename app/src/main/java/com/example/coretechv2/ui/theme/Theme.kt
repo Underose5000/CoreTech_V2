@@ -90,6 +90,7 @@ private val LightColorScheme = lightColorScheme(
     inverseSurface = Color(0xFF727272),
     inverseOnSurface = Color(0xFFFFFFFF),
     surfaceBright = Color(0xFFFFFFFF),
+    surfaceDim = Color(0xFFA7B5B7),
 )
 
 /**

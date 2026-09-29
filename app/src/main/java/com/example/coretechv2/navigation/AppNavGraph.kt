@@ -6,6 +6,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.coretechv2.ui.screen.AssemblyOrderDetails
+import com.example.coretechv2.ui.screen.AssemblyOrdersRecordDetailsScreen
 import com.example.coretechv2.ui.screen.AssemblyOrdersRecordLookupScreen
 import com.example.coretechv2.ui.screen.AssemblyOrdersScreen
 import com.example.coretechv2.ui.screen.HomeScreen
@@ -24,6 +25,8 @@ import com.example.coretechv2.viewmodel.SharedViewModel
  * - `"home"` -> [HomeScreen]
  * - `"assemblyorders"` -> [AssemblyOrdersScreen]
  * - `"assemblyorderdetail"` -> [AssemblyOrderDetails]
+ * - `"assemblyrecords"` -> [AssemblyOrdersRecordLookupScreen]
+ * - `"assemblyrecordsdetails"` -> [AssemblyOrdersRecordDetailsScreen]
  * - `"printboxlabels"` -> [PrintBoxLabelsScreen]
  *
  * A shared instance of [SharedViewModel] is passed to each screen to maintain
@@ -38,7 +41,7 @@ import com.example.coretechv2.viewmodel.SharedViewModel
 @Composable
 fun AppNavGraph(
     navController: NavHostController = rememberNavController(),
-    sharedViewModel: SharedViewModel
+    sharedViewModel: SharedViewModel,
 ) {
     NavHost(navController = navController, startDestination = "home") {
 
@@ -54,16 +57,22 @@ fun AppNavGraph(
                 sharedViewModel
             )
         }
-        composable("assemblyrecords") {
-            AssemblyOrdersRecordLookupScreen(
-                navController = navController,
-                sharedViewModel
-            )
-        }
         composable("assemblyorderdetail") {
             AssemblyOrderDetails(
                 navController = navController,
                 sharedViewModel
+            )
+        }
+        composable("assemblyrecords") {
+            AssemblyOrdersRecordLookupScreen(
+                navController = navController,
+                sharedViewModel,
+            )
+        }
+        composable("assemblyrecordsdetails") {
+            AssemblyOrdersRecordDetailsScreen(
+                navController = navController,
+                sharedViewModel,
             )
         }
         composable("printboxlabels") {
@@ -72,6 +81,7 @@ fun AppNavGraph(
                 sharedViewModel
             )
         }
+
 
     }
 }
