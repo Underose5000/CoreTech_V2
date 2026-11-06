@@ -30,25 +30,28 @@ class APISettingViewModel(private val dataStoreManager: DataStoreManager) : View
     private val apiCall = APICall(dataStoreManager)
 
     /**
-     * The API URL stored before the current settings are changed.
+     * The last API URL known to connect, restored if a new URL fails.
      */
-    val oldurl: String = runBlocking {
+    var oldurl: String = runBlocking {
         dataStoreManager.apiUrlFlow.firstOrNull() ?: ""
     }
+        private set
 
     /**
-     * The API port stored before the current settings are changed.
+     * The last API port known to connect, restored if a new port fails.
      */
-    val oldport: String = runBlocking {
+    var oldport: String = runBlocking {
         dataStoreManager.apiPortFlow.firstOrNull() ?: ""
     }
+        private set
 
     /**
-     * The API key stored before the current settings are changed.
+     * The last API key known to connect, restored if a new key fails.
      */
-    val oldkey: String = runBlocking {
+    var oldkey: String = runBlocking {
         dataStoreManager.apiKeyFlow.firstOrNull() ?: ""
     }
+        private set
 
     /**
      * Indicates whether the API connection was successfully verified.
@@ -174,11 +177,17 @@ class APISettingViewModel(private val dataStoreManager: DataStoreManager) : View
             }
 
 
-            dataStoreManager.saveApiSettings(newurl.trim(), newport.trim(), newkey.trim())
+            val url = newurl.trim()
+            val port = newport.trim()
+            val key = newkey.trim()
+            dataStoreManager.saveApiSettings(url, port, key)
 
             val connectionConfirmed: List<APICallTables.VerifyConnection>? = apiCall.query("SELECT * FROM VERIFY_CONNECTION")
 
             if (connectionConfirmed?.firstOrNull()?.IS_CONNECTED == 1) {
+                oldurl = url
+                oldport = port
+                oldkey = key
                 ConnectedSuccess = true
             } else {
                 dataStoreManager.saveApiSettings(oldurl, oldport, oldkey)
@@ -187,6 +196,14 @@ class APISettingViewModel(private val dataStoreManager: DataStoreManager) : View
             }
 
         }
+    }
+
+    /**
+     * Consumes the successful connection event so another save can be
+     * reported again.
+     */
+    fun consumeConnectedSuccess() {
+        ConnectedSuccess = false
     }
 
     /**

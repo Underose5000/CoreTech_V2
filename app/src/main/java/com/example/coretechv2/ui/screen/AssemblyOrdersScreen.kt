@@ -1,6 +1,5 @@
 package com.example.coretechv2.ui.screen
 
-import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -11,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -20,10 +20,12 @@ import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarHostState
@@ -32,10 +34,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.style.TextAlign
@@ -141,12 +141,64 @@ fun AssemblyOrdersScreen(
                     .fillMaxWidth()
                     .padding(16.dp)
             )
-            LazyColumn(
+            val orders = viewModel.AssemblyOrderListSearached
+
+            // Thin bar while refreshing orders that are already on screen
+            if (viewModel.isLoading && orders.isNotEmpty()) {
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+            }
+
+            when {
+                // First load: nothing to show yet
+                orders.isEmpty() && (viewModel.isLoading || !viewModel.hasLoaded && viewModel.loadError == null) -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        CircularProgressIndicator()
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text("Loading assembly orders…")
+                    }
+                }
+
+                // Load failed and there is no cached data to fall back on
+                orders.isEmpty() && !viewModel.hasLoaded && viewModel.loadError != null -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(viewModel.loadError ?: "Couldn't load assembly orders")
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(onClick = { viewModel.reload() }) { Text("Retry") }
+                    }
+                }
+
+                orders.isEmpty() -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            if (viewModel.Searchfield.isBlank()) "No assembly orders found"
+                            else "No orders match \"${viewModel.Searchfield}\""
+                        )
+                    }
+                }
+
+                else -> LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
             ) {
-                items(viewModel.AssemblyOrderListSearached) { order ->
+                items(orders) { order ->
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -166,6 +218,7 @@ fun AssemblyOrdersScreen(
                     }
                     HorizontalDivider(Modifier, DividerDefaults.Thickness, MaterialTheme.colorScheme.outline)
                 }
+            }
             }
         }
     }

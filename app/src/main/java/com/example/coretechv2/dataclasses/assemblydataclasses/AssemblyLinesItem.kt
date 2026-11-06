@@ -24,6 +24,10 @@ data class AssemblyLinesItem(
     val ADDITIONALFIELD_3: String,
     val ADDITIONALFIELD_4: String,
     val ADDITIONALFIELD_6: String,
+    // Planned qty plus adjustments, or TOTALISSUEDQTY once any line on the order has been issued
+    val ACTUALQTY: String = "",
+    // Total of all adjustments made to the line
+    val ADJUSTQTY: String = "",
 )
 
 

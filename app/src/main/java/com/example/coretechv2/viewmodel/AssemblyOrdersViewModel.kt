@@ -1,6 +1,6 @@
 package com.example.coretechv2.viewmodel
 
-import android.util.Log
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -17,9 +17,11 @@ import com.example.coretechv2.repository.DataStoreManager
 import com.example.coretechv2.repository.toDateFormatYYYYMMDD
 import com.example.coretechv2.ui.screen.AddAssemblyOrderScreen
 import com.example.coretechv2.ui.screen.ItemLookUpScreen
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.LocalDate
 
 /**
@@ -69,14 +71,42 @@ class AssemblyOrdersViewModel(private val dataStoreManager: DataStoreManager, va
 
     var showAllOrders = mutableStateOf(false)
         private set
-    var AssemblyOrdersList = mutableStateListOf<APICallTables.AssemblyHeader>()
-        private set
 
-    var allAssemblyOrdersList = mutableStateListOf<APICallTables.AssemblyHeader>()
-        private set
+    /** Open assembly orders. Backed by the cache in [SharedViewModel]. */
+    val AssemblyOrdersList: List<APICallTables.AssemblyHeader>
+        get() = sharedViewModel.AssemblyOrdersList
 
-    var AssemblyOrderListSearached = mutableStateListOf<APICallTables.AssemblyHeader>()
-        private set
+    /** All assembly orders, including completed. Backed by the cache in [SharedViewModel]. */
+    val allAssemblyOrdersList: List<APICallTables.AssemblyHeader>
+        get() = sharedViewModel.allAssemblyOrdersList
+
+    /**
+     * The orders shown on screen: the open or all orders list, filtered by
+     * [Searchfield].
+     *
+     * This is derived state, so it recalculates automatically whenever the
+     * underlying lists finish loading, the search text changes or the
+     * open/all toggle changes. There is no copy step that can run before the
+     * data arrives and leave the screen blank.
+     */
+    val AssemblyOrderListSearached: List<APICallTables.AssemblyHeader> by derivedStateOf {
+        filterOrders(
+            if (showAllOrders.value) allAssemblyOrdersList else AssemblyOrdersList,
+            Searchfield
+        )
+    }
+
+    /** True while the list currently being shown is still loading. */
+    val isLoading: Boolean
+        get() = if (showAllOrders.value) sharedViewModel.allOrdersLoading else sharedViewModel.openOrdersLoading
+
+    /** True once the list currently being shown has loaded at least once. */
+    val hasLoaded: Boolean
+        get() = if (showAllOrders.value) sharedViewModel.allOrdersLoaded else sharedViewModel.openOrdersLoaded
+
+    /** Error from the most recent load, if it failed. */
+    val loadError: String?
+        get() = sharedViewModel.ordersError
 
     var selectedOrder by mutableStateOf<APICallTables.AssemblyHeader?>(null)
         private set
@@ -147,52 +177,39 @@ class AssemblyOrdersViewModel(private val dataStoreManager: DataStoreManager, va
      * Multiple search terms must all be present for an order to be included
      * in the results. The search is performed against either the current open
      * orders or all assembly orders depending on the [showAllOrders] state.
+     * The displayed list [AssemblyOrderListSearached] updates automatically.
      *
      * @param newValue The new search text entered by the user.
      */
     fun onSearchFieldChange(newValue: String) {
-        val searchTerms = newValue
+        Searchfield = newValue
+    }
+
+    /**
+     * Filters [orders] by the whitespace separated terms in [search]. Every term
+     * must match for an order to be included.
+     */
+    private fun filterOrders(
+        orders: List<APICallTables.AssemblyHeader>,
+        search: String
+    ): List<APICallTables.AssemblyHeader> {
+        val searchTerms = search
             .trim()
             .split(Regex("\\s+"))
             .filter { it.isNotBlank() }
+        if (searchTerms.isEmpty()) return orders.toList()
 
-        val searchAllFields = newValue.matches(Regex("[Aa0-9\\s]+"))
-        Searchfield = newValue
-        AssemblyOrderListSearached.clear()
-        if (newValue.isBlank() && !showAllOrders.value) {
-            AssemblyOrderListSearached.addAll(AssemblyOrdersList)
-        } else if (newValue.isBlank() && showAllOrders.value) {
-            AssemblyOrderListSearached.addAll(allAssemblyOrdersList)
-        } else if (showAllOrders.value) {
-            AssemblyOrderListSearached.addAll(
-                allAssemblyOrdersList.filter { order ->
-
-                    searchTerms.all { term ->
-                        if (searchAllFields) {
-                            order.ITEMDESCRIPTION.contains(term, ignoreCase = true) ||
-                                    order.ITEMCODE.contains(term, ignoreCase = true) ||
-                                    order.ORDERNUMBER.contains(term, ignoreCase = true)
-                        } else {
-                            order.ITEMDESCRIPTION.contains(term, ignoreCase = true)
-                        }
-                    }
+        val searchAllFields = search.matches(Regex("[Aa0-9\\s]+"))
+        return orders.filter { order ->
+            searchTerms.all { term ->
+                if (searchAllFields) {
+                    order.ITEMDESCRIPTION.contains(term, ignoreCase = true) ||
+                            order.ITEMCODE.contains(term, ignoreCase = true) ||
+                            order.ORDERNUMBER.contains(term, ignoreCase = true)
+                } else {
+                    order.ITEMDESCRIPTION.contains(term, ignoreCase = true)
                 }
-            )
-        } else {
-            AssemblyOrderListSearached.addAll(
-                AssemblyOrdersList.filter { order ->
-
-                    searchTerms.all { term ->
-                        if (searchAllFields) {
-                            order.ITEMDESCRIPTION.contains(term, ignoreCase = true) ||
-                                    order.ITEMCODE.contains(term, ignoreCase = true) ||
-                                    order.ORDERNUMBER.contains(term, ignoreCase = true)
-                        } else {
-                            order.ITEMDESCRIPTION.contains(term, ignoreCase = true)
-                        }
-                    }
-                }
-            )
+            }
         }
     }
 
@@ -278,7 +295,6 @@ class AssemblyOrdersViewModel(private val dataStoreManager: DataStoreManager, va
      */
     fun pastOrdersPressed() {
         showAllOrders.value = !showAllOrders.value
-        onSearchFieldChange(Searchfield)
     }
 
     /**
@@ -294,108 +310,23 @@ class AssemblyOrdersViewModel(private val dataStoreManager: DataStoreManager, va
     }
 
     /**
-     * Reloads the assembly order lists and reapplies the current search filter.
+     * Fetches fresh assembly orders from the API.
      *
-     * Both the open assembly orders and all assembly orders are retrieved before
-     * the appropriate list is displayed and filtered.
+     * Any orders already on screen stay visible until the new data arrives.
      */
     fun reload() {
-        Log.d("Timing", "reloaded")
-        retrieveAssemblyOrders()
-        retrieveAllAssemblyOrders()
-        AssemblyOrderListSearached.clear()
-        if (!showAllOrders.value) {
-            AssemblyOrdersList.let {
-                AssemblyOrderListSearached.addAll(it)
-            }
-        } else {
-            allAssemblyOrdersList.let {
-                AssemblyOrderListSearached.addAll(it)
-            }
-        }
-        onSearchFieldChange(Searchfield)
+        sharedViewModel.loadAssemblyOrders(force = true)
     }
 
     /**
-     * Initialises the assembly order lists using data from the shared ViewModel
-     * when available.
+     * Makes sure the assembly orders are loaded when the screen opens.
      *
-     * If the shared ViewModel does not contain the required data, the relevant
-     * information is retrieved from the API instead.
+     * If the home screen preload has already finished, the cached orders show
+     * immediately. If it is still running, that load is reused and the screen
+     * fills as soon as it completes. Otherwise a new load is started.
      */
     fun setAllAssemblyOrders() {
-        Log.d("Orders", "set All Assembly Orders Started")
-        if (sharedViewModel.AssemblyOrdersList.isEmpty()) {
-            retrieveAssemblyOrders()
-            AssemblyOrderListSearached.clear()
-            AssemblyOrdersList.let {
-                AssemblyOrderListSearached.addAll(it)
-            }
-            Log.d("Orders", "set All Assembly Orders using retrieveAssemblyOrders. list size = ${AssemblyOrderListSearached.size}. Searchfield = $Searchfield")
-        } else {
-            AssemblyOrdersList.clear()
-            AssemblyOrderListSearached.clear()
-            sharedViewModel.AssemblyOrdersList.let {
-                AssemblyOrdersList.addAll(it)
-                AssemblyOrderListSearached.addAll(it)
-            }
-            Log.d("Orders", "set All Assembly Orders using SharedViewmodel. list size = ${AssemblyOrderListSearached.size}. Searchfield = $Searchfield")
-        }
-        if (sharedViewModel.allAssemblyOrdersList.isEmpty()) {
-            retrieveAllAssemblyOrders()
-        } else {
-            allAssemblyOrdersList.clear()
-            sharedViewModel.allAssemblyOrdersList.let {
-                allAssemblyOrdersList.addAll(it)
-            }
-        }
-        onSearchFieldChange(Searchfield)
-    }
-
-    /**
-     * Initialises the record order lists using data from the shared ViewModel
-     * when available.
-     *
-     * If the shared ViewModel does not contain the required data, the relevant
-     * information is retrieved from the API instead.
-     */
-
-    /**
-     * Retrieves all open assembly orders from the API.
-     *
-     * The retrieved orders are stored both locally in this ViewModel and in the
-     * shared ViewModel.
-     */
-    fun retrieveAssemblyOrders() {
-        viewModelScope.launch {
-            val assemblyOrdersListCall: List<APICallTables.AssemblyHeader>? = apiCall.query("SELECT * FROM AssemblyHeader where OrderStatus = 'Open' order by OrderNumber DESC")
-
-            AssemblyOrdersList.clear()
-            sharedViewModel.AssemblyOrdersList.clear()
-            assemblyOrdersListCall?.let {
-                AssemblyOrdersList.addAll(it)
-                sharedViewModel.AssemblyOrdersList.addAll(it)
-            }
-        }
-    }
-
-    /**
-     * Retrieves all assembly orders from the API, including completed orders.
-     *
-     * The retrieved orders are stored both locally in this ViewModel and in the
-     * shared ViewModel.
-     */
-    fun retrieveAllAssemblyOrders() {
-        viewModelScope.launch {
-            val assemblyOrdersListCall: List<APICallTables.AssemblyHeader>? = apiCall.query("SELECT * FROM AssemblyHeader order by OrderNumber DESC")
-
-            allAssemblyOrdersList.clear()
-            sharedViewModel.allAssemblyOrdersList
-            assemblyOrdersListCall?.let {
-                allAssemblyOrdersList.addAll(it)
-                sharedViewModel.allAssemblyOrdersList.addAll(it)
-            }
-        }
+        sharedViewModel.loadAssemblyOrders()
     }
 
     /**
@@ -543,79 +474,141 @@ class AssemblyOrdersViewModel(private val dataStoreManager: DataStoreManager, va
      * If any part of the operation fails, the method attempts to remove the
      * partially created order and displays an appropriate error message.
      *
+     * The form values are copied before saving and the save itself runs as
+     * [NonCancellable], so navigating away part way through can neither blank
+     * the values being inserted nor leave a half-created order behind.
+     *
      * When the order is successfully created, the current order information is
      * stored in the shared ViewModel and the user is navigated to the assembly
-     * order details screen.
+     * order details screen. Navigation is skipped if the user has already left
+     * the assembly orders screen.
      *
      * @param navController Navigation controller used to navigate to the newly
      * created assembly order.
      */
     fun onAddSave(navController: NavController) {
         submitButtonEnabled = false
+        val item = sharedViewModel.currentItem.value.copy()
+        val version = assemblyVersion
+        val versionCode = assemblyVersionCode
+        val versionQty = assemblyVersionQty
+        val qty = assemblyQty.toDoubleOrNull()
+        val user = sharedViewModel.currentUser.value
+
+        if (item.code.isBlank() || version.isBlank() || versionQty == 0.0 || qty == null || qty <= 0.0) {
+            sharedViewModel.snackBarMessage("Please Select an Item, Version and Qty")
+            submitButtonEnabled = true
+            return
+        }
+
         sharedViewModel.snackBarMessage("Assembly Saving")
         viewModelScope.launch {
-            val date = toDateFormatYYYYMMDD(LocalDate.now())
-            val requiredDate = toDateFormatYYYYMMDD(LocalDate.now().plusDays(3))
-            val orderNumber: List<APICallTables.StringData>? = apiCall.query("SELECT 'A' || CAST(CAST(SUBSTRING(MAX(ORDERNUMBER) FROM 2) AS INTEGER) + 1 AS VARCHAR(10)) as STRING FROM ASSEMBLYHEADER")
-            val heardercall = "INSERT INTO ASSEMBLYHEADER (" +
-                    "ORDERNUMBER, ITEMCODE, ITEMUNIT, ITEMDESCRIPTION, ASSEMBLYVERSION, ORDERQTY, REQUIREDDATE, ORDERDATE, SYSUSERCREATED" +
+            // withContext throws on return if this screen was closed during the save, so navigation is skipped
+            val newOrderNumber = withContext(NonCancellable) {
+                saveAssemblyOrder(item, version, versionCode, versionQty, qty, user)
+            }
+            if (newOrderNumber == null) {
+                submitButtonEnabled = true
+                return@launch
+            }
+            sharedViewModel.currentOrderNumber.value = newOrderNumber
+            sharedViewModel.currentItemCode.value = item.code
+            sharedViewModel.closePopup()
+            navController.navigate("assemblyorderdetail")
+        }
+    }
+
+    /**
+     * Generates the next assembly order number.
+     *
+     * Only the longest order numbers starting with 'A' are compared so that the
+     * text based MAX returns the highest number (e.g. A10000 over A9999) and
+     * invalid order numbers such as 'null' are ignored.
+     *
+     * @return The next order number, or null if it could not be determined.
+     */
+    private suspend fun nextOrderNumber(): String? {
+        val maxOrderNumber: List<APICallTables.StringData>? = apiCall.query(
+            "SELECT MAX(ORDERNUMBER) AS STRING FROM ASSEMBLYHEADER WHERE ORDERNUMBER LIKE 'A%' AND " +
+                    "CHAR_LENGTH(ORDERNUMBER) = (SELECT MAX(CHAR_LENGTH(ORDERNUMBER)) FROM ASSEMBLYHEADER WHERE ORDERNUMBER LIKE 'A%')"
+        )
+        val current = maxOrderNumber?.firstOrNull()?.STRING ?: return null
+        val number = current.drop(1).toIntOrNull() ?: return null
+        return "A${number + 1}"
+    }
+
+    /**
+     * Inserts the assembly header and lines for a new assembly order.
+     *
+     * @return The new order number when the order and all lines were saved,
+     * otherwise null after an error message has been shown.
+     */
+    private suspend fun saveAssemblyOrder(
+        item: ItemDescriptorItem,
+        version: String,
+        versionCode: String,
+        versionQty: Double,
+        qty: Double,
+        user: String
+    ): String? {
+        val date = toDateFormatYYYYMMDD(LocalDate.now())
+        val requiredDate = toDateFormatYYYYMMDD(LocalDate.now().plusDays(3))
+        val orderNumber = nextOrderNumber()
+        if (orderNumber == null) {
+            sharedViewModel.snackBarMessage("Error Getting Order Number, Please Try Again")
+            return null
+        }
+
+        val heardercall = "INSERT INTO ASSEMBLYHEADER (" +
+                "ORDERNUMBER, ITEMCODE, ITEMUNIT, ITEMDESCRIPTION, ASSEMBLYVERSION, ORDERQTY, REQUIREDDATE, ORDERDATE, SYSUSERCREATED" +
+                ") VALUES (" +
+                "'$orderNumber', '${item.code}', '${item.unit}', '${item.description}', " +
+                "'$version', $qty, '$requiredDate', '$date', '$user'" +
+                ")"
+        val deleteHeaderCall = "DELETE FROM ASSEMBLYHEADER WHERE ORDERNUMBER = '$orderNumber'"
+        val deleteLineCall = "DELETE FROM ASSEMBLYLINES WHERE ORDERNUMBER = '$orderNumber'"
+
+        val response = apiCall.insertUpdateDelete(heardercall)
+        if (response != "200 OK") {
+            sharedViewModel.snackBarMessage("Error Adding Header, Please Try Again")
+            return null
+        }
+
+        val orderHeader: List<APICallTables.AssemblyHeader>? = apiCall.query("SELECT * FROM ASSEMBLYHeader WHERE ORDERNUMBER = '$orderNumber'")
+        val bomLines: List<APICallTables.assemblyBOMLines>? = apiCall.query("SELECT * FROM BOMLINES WHERE ITEMCODE = '$versionCode'")
+
+        if (bomLines.isNullOrEmpty() || orderHeader.isNullOrEmpty()) {
+            sharedViewModel.snackBarMessage("Error Finding Lines, Please Try Again")
+            val deleteResponse = apiCall.insertUpdateDelete(deleteHeaderCall)
+            if (deleteResponse != "200 OK") {
+                sharedViewModel.snackBarMessage("Error Found, Please See Daniel")
+            }
+            return null
+        }
+
+        for (line in bomLines) {
+            val orderQty = (line.PERBATCHQTY * orderHeader[0].ORDERQTY) / versionQty
+            val lineCall = "INSERT INTO ASSEMBLYLINES (" +
+                    "ORDERNUMBER, HEADERSYSUNIQUEID, CODETYPE, LINECODE, ORDERQTY, LINEDESCRIPTION, LINEUNIT, STEPNAME, LINENUMBER, RUNORSETUP, POSITIONREFERENCE, SYSUSERCREATED" +
                     ") VALUES (" +
-                    "'${orderNumber?.first()?.STRING}', '${sharedViewModel.currentItem.value.code}', '${sharedViewModel.currentItem.value.unit}', '${sharedViewModel.currentItem.value.description}', " +
-                    "'$assemblyVersion', $assemblyQty, '$requiredDate', '$date', '${sharedViewModel.currentUser.value}'" +
+                    "'${orderHeader[0].ORDERNUMBER}', ${orderHeader[0].SYSUNIQUEID}, '${line.CODETYPE}', '${line.LINECODE}', $orderQty, '${line.LINEDESCRIPTION}', '${line.LINEUNIT}', " +
+                    "'${line.STEPNAME}', ${line.LINENUMBER}, '${line.RUNORSETUP}', '${line.POSITIONREFERENCE}', '$user'" +
                     ")"
-            val deleteHeaderCall = "DELETE FROM ASSEMBLYHEADER WHERE ORDERNUMBER = '${orderNumber?.first()?.STRING}'"
-            val deleteLineCall = "DELETE FROM ASSEMBLYLINES WHERE ORDERNUMBER = '${orderNumber?.first()?.STRING}'"
 
-            val response = apiCall.insertUpdateDelete(heardercall)
-            if (response == "200 OK") {
-                val orderHeader: List<APICallTables.AssemblyHeader>? = apiCall.query("SELECT * FROM ASSEMBLYHeader WHERE ORDERNUMBER = '${orderNumber?.first()?.STRING}'")
-                val bomLines: List<APICallTables.assemblyBOMLines>? = apiCall.query("SELECT * FROM BOMLINES WHERE ITEMCODE = '$assemblyVersionCode'")
-
-                if (bomLines!!.isEmpty() || orderHeader!!.isEmpty()) {
-                    sharedViewModel.snackBarMessage("Error Finding Lines, Please Try Again")
-                    val deleteResponse = apiCall.insertUpdateDelete(deleteHeaderCall)
-                    if (deleteResponse != "200 OK") {
-                        sharedViewModel.snackBarMessage("Error Found, Please See Daniel")
-                    }
-                } else {
-                    var lineCheck = 0
-                    for (i in 0 until bomLines.size) {
-                        val orderQty = (bomLines[i].PERBATCHQTY * orderHeader[0].ORDERQTY) / assemblyVersionQty
-                        val lineCall = "INSERT INTO ASSEMBLYLINES (" +
-                                "ORDERNUMBER, HEADERSYSUNIQUEID, CODETYPE, LINECODE, ORDERQTY, LINEDESCRIPTION, LINEUNIT, STEPNAME, LINENUMBER, RUNORSETUP, POSITIONREFERENCE, SYSUSERCREATED" +
-                                ") VALUES (" +
-                                "'${orderHeader[0].ORDERNUMBER}', ${orderHeader[0].SYSUNIQUEID}, '${bomLines[i].CODETYPE}', '${bomLines[i].LINECODE}', $orderQty, '${bomLines[i].LINEDESCRIPTION}', '${bomLines[i].LINEUNIT}', " +
-                                "'${bomLines[i].STEPNAME}', ${bomLines[i].LINENUMBER}, '${bomLines[i].RUNORSETUP}', '${bomLines[i].POSITIONREFERENCE}', '${sharedViewModel.currentUser.value}'" +
-                                ")"
-
-
-                        val lineResponse = apiCall.insertUpdateDelete(lineCall)
-                        if (lineResponse == "200 OK") {
-                            lineCheck += 1
-                        } else {
-                            sharedViewModel.snackBarMessage("Error Adding Lines, Please Delete Order and Try Again")
-                            val deleteLineResponse = apiCall.insertUpdateDelete(deleteLineCall)
-                            val deleteHeaderResponse = apiCall.insertUpdateDelete(deleteHeaderCall)
-                            if (deleteHeaderResponse != "200 OK" || deleteLineResponse != "200 OK") {
-                                sharedViewModel.snackBarMessage("Error Found, Please See Daniel")
-                            }
-                            return@launch
-                        }
-                    }
-                    if (lineCheck != bomLines.size) {
-                        sharedViewModel.snackBarMessage("Some Assembly Lines Missing, Please Delete Order and Try Again")
-                    } else {
-                        sharedViewModel.snackBarMessage("Assembly Order Added")
-                        sharedViewModel.currentOrderNumber.value = orderHeader[0].ORDERNUMBER
-                        sharedViewModel.currentItemCode.value = sharedViewModel.currentItem.value.code
-                        sharedViewModel.closePopup()
-                        navController.navigate("assemblyorderdetail")
-                    }
+            val lineResponse = apiCall.insertUpdateDelete(lineCall)
+            if (lineResponse != "200 OK") {
+                sharedViewModel.snackBarMessage("Error Adding Lines, Please Delete Order and Try Again")
+                val deleteLineResponse = apiCall.insertUpdateDelete(deleteLineCall)
+                val deleteHeaderResponse = apiCall.insertUpdateDelete(deleteHeaderCall)
+                if (deleteHeaderResponse != "200 OK" || deleteLineResponse != "200 OK") {
+                    sharedViewModel.snackBarMessage("Error Found, Please See Daniel")
                 }
-            } else {
-                sharedViewModel.snackBarMessage("Error Adding Header, Please Try Again")
+                return null
             }
         }
+
+        sharedViewModel.snackBarMessage("Assembly Order Added")
+        return orderHeader[0].ORDERNUMBER
     }
 }
 

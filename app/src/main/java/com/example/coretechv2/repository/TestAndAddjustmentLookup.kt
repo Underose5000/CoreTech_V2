@@ -73,30 +73,30 @@ suspend fun testAndAdjustmentLookup(dataStoreManager: DataStoreManager, orderNum
 
 
         testAndAdjustments.clear()
-        for (testValue in 0 until testAndAdjustmentsCount.first()) {
+        for (testValue in 0 until (testAndAdjustmentsCount.first() + 1)) {
             val testAndAdjustment = mutableStateListOf<Any>()
             val test = mutableStateListOf<Any>()
             val adjust = mutableStateListOf<Any>()
             for (tn in 0 until (viscosityTests?.size ?: 0)) {
-                if (viscosityTests?.get(tn)?.TESTNO == testValue + 1) test.add(viscosityTests[tn])
+                if (viscosityTests?.get(tn)?.TESTNO == testValue) test.add(viscosityTests[tn])
             }
             for (tn in 0 until (gelTimeTests?.size ?: 0)) {
-                if (gelTimeTests?.get(tn)?.TESTNO == testValue + 1) test.add(gelTimeTests[tn])
+                if (gelTimeTests?.get(tn)?.TESTNO == testValue) test.add(gelTimeTests[tn])
             }
             for (tn in 0 until (elongationTests?.size ?: 0)) {
-                if (elongationTests?.get(tn)?.TESTNO == testValue + 1) test.add(elongationTests[tn])
+                if (elongationTests?.get(tn)?.TESTNO == testValue) test.add(elongationTests[tn])
             }
             for (tn in 0 until (flameTests?.size ?: 0)) {
-                if (flameTests?.get(tn)?.TESTNO == testValue + 1) test.add(flameTests[tn])
+                if (flameTests?.get(tn)?.TESTNO == testValue) test.add(flameTests[tn])
             }
             for (tn in 0 until (resistivityTests?.size ?: 0)) {
-                if (resistivityTests?.get(tn)?.TESTNO == testValue + 1) test.add(resistivityTests[tn])
+                if (resistivityTests?.get(tn)?.TESTNO == testValue) test.add(resistivityTests[tn])
             }
             for (tn in 0 until (peakExothermTests?.size ?: 0)) {
-                if (peakExothermTests?.get(tn)?.TESTNO == testValue + 1) test.add(peakExothermTests[tn])
+                if (peakExothermTests?.get(tn)?.TESTNO == testValue) test.add(peakExothermTests[tn])
             }
             for (tn in 0 until (adjustmentLines?.size ?: 0)) {
-                if (adjustmentLines?.get(tn)?.ADJUSTNO == testValue + 1) adjust.add(adjustmentLines[tn])
+                if (adjustmentLines?.get(tn)?.ADJUSTNO == testValue) adjust.add(adjustmentLines[tn])
             }
 
             testAndAdjustment.add(test)

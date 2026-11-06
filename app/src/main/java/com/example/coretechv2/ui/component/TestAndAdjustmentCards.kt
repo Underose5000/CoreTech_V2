@@ -1,6 +1,8 @@
 package com.example.coretechv2.ui.component
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
@@ -19,8 +21,53 @@ import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.modifier.modifierLocalConsumer
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.rememberNavController
 import com.example.coretechv2.dataclasses.APICallTables
+import com.example.coretechv2.ui.screen.AssemblyOrderDetails
+import com.example.coretechv2.viewmodel.SharedViewModel
+
+@Composable
+fun CardDoubleLine(){
+    Row (
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(IntrinsicSize.Min)
+            .padding(7.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .width(100.dp)
+                .fillMaxHeight(), verticalArrangement = Arrangement.Center
+        ) {
+            Text("Viscosity", style = MaterialTheme.typography.titleSmall)
+        }
+        VerticalDivider(modifier = Modifier.fillMaxHeight())
+        Spacer(Modifier.width(10.dp))
+        Column() {
+            Row() {
+                //Text("Spindle: ${results.SPINDLE}")
+                Spacer(Modifier.width(30.dp))
+                //Text("Index: ${results.INDEXREADING}")
+            }
+            Spacer(Modifier.width(15.dp))
+            //ViscosityResultsTable(results)
+        }
+    }
+}
+
+@Composable
+fun CardSingleLine() {
+
+}
+
+
+
+
+
 
 /**
  * Displays a Gel Time test result in a structured row layout.
@@ -268,7 +315,162 @@ fun ResistivityCard(results: APICallTables.ResistivityTest) {
     }
 }
 
+@Composable
+fun ViscosityResultsTable(results: APICallTables.viscosityTest) {
+    Row() {
+        VerticalDivider(modifier = Modifier.fillMaxHeight())
+        Column(
+            modifier = Modifier.width(40.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                if (results.SPINDLE in listOf("A", "B", "C", "D", "E", "F", "G")) {
+                    "100"
+                } else {
+                    "60"
+                }
+            )
+            HorizontalDivider()
+            Text(results.READING60.cleanFormat())
+        }
+        VerticalDivider(modifier = Modifier.fillMaxHeight())
+        Column(
+            modifier = Modifier.width(40.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                if (results.SPINDLE in listOf("A", "B", "C", "D", "E", "F", "G")) {
+                    "50"
+                } else {
+                    "30"
+                }
+            )
+            HorizontalDivider()
+            Text(results.READING30.cleanFormat())
+        }
+        VerticalDivider(modifier = Modifier.fillMaxHeight())
+        Column(
+            modifier = Modifier.width(40.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                if (results.SPINDLE in listOf("A", "B", "C", "D", "E", "F", "G")) {
+                    "20"
+                } else {
+                    "12"
+                }
+            )
+            HorizontalDivider()
+            Text(results.READING12.cleanFormat())
+        }
+        VerticalDivider(modifier = Modifier.fillMaxHeight())
+        Column(
+            modifier = Modifier.width(40.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                if (results.SPINDLE in listOf("A", "B", "C", "D", "E", "F", "G")) {
+                    "10"
+                } else {
+                    "6"
+                }
+            )
+            HorizontalDivider()
+            Text(results.READING6.cleanFormat())
+        }
+        VerticalDivider()
+        Column(
+            modifier = Modifier.width(40.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                if (results.SPINDLE in listOf("A", "B", "C", "D", "E", "F", "G")) {
+                    "5"
+                } else {
+                    "3"
+                }
+            )
+            HorizontalDivider()
+            Text(results.READING3.cleanFormat())
+        }
+        VerticalDivider()
+        Column(
+            modifier = Modifier.width(40.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                if (results.SPINDLE in listOf("A", "B", "C", "D", "E", "F", "G")) {
+                    "2.5"
+                } else {
+                    "1.5"
+                }
+            )
+            HorizontalDivider()
+            Text(results.READING1_5.cleanFormat())
+        }
+        VerticalDivider()
+        Column(
+            modifier = Modifier.width(40.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                if (results.SPINDLE in listOf("A", "B", "C", "D", "E", "F", "G")) {
+                    "1"
+                } else {
+                    "0.6"
+                }
+            )
+            HorizontalDivider()
+            Text(results.READING0_6.cleanFormat())
+        }
+        VerticalDivider()
+        Column(
+            modifier = Modifier.width(40.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                if (results.SPINDLE in listOf("A", "B", "C", "D", "E", "F", "G")) {
+                    "0.5"
+                } else {
+                    "0.3"
+                }
+            )
+            HorizontalDivider()
+            Text(results.READING0_3.cleanFormat())
+        }
+        VerticalDivider()
+    }
+}
 
+@Composable
+fun ViscosityCardDoubleLine(results: APICallTables.viscosityTest) {
+    Log.d("ViscosityCard", "ViscosityCardDoubleLine Used")
+    Row (
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(IntrinsicSize.Min)
+            .padding(7.dp)
+    ) {
+//        Column(
+//            modifier = Modifier
+//                .width(100.dp)
+//                .fillMaxHeight(), verticalArrangement = Arrangement.Center
+//        ) {
+//            Text("Viscosity", style = MaterialTheme.typography.titleSmall)
+//        }
+//        VerticalDivider(modifier = Modifier.fillMaxHeight())
+//        Spacer(Modifier.width(10.dp))
+        Column() {
+            Row() {
+                Text("Spindle: ${results.SPINDLE}")
+                Spacer(Modifier.width(30.dp))
+                Text("Index: ${results.INDEXREADING}")
+            }
+            Spacer(Modifier.width(15.dp))
+            ViscosityResultsTable(results)
+        }
+    }
+}
 /**
  * Displays a viscosity test result in a structured tabular row layout.
  *
@@ -288,7 +490,8 @@ fun ResistivityCard(results: APICallTables.ResistivityTest) {
  * @param results Viscosity test data from [APICallTables.viscosityTest]
  */
 @Composable
-fun ViscosityCard(results: APICallTables.viscosityTest) {
+fun ViscosityCardSingleLine(results: APICallTables.viscosityTest) {
+    Log.d("ViscosityCard", "ViscosityCardSingleLine Used")
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -312,131 +515,8 @@ fun ViscosityCard(results: APICallTables.viscosityTest) {
             Text(results.SPINDLE)
             Text(results.INDEXREADING.toString())
         }
-        Spacer(Modifier.width(20.dp))
-        Row() {
-            VerticalDivider(modifier = Modifier.fillMaxHeight())
-            Column(
-                modifier = Modifier.width(40.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(
-                    if (results.SPINDLE in listOf("A", "B", "C", "D", "E", "F", "G")) {
-                        "100"
-                    } else {
-                        "60"
-                    }
-                )
-                HorizontalDivider()
-                Text(results.READING60.cleanFormat())
-            }
-            VerticalDivider(modifier = Modifier.fillMaxHeight())
-            Column(
-                modifier = Modifier.width(40.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(
-                    if (results.SPINDLE in listOf("A", "B", "C", "D", "E", "F", "G")) {
-                        "50"
-                    } else {
-                        "30"
-                    }
-                )
-                HorizontalDivider()
-                Text(results.READING30.cleanFormat())
-            }
-            VerticalDivider(modifier = Modifier.fillMaxHeight())
-            Column(
-                modifier = Modifier.width(40.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(
-                    if (results.SPINDLE in listOf("A", "B", "C", "D", "E", "F", "G")) {
-                        "20"
-                    } else {
-                        "12"
-                    }
-                )
-                HorizontalDivider()
-                Text(results.READING12.cleanFormat())
-            }
-            VerticalDivider(modifier = Modifier.fillMaxHeight())
-            Column(
-                modifier = Modifier.width(40.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(
-                    if (results.SPINDLE in listOf("A", "B", "C", "D", "E", "F", "G")) {
-                        "10"
-                    } else {
-                        "6"
-                    }
-                )
-                HorizontalDivider()
-                Text(results.READING6.cleanFormat())
-            }
-            VerticalDivider()
-            Column(
-                modifier = Modifier.width(40.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(
-                    if (results.SPINDLE in listOf("A", "B", "C", "D", "E", "F", "G")) {
-                        "5"
-                    } else {
-                        "3"
-                    }
-                )
-                HorizontalDivider()
-                Text(results.READING3.cleanFormat())
-            }
-            VerticalDivider()
-            Column(
-                modifier = Modifier.width(40.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(
-                    if (results.SPINDLE in listOf("A", "B", "C", "D", "E", "F", "G")) {
-                        "2.5"
-                    } else {
-                        "1.5"
-                    }
-                )
-                HorizontalDivider()
-                Text(results.READING1_5.cleanFormat())
-            }
-            VerticalDivider()
-            Column(
-                modifier = Modifier.width(40.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(
-                    if (results.SPINDLE in listOf("A", "B", "C", "D", "E", "F", "G")) {
-                        "1"
-                    } else {
-                        "0.6"
-                    }
-                )
-                HorizontalDivider()
-                Text(results.READING0_6.cleanFormat())
-            }
-            VerticalDivider()
-            Column(
-                modifier = Modifier.width(40.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(
-                    if (results.SPINDLE in listOf("A", "B", "C", "D", "E", "F", "G")) {
-                        "0.5"
-                    } else {
-                        "0.3"
-                    }
-                )
-                HorizontalDivider()
-                Text(results.READING0_3.cleanFormat())
-            }
-            VerticalDivider()
-        }
-
+        Spacer(Modifier.width(10.dp))
+        ViscosityResultsTable(results)
     }
 }
 
@@ -503,5 +583,38 @@ fun Double.cleanFormat(): String {
         this.toInt().toString()
     } else {
         this.toString()
+    }
+}
+
+@Preview()
+@Composable
+fun CardPreview() {
+    val results = APICallTables.viscosityTest(
+        SYSUNIQUEID = 0.0,
+        ITEMCODE = "130123",
+        ORDERNUMBER = "A1102",
+        TESTNO = 1,
+        ITEMDESCRIPTION = "Test Item",
+        SPINDLE = "3",
+        INDEXREADING = 5.2,
+        READING60 = 100.0,
+        READING30 = 80.0,
+        READING12 = 70.0,
+        READING6 = 50.0,
+        READING3 = 20.0,
+        READING1_5 = 15.0,
+        READING0_6 = 10.0,
+        READING0_3 = 8.0
+    )
+
+    Box(modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center) {
+        Column(modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center)
+        {
+            ViscosityCardDoubleLine(results = results)
+            ViscosityCardSingleLine(results = results)
+        }
     }
 }

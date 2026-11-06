@@ -12,6 +12,7 @@ import io.ktor.client.statement.HttpResponse
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.serialization.json.Json
 
@@ -82,6 +83,9 @@ class APICall(private val dataStoreManager: DataStoreManager) {
             response.body()
 
 
+        } catch (e: CancellationException) {
+            // Let coroutine cancellation propagate so callers stop instead of continuing with null
+            throw e
         } catch (e: ClientRequestException) {
             Log.d("APICall", "ClientRequestException: ${e.message}", e)
             null
@@ -128,6 +132,8 @@ class APICall(private val dataStoreManager: DataStoreManager) {
             response.status.toString()
 
 
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: ClientRequestException) {
             Log.d("APICall", "ClientRequestException: ${e.message}", e)
             null

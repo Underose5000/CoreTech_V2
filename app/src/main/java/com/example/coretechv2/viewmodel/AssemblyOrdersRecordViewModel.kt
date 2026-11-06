@@ -10,7 +10,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.example.coretechv2.dataclasses.APICallTables
 import com.example.coretechv2.dataclasses.MenuItem
@@ -21,7 +20,6 @@ import com.example.coretechv2.repository.DataStoreManager
 import com.example.coretechv2.repository.testAndAdjustmentLookup
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.launch
 import java.time.LocalDate
 
 /**
@@ -402,7 +400,7 @@ class AssemblyOrdersRecordViewModel(private val dataStoreManager: DataStoreManag
                     "AH.ORDERQTY, AH.ADDITIONALFIELD_1, AH.ADDITIONALFIELD_2, AH.ADDITIONALFIELD_3, " +
                     "AH.ADDITIONALFIELD_4, AH.ADDITIONALFIELD_5, AH.ADDITIONALFIELD_6, AH.ADDITIONALFIELD_7, " +
                     "AH.ADDITIONALFIELD_8, AH.ADDITIONALFIELD_9, AH.ADDITIONALFIELD_10, AH.ADDITIONALFIELD_11, " +
-                    "AH.ADDITIONALFIELD_12, AH.ADDITIONALFIELD_13, AH.SYSUNIQUEID, " +
+                    "AH.ADDITIONALFIELD_12, AH.ADDITIONALFIELD_13, AH.ADDITIONALFIELD_14, AH.SYSUNIQUEID, " +
                     "CASE WHEN " +
                     "   EXISTS (SELECT 1 FROM OSTDEF_VISCOSITY_TESTS T1 WHERE T1.OrderNumber = AH.OrderNumber) " +
                     "   OR EXISTS (SELECT 1 FROM OSTDEF_ELONGATIONAL_TEST T2 WHERE T2.OrderNumber = AH.OrderNumber) " +
@@ -453,7 +451,7 @@ class AssemblyOrdersRecordViewModel(private val dataStoreManager: DataStoreManag
                     "AH.ORDERQTY, AH.ADDITIONALFIELD_1, AH.ADDITIONALFIELD_2, AH.ADDITIONALFIELD_3, " +
                     "AH.ADDITIONALFIELD_4, AH.ADDITIONALFIELD_5, AH.ADDITIONALFIELD_6, AH.ADDITIONALFIELD_7, " +
                     "AH.ADDITIONALFIELD_8, AH.ADDITIONALFIELD_9, AH.ADDITIONALFIELD_10, AH.ADDITIONALFIELD_11, " +
-                    "AH.ADDITIONALFIELD_12, AH.ADDITIONALFIELD_13, AH.SYSUNIQUEID, " +
+                    "AH.ADDITIONALFIELD_12, AH.ADDITIONALFIELD_13, AH.ADDITIONALFIELD_14, AH.SYSUNIQUEID, " +
                     "CASE WHEN " +
                     "   EXISTS (SELECT 1 FROM OSTDEF_VISCOSITY_TESTS T1 WHERE T1.OrderNumber = AH.OrderNumber) " +
                     "   OR EXISTS (SELECT 1 FROM OSTDEF_ELONGATIONAL_TEST T2 WHERE T2.OrderNumber = AH.OrderNumber) " +

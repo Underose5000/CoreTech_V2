@@ -11,7 +11,6 @@ import androidx.core.graphics.toColorInt
 import com.brother.ptouch.sdk.NetPrinter
 import com.brother.ptouch.sdk.NetworkDiscovery
 import com.brother.sdk.lmprinter.Channel
-import com.brother.sdk.lmprinter.OpenChannelError
 import com.brother.sdk.lmprinter.PrinterDriverGenerator
 import com.brother.sdk.lmprinter.PrinterModel
 import com.brother.sdk.lmprinter.setting.PrintImageSettings

@@ -32,6 +32,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.coretechv2.R
 import com.example.coretechv2.factory.APISettingViewModelFactory
+import androidx.core.net.toUri
+import com.example.coretechv2.ui.component.BarcodeScanEffect
 import com.example.coretechv2.ui.component.QRScanner
 import com.example.coretechv2.viewmodel.APISettingViewModel
 import com.example.coretechv2.viewmodel.SharedViewModel
@@ -87,6 +89,11 @@ fun APISettingsScreen(
 
     if (viewModel.ConnectedSuccess) {
         onConnectedSuccess()
+    }
+
+    // Hardware barcode scanner: scanning the API QR code fills in the details without the camera
+    BarcodeScanEffect { code ->
+        if (!code.toUri().host.isNullOrEmpty()) viewModel.onQRCodeScanned(code)
     }
 
     Column(

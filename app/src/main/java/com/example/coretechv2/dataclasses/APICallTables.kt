@@ -74,7 +74,8 @@ class APICallTables {
         var ADDITIONALFIELD_10: String,
         var ADDITIONALFIELD_11: String,
         var ADDITIONALFIELD_12: String,
-        var ADDITIONALFIELD_13: String,
+        var ADDITIONALFIELD_13: String? = null,
+        var ADDITIONALFIELD_14: String? = null,
         val SYSUNIQUEID: Double,
     )
     @Serializable
@@ -98,7 +99,8 @@ class APICallTables {
         var ADDITIONALFIELD_10: String,
         var ADDITIONALFIELD_11: String,
         var ADDITIONALFIELD_12: String,
-        var ADDITIONALFIELD_13: String,
+        var ADDITIONALFIELD_13: String? = null,
+        var ADDITIONALFIELD_14: String? = null,
         val SYSUNIQUEID: Double,
         val TESTSEXISTS: Int,
         val ADJUSTSEXISTS: Int,
@@ -372,6 +374,19 @@ class APICallTables {
     @Serializable
     data class VerifyConnection(
         val IS_CONNECTED: Int
+    )
+
+    @Serializable
+    data class IssueLocation(
+        val WAREHOUSE: String? = null,
+        val LOCATION: String? = null,
+    )
+
+    /** An item or descriptor code and its barcode, used to match scans to assembly lines. */
+    @Serializable
+    data class CodeBarcode(
+        val CODE: String,
+        val BARCODE: String? = null,
     )
 
     @Serializable

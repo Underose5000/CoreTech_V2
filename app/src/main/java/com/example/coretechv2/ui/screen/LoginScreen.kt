@@ -1,5 +1,6 @@
 package com.example.coretechv2.ui.screen
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -76,12 +77,11 @@ fun LoginScreen(
         factory = LoginViewModelFactory(context)
     )
 
-    if (viewModel.currentuser.value != currentuser) {
-
+    if (viewModel.currentuser.value != currentuser && viewModel.loginSuccess) {
         ondifferentUser(viewModel.currentuser.value)
-    }
-    if (viewModel.loginSuccess) {
-
+        onLoginSuccess()
+        viewModel.consumeLoginSuccess()
+    } else if (viewModel.currentuser.value == currentuser && viewModel.loginSuccess) {
         onLoginSuccess()
         viewModel.consumeLoginSuccess()
     }

@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -54,44 +56,37 @@ fun HomeScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     val screenWidthDp = configuration.screenWidthDp
-    val screenHeightDp = configuration.screenHeightDp
     val screenDensity = configuration.densityDpi
-    var isFlipPhone = false
-    var isTablet = false
 
     if (screenWidthDp >= 550 && screenDensity >= 500) {
-        isFlipPhone = true
-        Log.d("screen dp size", "is FLip")
+        sharedViewModel.isFlipPhone = true
     } else if ((screenWidthDp >= 600 && !isLandscape) || (screenWidthDp >= 1000 && isLandscape)) {
-        isTablet = true
-        Log.d("screen dp size", "is Tablet")
-    } else {
-        Log.d("screen dp size", "is Phone")
+        sharedViewModel.isTablet = true
     }
 
-    Log.d("screen dp size", "$screenWidthDp by $screenHeightDp @ $screenDensity & is landscape = $isLandscape")
+    Log.d("screen dp size", "$screenWidthDp @ $screenDensity & is landscape = $isLandscape")
     LaunchedEffect(Unit) {
-        sharedViewModel.retrieveAssemblyOrders()
-        sharedViewModel.retrieveAllAssemblyOrders()
-        Log.d("LaunchedEffect", "Orders Retrieved. List size = ${sharedViewModel.AssemblyOrdersList.size}")
+        // Preload orders in the background. Safe if the user leaves Home before it
+        // finishes: the orders screen picks up this same load rather than starting over.
+        sharedViewModel.loadAssemblyOrders(force = true)
     }
 
 
-    if (isLandscape and isTablet) {
+    if (isLandscape and sharedViewModel.isTablet) {
         LandscapeTabletLayout(
             navController = navController,
             sharedViewModel = sharedViewModel,
             sharedViewModel.currentUser.value,
             snackbarHostState
         )
-    } else if (!isLandscape and isTablet) {
+    } else if (!isLandscape and sharedViewModel.isTablet) {
         PortraitTabletLayout(
             navController = navController,
             sharedViewModel = sharedViewModel,
             sharedViewModel.currentUser.value,
             snackbarHostState
         )
-    } else if (isFlipPhone) {
+    } else if (sharedViewModel.isFlipPhone) {
         FlipPhoneLayout(
             navController = navController,
             sharedViewModel = sharedViewModel,
@@ -140,8 +135,10 @@ fun LandscapeTabletLayout(
         navController = navController,
         title = "Home",
         snackbarHostState,
-
-        ) { innerPadding ->
+        icon1 = Icons.Filled.Settings,
+        icon1Description = "Settings",
+        icon1action = { navController.navigate("settings") }
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -385,7 +382,10 @@ fun PortraitTabletLayout(
     TopBar(
         navController = navController,
         title = "Home",
-        snackbarHostState
+        snackbarHostState,
+        icon1 = Icons.Filled.Settings,
+        icon1Description = "Settings",
+        icon1action = { navController.navigate("settings") }
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -600,7 +600,10 @@ fun FlipPhoneLayout(
     TopBar(
         navController = navController,
         title = "Home",
-        snackbarHostState
+        snackbarHostState,
+        icon1 = Icons.Filled.Settings,
+        icon1Description = "Settings",
+        icon1action = { navController.navigate("settings") }
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -826,7 +829,10 @@ fun LandscapePhoneLayout(
     TopBar(
         navController = navController,
         title = "Home",
-        snackbarHostState
+        snackbarHostState,
+        icon1 = Icons.Filled.Settings,
+        icon1Description = "Settings",
+        icon1action = { navController.navigate("settings") }
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -1047,7 +1053,10 @@ fun PortraitPhoneLayout(
     TopBar(
         navController = navController,
         title = "Home",
-        snackbarHostState
+        snackbarHostState,
+        icon1 = Icons.Filled.Settings,
+        icon1Description = "Settings",
+        icon1action = { navController.navigate("settings") }
     ) { innerPadding ->
         Column(
             modifier = Modifier

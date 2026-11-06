@@ -1,5 +1,6 @@
 package com.example.coretechv2.ui.screen
 
+import android.content.res.Configuration
 import android.util.Log
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
@@ -35,20 +36,16 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
@@ -65,11 +62,14 @@ import com.example.coretechv2.ui.component.Menu
 import com.example.coretechv2.ui.component.PeakExothermCard
 import com.example.coretechv2.ui.component.ResistivityCard
 import com.example.coretechv2.ui.component.TopBar
-import com.example.coretechv2.ui.component.ViscosityCard
+import com.example.coretechv2.ui.component.ViscosityCardDoubleLine
+import com.example.coretechv2.ui.component.ViscosityCardSingleLine
 import com.example.coretechv2.viewmodel.AssemblyOrdersRecordViewModel
 import com.example.coretechv2.viewmodel.SharedViewModel
 import kotlinx.coroutines.launch
-import kotlin.collections.contains
+import kotlin.collections.forEachIndexed
+import kotlin.collections.isNullOrEmpty
+import kotlin.text.isNullOrEmpty
 
 /**
  * Displays the assembly order record lookup screen.
@@ -118,14 +118,22 @@ fun AssemblyOrdersRecordLookupScreen(
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val focusManager = LocalFocusManager.current
     val viewModel: AssemblyOrdersRecordViewModel = viewModel(
         factory = AssemblyOrdersRecordViewModelFactory(context, sharedViewModel)
     )
-    val focusManager = LocalFocusManager.current
+    val configuration = LocalConfiguration.current
+    val screenWidthDp = configuration.screenWidthDp
+    val screenDensity = configuration.densityDpi
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+
+
+
     LaunchedEffect(Unit) {
         viewModel.clearSelectedOrderList()
         viewModel.clearShowDetail()
-        if (viewModel.newEntry){
+        if (viewModel.newEntry) {
             viewModel.clearSearchField()
             viewModel.clearNewEntry()
         }
@@ -156,7 +164,7 @@ fun AssemblyOrdersRecordLookupScreen(
         icon2action = { viewModel.compareOrdersPressed(navController) },
         icon3 = Icons.Filled.Refresh,
         icon3Description = "Refresh Records",
-        icon3action = { scope.launch {viewModel.retrieveAssemblyOrders()} },
+        icon3action = { scope.launch { viewModel.retrieveAssemblyOrders() } },
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -235,7 +243,7 @@ fun AssemblyOrdersRecordLookupScreen(
                                                 viewModel.addSelectedOrder(order.ORDERNUMBER)
                                             }
                                         } else {
-                                            scope.launch {viewModel.retrieveTestDetail(order)}
+                                            scope.launch { viewModel.retrieveTestDetail(order) }
                                             if (viewModel.showDetail.contains(order.ORDERNUMBER)) {
                                                 viewModel.removeShowDetail(order.ORDERNUMBER)
                                             } else {
@@ -244,9 +252,9 @@ fun AssemblyOrdersRecordLookupScreen(
                                         }
                                     },
                                     onLongClick = {
-                                        if (!(order.TESTSEXISTS == 1 || order.ADJUSTSEXISTS == 1 || order.NOTESEXISTS == 1)){
-                                            Log.d("Hidden","Nothing is meant to happen here")
-                                        }else if (viewModel.compareOrders.value) {
+                                        if (!(order.TESTSEXISTS == 1 || order.ADJUSTSEXISTS == 1 || order.NOTESEXISTS == 1)) {
+                                            Log.d("Hidden", "Nothing is meant to happen here")
+                                        } else if (viewModel.compareOrders.value) {
                                             if (viewModel.showDetail.contains(order.ORDERNUMBER)) {
                                                 viewModel.removeShowDetail(order.ORDERNUMBER)
                                             } else {
@@ -262,61 +270,13 @@ fun AssemblyOrdersRecordLookupScreen(
                                 .padding(16.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column(modifier = Modifier.weight(3f)) {
-                                Text(
-                                    text = order.ITEMDESCRIPTION,
-                                )
-                                Text(
-                                    text = "Order#: ${order.ORDERNUMBER}    Date: ${order.ORDERDATE}    Qty: ${order.ORDERQTY}",
-                                )
-                            }
-                            Row(
-                                modifier = Modifier.weight(1f),
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(text = "Tests")
-                                Icon(
-                                    imageVector = if (order.TESTSEXISTS == 1)
-                                        Icons.Filled.CheckBox
-                                    else
-                                        Icons.Filled.CheckBoxOutlineBlank,
-                                    contentDescription = null,
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 0.dp)
-                                )
-                            }
-                            Row(
-                                modifier = Modifier.weight(1f),
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(text = "Adjusts")
-                                Icon(
-                                    imageVector = if (order.ADJUSTSEXISTS == 1)
-                                        Icons.Filled.CheckBox
-                                    else
-                                        Icons.Filled.CheckBoxOutlineBlank,
-                                    contentDescription = null,
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 0.dp)
-                                )
-                            }
-                            Row(
-                                modifier = Modifier.weight(1f),
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(text = "Notes")
-                                Icon(
-                                    imageVector = if (order.NOTESEXISTS == 1)
-                                        Icons.Filled.CheckBox
-                                    else
-                                        Icons.Filled.CheckBoxOutlineBlank,
-                                    contentDescription = null,
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 0.dp)
-                                )
+                            if (sharedViewModel.isTablet && isLandscape) {
+                                AssemblyOrdersRecordRowDetailsTabletLandscape(order)
+                            } else {
+                                AssemblyOrdersRecordRowDetailsPortrait(order)
                             }
                         }
-                        if (viewModel.showDetail.contains(order.ORDERNUMBER) && !viewModel.testLoaded && !viewModel.testAndAdjustments.contains(order.ORDERNUMBER)){
+                        if (viewModel.showDetail.contains(order.ORDERNUMBER) && !viewModel.testLoaded && !viewModel.testAndAdjustments.contains(order.ORDERNUMBER)) {
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -331,131 +291,10 @@ fun AssemblyOrdersRecordLookupScreen(
                                 Text("Loading Test", style = MaterialTheme.typography.titleMedium)
                             }
                         } else if (viewModel.showDetail.contains(order.ORDERNUMBER)) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                            ) {
-                                val dividerColor = MaterialTheme.colorScheme.outlineVariant
-                                Column(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .drawBehind {
-                                            drawLine(
-                                                color = dividerColor,
-                                                start = Offset(size.width, 0f),
-                                                end = Offset(size.width, size.height),
-                                                strokeWidth = 1.dp.toPx()
-                                            )
-                                        }
-                                ) {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .background(MaterialTheme.colorScheme.outlineVariant)
-                                    ) {
-                                        Text("Tests and Adjustments", Modifier.padding(vertical = 2.dp, horizontal = 5.dp), style = MaterialTheme.typography.titleSmall)
-                                    }
-                                    val ordersTestAndAdjustments = viewModel.testAndAdjustments[order.ORDERNUMBER]
-                                    if (!ordersTestAndAdjustments.isNullOrEmpty()) {
-                                        Log.d("Assembly Details", "Test found")
-                                        ordersTestAndAdjustments.forEachIndexed { index, detail ->
-                                            val tests = detail[0] as SnapshotStateList<*>
-                                            val adjustments = detail[1] as SnapshotStateList<*>
-
-                                            if (!tests.isEmpty()) {
-                                                Row(
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .background(MaterialTheme.colorScheme.primaryContainer)
-                                                ) {
-                                                    Text("Test ${index + 1}", Modifier.padding(vertical = 2.dp, horizontal = 5.dp), style = MaterialTheme.typography.titleSmall)
-                                                }
-                                                Spacer(modifier = Modifier.height(1.dp))
-                                                for (test in tests) {
-                                                    Row(
-                                                        modifier = Modifier
-                                                            .fillMaxWidth()
-                                                    )
-                                                    {
-                                                        when (test) {
-                                                            is APICallTables.viscosityTest -> {
-                                                                ViscosityCard(test)
-                                                            }
-
-                                                            is APICallTables.gelTimeTest -> {
-                                                                GelTimeCard(test)
-                                                            }
-
-                                                            is APICallTables.ElongationalBreakTest -> {
-                                                                ElongationalBreakCard(test)
-                                                            }
-
-                                                            is APICallTables.FlammabilityTest -> {
-                                                                FlammabilityCard(test)
-                                                            }
-
-                                                            is APICallTables.ResistivityTest -> {
-                                                                ResistivityCard(test)
-                                                            }
-
-                                                            is APICallTables.peakExothermTest -> {
-                                                                PeakExothermCard(test)
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                            if (!adjustments.isEmpty()) {
-                                                Row(
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .background(MaterialTheme.colorScheme.primary)
-                                                ) {
-                                                    Text("Adjustment ${index + 1}", Modifier.padding(vertical = 2.dp, horizontal = 5.dp), style = MaterialTheme.typography.titleSmall)
-                                                }
-                                                Spacer(modifier = Modifier.height(5.dp))
-                                                for (adjust in adjustments) {
-                                                    Row(
-                                                        modifier = Modifier
-                                                            .fillMaxWidth()
-                                                    ) {
-                                                        when (adjust) {
-                                                            is APICallTables.assemblyAdjustment -> {
-                                                                AdjustmentCard(adjust)
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-
-                                        }
-                                    }
-                                }
-                                VerticalDivider(thickness = DividerDefaults.Thickness, color = MaterialTheme.colorScheme.outlineVariant)
-
-                                Column(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                ) {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .background(MaterialTheme.colorScheme.outlineVariant)
-                                    ) {
-                                        Text("Notes", Modifier.padding(vertical = 2.dp, horizontal = 5.dp), style = MaterialTheme.typography.titleSmall)
-                                    }
-                                    val ordersNotes = viewModel.notes[order.ORDERNUMBER]
-                                    if (!ordersNotes.isNullOrEmpty()) {
-                                        Log.d("Assembly Details", "Notes found")
-
-                                        Box(
-                                            modifier = Modifier
-                                                .fillMaxSize()
-                                        ) {
-                                            Text(text = ordersNotes, Modifier.padding(vertical = 2.dp, horizontal = 5.dp))
-                                        }
-                                    }
-                                }
+                            if (sharedViewModel.isTablet && isLandscape) {
+                                AssemblyOrdersRecordDetailLayoutLandscape(order, viewModel, sharedViewModel, isLandscape)
+                            } else {
+                                AssemblyOrdersRecordDetailLayoutPortrait(order, viewModel, sharedViewModel, isLandscape)
                             }
                             HorizontalDivider(Modifier, 10.dp, MaterialTheme.colorScheme.outlineVariant)
                         }
@@ -477,7 +316,7 @@ fun AssemblyOrdersRecordLookupScreen(
                                 )
                                 Text("Loading Assemblies", style = MaterialTheme.typography.titleMedium)
                             }
-                        } else if(viewModel.allTestLoaded){
+                        } else if (viewModel.allTestLoaded) {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -487,12 +326,12 @@ fun AssemblyOrdersRecordLookupScreen(
                             ) {
                                 Text("End of Records", Modifier.padding(vertical = 2.dp, horizontal = 5.dp), style = MaterialTheme.typography.titleLarge)
                             }
-                        }else {
+                        } else {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(100.dp)
-                                    .clickable(onClick = { scope.launch { viewModel.retrieveAllAssemblyOrders() }}),
+                                    .clickable(onClick = { scope.launch { viewModel.retrieveAllAssemblyOrders() } }),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.Center
                             ) {
@@ -504,22 +343,290 @@ fun AssemblyOrdersRecordLookupScreen(
             }
         }
         if (viewModel.showFilterMenu) {
-            Box(modifier = Modifier
-                .fillMaxSize()
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null ,
-                    onClick = { viewModel.menuClose() })
-            ){
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding),
-                contentAlignment = Alignment.TopEnd
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = { viewModel.menuClose() })
             ) {
-                Menu(menuList = viewModel.filtersMenuList, width = 250)
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding),
+                    contentAlignment = Alignment.TopEnd
+                ) {
+                    Menu(menuList = viewModel.filtersMenuList, width = 250)
+                }
             }
         }
+    }
+}
+
+@Composable
+fun AssemblyOrdersRecordRowDetailsTabletLandscape(order: APICallTables.AssemblyRecordLookup) {
+    Row(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = Modifier.weight(3f)) {
+            Text(
+                text = order.ITEMDESCRIPTION,
+            )
+            Text(
+                text = "Order#: ${order.ORDERNUMBER}    Date: ${order.ORDERDATE}    Qty: ${order.ORDERQTY}",
+            )
+        }
+        Row(
+            modifier = Modifier.weight(1f),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(text = "Tests")
+            Icon(
+                imageVector = if (order.TESTSEXISTS == 1)
+                    Icons.Filled.CheckBox
+                else
+                    Icons.Filled.CheckBoxOutlineBlank,
+                contentDescription = null,
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 0.dp)
+            )
+        }
+        Row(
+            modifier = Modifier.weight(1f),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(text = "Adjusts")
+            Icon(
+                imageVector = if (order.ADJUSTSEXISTS == 1)
+                    Icons.Filled.CheckBox
+                else
+                    Icons.Filled.CheckBoxOutlineBlank,
+                contentDescription = null,
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 0.dp)
+            )
+        }
+        Row(
+            modifier = Modifier.weight(1f),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(text = "Notes")
+            Icon(
+                imageVector = if (order.NOTESEXISTS == 1)
+                    Icons.Filled.CheckBox
+                else
+                    Icons.Filled.CheckBoxOutlineBlank,
+                contentDescription = null,
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 0.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun AssemblyOrdersRecordRowDetailsPortrait(order: APICallTables.AssemblyRecordLookup) {
+    Row(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = Modifier.weight(3f)) {
+            Text(
+                text = order.ITEMDESCRIPTION,
+            )
+            Text(
+                text = "Order#: ${order.ORDERNUMBER}    Date: ${order.ORDERDATE}    Qty: ${order.ORDERQTY}",
+            )
+            Row() {
+                Row(
+                    modifier = Modifier.weight(1f),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = "Tests")
+                    Icon(
+                        imageVector = if (order.TESTSEXISTS == 1)
+                            Icons.Filled.CheckBox
+                        else
+                            Icons.Filled.CheckBoxOutlineBlank,
+                        contentDescription = null,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 0.dp)
+                    )
+                }
+                Row(
+                    modifier = Modifier.weight(1f),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = "Adjusts")
+                    Icon(
+                        imageVector = if (order.ADJUSTSEXISTS == 1)
+                            Icons.Filled.CheckBox
+                        else
+                            Icons.Filled.CheckBoxOutlineBlank,
+                        contentDescription = null,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 0.dp)
+                    )
+                }
+                Row(
+                    modifier = Modifier.weight(1f),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = "Notes")
+                    Icon(
+                        imageVector = if (order.NOTESEXISTS == 1)
+                            Icons.Filled.CheckBox
+                        else
+                            Icons.Filled.CheckBoxOutlineBlank,
+                        contentDescription = null,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 0.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun AssemblyOrdersRecordDetailLayoutLandscape(order: APICallTables.AssemblyRecordLookup, viewModel: AssemblyOrdersRecordViewModel, sharedViewModel: SharedViewModel, isLandscape: Boolean) {
+    Row(modifier = Modifier.fillMaxSize()) {
+        val dividerColor = MaterialTheme.colorScheme.outlineVariant
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .drawBehind {
+                    drawLine(
+                        color = dividerColor,
+                        start = Offset(size.width, 0f),
+                        end = Offset(size.width, size.height),
+                        strokeWidth = 1.dp.toPx()
+                    )
+                }
+        ) {
+            AssemblyOrdersRecordDetailTestAndAddjustment(order, viewModel, sharedViewModel, isLandscape)
+        }
+        Column(
+            modifier = Modifier
+                .weight(1f)
+        ) {
+            AssemblyOrdersRecordDetailNotes(order, viewModel)
+        }
+    }
+}
+
+@Composable
+fun AssemblyOrdersRecordDetailLayoutPortrait(order: APICallTables.AssemblyRecordLookup, viewModel: AssemblyOrdersRecordViewModel, sharedViewModel: SharedViewModel, isLandscape: Boolean) {
+    Column (modifier = Modifier.fillMaxSize()) {
+        AssemblyOrdersRecordDetailTestAndAddjustment(order, viewModel, sharedViewModel, isLandscape)
+        HorizontalDivider(Modifier, DividerDefaults.Thickness, MaterialTheme.colorScheme.outline)
+        AssemblyOrdersRecordDetailNotes(order, viewModel)
+    }
+}
+
+@Composable
+fun AssemblyOrdersRecordDetailTestAndAddjustment(order: APICallTables.AssemblyRecordLookup, viewModel: AssemblyOrdersRecordViewModel, sharedViewModel: SharedViewModel, isLandscape: Boolean) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.outlineVariant)
+    ) {
+        Text("Tests and Adjustments", Modifier.padding(vertical = 2.dp, horizontal = 5.dp), style = MaterialTheme.typography.titleSmall)
+    }
+    val ordersTestAndAdjustments = viewModel.testAndAdjustments[order.ORDERNUMBER]
+    if (!ordersTestAndAdjustments.isNullOrEmpty()) {
+        ordersTestAndAdjustments.forEachIndexed { index, detail ->
+            val tests = detail[0] as SnapshotStateList<*>
+            val adjustments = detail[1] as SnapshotStateList<*>
+
+            if (!tests.isEmpty()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.primaryContainer)
+                ) {
+                    Text("Test ${index}", Modifier.padding(vertical = 2.dp, horizontal = 5.dp), style = MaterialTheme.typography.titleSmall)
+                }
+                Spacer(modifier = Modifier.height(1.dp))
+                for (test in tests) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                    )
+                    {
+                        when (test) {
+                            is APICallTables.viscosityTest -> {
+                                if (sharedViewModel.isTablet && isLandscape) {
+                                    ViscosityCardSingleLine(test)
+                                } else {
+                                    ViscosityCardDoubleLine(test)
+                                }
+                            }
+
+                            is APICallTables.gelTimeTest -> {
+                                GelTimeCard(test)
+                            }
+
+                            is APICallTables.ElongationalBreakTest -> {
+                                ElongationalBreakCard(test)
+                            }
+
+                            is APICallTables.FlammabilityTest -> {
+                                FlammabilityCard(test)
+                            }
+
+                            is APICallTables.ResistivityTest -> {
+                                ResistivityCard(test)
+                            }
+
+                            is APICallTables.peakExothermTest -> {
+                                PeakExothermCard(test)
+                            }
+                        }
+                    }
+                }
+            }
+            if (!adjustments.isEmpty()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.primary)
+                ) {
+                    Text("Adjustment ${index}", Modifier.padding(vertical = 2.dp, horizontal = 5.dp), style = MaterialTheme.typography.titleSmall)
+                }
+                Spacer(modifier = Modifier.height(5.dp))
+                for (adjust in adjustments) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                    ) {
+                        when (adjust) {
+                            is APICallTables.assemblyAdjustment -> {
+                                AdjustmentCard(adjust)
+                            }
+                        }
+                    }
+                }
+            }
+
+        }
+    }
+}
+
+@Composable
+fun AssemblyOrdersRecordDetailNotes(order: APICallTables.AssemblyRecordLookup, viewModel: AssemblyOrdersRecordViewModel) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.outlineVariant)
+    ) {
+        Text("Notes", Modifier.padding(vertical = 2.dp, horizontal = 5.dp), style = MaterialTheme.typography.titleSmall)
+    }
+    val ordersNotes = viewModel.notes[order.ORDERNUMBER]
+    if (!ordersNotes.isNullOrEmpty()) {
+        Log.d("Assembly Details", "Notes found")
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+        ) {
+            Text(text = ordersNotes, Modifier.padding(vertical = 2.dp, horizontal = 5.dp))
         }
     }
 }

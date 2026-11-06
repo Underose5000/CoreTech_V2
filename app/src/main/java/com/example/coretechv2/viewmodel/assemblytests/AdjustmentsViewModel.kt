@@ -15,6 +15,9 @@ import com.example.coretechv2.dataclasses.assemblydataclasses.AdjustmentItem
 import com.example.coretechv2.dataclasses.assemblydataclasses.adjustmentHasValue
 import com.example.coretechv2.repository.APICall
 import com.example.coretechv2.repository.DataStoreManager
+import com.example.coretechv2.repository.issueToAssemblyLine
+import com.example.coretechv2.repository.loadAssemblyLine
+import com.example.coretechv2.repository.orderAcceptsIssues
 import com.example.coretechv2.ui.screen.ItemLookUpScreen
 import com.example.coretechv2.viewmodel.SharedViewModel
 import kotlinx.coroutines.launch
@@ -26,8 +29,8 @@ import kotlinx.coroutines.launch
  * item selection and searching, adjustment quantities and numbers, popup
  * state, and saving adjustment information to the database.
  *
- * It also updates the associated assembly line quantity when an adjustment
- * is inserted or modified.
+ * Adjustments are stored separately from the assembly line's planned
+ * quantity, which is not changed when an adjustment is inserted or modified.
  *
  * @property dataStoreManager Provides access to persisted application settings
  * and configuration required by the API layer.
@@ -57,8 +60,6 @@ class AdjustmentsViewModel(private val dataStoreManager: DataStoreManager, var s
     var itemListSearched = mutableStateListOf<APICallTables.ItemDescriptor>()
         private set
     var adjustmentRecord = mutableStateOf(AdjustmentItem())
-
-    var currentQty by mutableStateOf(0.0)
 
     /**
      * Resets the message popup close state.
@@ -240,23 +241,23 @@ class AdjustmentsViewModel(private val dataStoreManager: DataStoreManager, var s
     /**
      * Saves the current adjustment to the database.
      *
-     * When inserting a new adjustment, an assembly line is created if the
-     * selected item does not already have one. The adjustment record is then
-     * inserted and the associated assembly line quantity is increased.
+     * When inserting a new adjustment, an assembly line with a planned quantity
+     * of 0 is created if the selected item does not already have one. The
+     * adjustment record is then inserted.
      *
-     * When updating an existing adjustment, the previous adjustment quantity
-     * is removed from the assembly line quantity and the new quantity is added.
+     * The adjustment is then issued to its line straight away (see
+     * [issueAdjustment]) so it is included in the line's actual quantity. The
+     * assembly line's planned quantity (ORDERQTY) is not changed.
      *
      * On successful completion, the adjustment screen is closed and a success
-     * snackbar message is displayed. If either database operation fails,
-     * an error snackbar message is displayed.
+     * snackbar message is displayed. If a database operation fails, an error
+     * snackbar message is displayed.
      *
      * @param adjustment The existing adjustment being edited, or `null` when
      * creating a new adjustment.
      */
     fun onSave(adjustment: APICallTables.assemblyAdjustment?) {
         var lineNumber = 0
-        var assemblyLinesInsert: String? = ""
         val currentLines = currentLineNumbers(sharedViewModel.currentItem.value.code)
         viewModelScope.launch {
             if (sharedViewModel.saveType == APICallTypes.INSERT) {
@@ -268,9 +269,10 @@ class AdjustmentsViewModel(private val dataStoreManager: DataStoreManager, var s
                             "${lineNumber}, " +
                             "'${sharedViewModel.currentItem.value.unit}', '${sharedViewModel.currentItem.value.type}', '${sharedViewModel.currentAssemblyLines?.first()?.STEPNAME}', '0','${sharedViewModel.currentUser.value}', '${sharedViewModel.currentUser.value}')"
 
-                    assemblyLinesInsert = apiCall.insertUpdateDelete(assemblyLinesCall)
-
-
+                    if (apiCall.insertUpdateDelete(assemblyLinesCall) != "200 OK") {
+                        sharedViewModel.snackBarMessage("Error Adding Line, Please Try Again")
+                        return@launch
+                    }
                 } else if (currentLines.size > 1) {
                     lineNumber = currentLines.last().LINENUMBER
                 } else {
@@ -278,42 +280,29 @@ class AdjustmentsViewModel(private val dataStoreManager: DataStoreManager, var s
                 }
             }
             var call = ""
-            var assemblyLinesCall = ""
             if (sharedViewModel.saveType == APICallTypes.INSERT) {
                 call = "INSERT INTO OSTDEF_ADJUSTMENTS " +
                         "(ORDERNUMBER, LINECODE, LINEDESCRIPTION, LINENUMBER, LINEUNIT, CODETYPE, ADJUSTNO, ADJUSTQTY, SYSUSERCREATED, SYSUSERMODIFIED) " +
                         "VALUES('${sharedViewModel.currentAssemblyHeader?.ORDERNUMBER}', '${sharedViewModel.currentItem.value.code}', '${sharedViewModel.currentItem.value.description}', ${lineNumber}, " +
                         "'${sharedViewModel.currentItem.value.unit}', '${sharedViewModel.currentItem.value.type}', ${adjustmentRecord.value.adjustmentNumber}, ${adjustmentRecord.value.qty}, '${sharedViewModel.currentUser.value}', '${sharedViewModel.currentUser.value}')"
-
-                assemblyLinesCall = "UPDATE ASSEMBLYLINES " +
-                        "SET ORDERQTY = ORDERQTY + ${adjustmentRecord.value.qty} " +
-                        "WHERE ORDERNUMBER = '${sharedViewModel.currentAssemblyHeader?.ORDERNUMBER}' AND LINECODE = '${sharedViewModel.currentItem.value.code}' and LINENUMBER = '$lineNumber'"
             }
 
             if (sharedViewModel.saveType == APICallTypes.UPDATE) {
-
-
                 call = "UPDATE OSTDEF_ADJUSTMENTS SET  " +
                         "ADJUSTNO = ${adjustmentRecord.value.adjustmentNumber}," +
                         "ADJUSTQTY = '${adjustmentRecord.value.qty}'," +
                         "SYSUSERMODIFIED = '${sharedViewModel.currentUser.value}'" +
                         "WHERE SYSUNIQUEID = ${adjustmentRecord.value.sysID}"
-
-                assemblyLinesCall = "UPDATE ASSEMBLYLINES " +
-                        "SET ORDERQTY = ORDERQTY - ${currentQty} + ${adjustmentRecord.value.qty} " +
-                        "WHERE ORDERNUMBER = '${sharedViewModel.currentAssemblyHeader?.ORDERNUMBER}' AND LINECODE = '${sharedViewModel.currentItem.value.code}' and LINENUMBER = '${adjustmentRecord.value.adjustmentLineNumber}'"
             }
 
             val response = apiCall.insertUpdateDelete(call)
-            val assemblyLinesResponse2 = apiCall.insertUpdateDelete(assemblyLinesCall)
-            if (response == "200 OK" && assemblyLinesResponse2 == "200 OK") {
-                if (currentLines.isEmpty() && assemblyLinesInsert == "200 OK") {
-                    closeTestScreen.value = true
+            if (response == "200 OK") {
+                if (issueAdjustment(adjustment, lineNumber)) {
                     sharedViewModel.snackBarMessage("Adjustment Saved successfully")
                 } else {
-                    closeTestScreen.value = true
-                    sharedViewModel.snackBarMessage("Adjustment Saved successfully")
+                    sharedViewModel.snackBarMessage("Adjustment saved, but its qty couldn't be issued. Please See Daniel")
                 }
+                closeTestScreen.value = true
             } else {
                 sharedViewModel.snackBarMessage("Error Saving, Please Try Again")
             }
@@ -321,12 +310,38 @@ class AdjustmentsViewModel(private val dataStoreManager: DataStoreManager, var s
     }
 
     /**
+     * Issues a saved adjustment to its assembly line straight away, so it is
+     * included in the line's actual quantity.
+     *
+     * A new adjustment issues its full quantity. An edited adjustment issues
+     * only the change from its previous quantity (negative if it was reduced).
+     * Nothing is issued once the order is Finished or Closed.
+     *
+     * @param adjustment The adjustment as it was before editing, or null for a new one.
+     * @param lineNumber The line number of a new adjustment.
+     * @return True if the issue was saved or no issue was needed.
+     */
+    private suspend fun issueAdjustment(adjustment: APICallTables.assemblyAdjustment?, lineNumber: Int): Boolean {
+        val header = sharedViewModel.currentAssemblyHeader ?: return false
+        if (!orderAcceptsIssues(header.ORDERSTATUS)) return true
+
+        val newQty = adjustmentRecord.value.qty.toDoubleOrNull() ?: return false
+        val isUpdate = sharedViewModel.saveType == APICallTypes.UPDATE && adjustment != null
+        val issueQty = if (isUpdate) newQty - adjustment!!.ADJUSTQTY else newQty
+        if (issueQty == 0.0) return true
+
+        val lineCode = if (isUpdate) adjustment!!.LINECODE else sharedViewModel.currentItem.value.code
+        val issueLineNumber = if (isUpdate) adjustment!!.LINENUMBER else lineNumber
+        val line = loadAssemblyLine(apiCall, header.ORDERNUMBER, lineCode, issueLineNumber) ?: return false
+        return issueToAssemblyLine(apiCall, line, issueQty, null, sharedViewModel.currentUser.value)
+    }
+
+    /**
      * Loads an existing adjustment for editing or prepares the ViewModel for
      * creating a new adjustment.
      *
      * When an existing adjustment is supplied, its values are copied into
-     * [adjustmentRecord], the original quantity is stored in [currentQty],
-     * and the associated item is retrieved from the database.
+     * [adjustmentRecord] and the associated item is retrieved from the database.
      *
      * When no adjustment is supplied, a new adjustment number is generated
      * based on the number of distinct adjustments already associated with the
@@ -343,7 +358,6 @@ class AdjustmentsViewModel(private val dataStoreManager: DataStoreManager, var s
                 adjustmentLineNumber = adjustment.LINENUMBER
                 sysID = adjustment.SYSUNIQUEID.toInt()
             }
-            currentQty = adjustment.ADJUSTQTY
             viewModelScope.launch {
                 val itemCall: List<APICallTables.ItemDescriptor>? = apiCall.query(
                     "SELECT ITEMCODE AS CODE, ITEMDESCRIPTION AS DESCRIPTION, ITEMUNIT AS UNIT, ITEMSTATUS AS STATUS, ITEMBARCODE AS BARCODE, ITEMCATEGORY AS CATEGORY, " +

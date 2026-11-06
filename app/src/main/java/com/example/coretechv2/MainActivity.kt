@@ -1,6 +1,7 @@
 package com.example.coretechv2
 
 import android.os.Bundle
+import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -12,6 +13,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.coretechv2.factory.MainActivityViewModelFactory
 import com.example.coretechv2.factory.SharedViewModelFactory
 import com.example.coretechv2.navigation.AppNavGraph
+import com.example.coretechv2.repository.BarcodeScanner
 import com.example.coretechv2.ui.component.ButtonMessage
 import com.example.coretechv2.ui.component.PopupWindow
 import com.example.coretechv2.ui.screen.APISettingsScreen
@@ -89,11 +91,12 @@ class MainActivity : ComponentActivity() {
                             viewModel.currentUser.value,
                             onLoginSuccess = { viewModel.onIsLoggedInTrue() },
                             ondifferentUser = { currentuser ->
-                                viewModel.currentUser.value = currentuser.uppercase()
+                                viewModel.currentUser.value = currentuser
                                 navController.navigate("home") {
                                     popUpTo(navController.graph.startDestinationId) { inclusive = true }
                                     launchSingleTop = true
                                 }
+                                viewModel.onIsLoggedInTrue()
                             }
                         )
 
@@ -113,6 +116,19 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    /**
+     * Passes key presses from the hardware barcode scanner to [BarcodeScanner]
+     * before they reach the focused screen.
+     *
+     * The scanner works as an external keyboard. Its key presses are consumed
+     * so a scan is never typed into a text field. Every other key press
+     * (on-screen keyboard, flip phone keypad) is handled as normal.
+     */
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (BarcodeScanner.onKeyEvent(event)) return true
+        return super.dispatchKeyEvent(event)
     }
 
     /**

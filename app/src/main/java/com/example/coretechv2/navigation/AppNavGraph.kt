@@ -11,6 +11,7 @@ import com.example.coretechv2.ui.screen.AssemblyOrdersRecordLookupScreen
 import com.example.coretechv2.ui.screen.AssemblyOrdersScreen
 import com.example.coretechv2.ui.screen.HomeScreen
 import com.example.coretechv2.ui.screen.PrintBoxLabelsScreen
+import com.example.coretechv2.ui.screen.SettingsScreen
 import com.example.coretechv2.viewmodel.SharedViewModel
 
 
@@ -28,6 +29,7 @@ import com.example.coretechv2.viewmodel.SharedViewModel
  * - `"assemblyrecords"` -> [AssemblyOrdersRecordLookupScreen]
  * - `"assemblyrecordsdetails"` -> [AssemblyOrdersRecordDetailsScreen]
  * - `"printboxlabels"` -> [PrintBoxLabelsScreen]
+ * - `"settings"` -> [SettingsScreen]
  *
  * A shared instance of [SharedViewModel] is passed to each screen to maintain
  * shared application state across navigation destinations.
@@ -77,6 +79,12 @@ fun AppNavGraph(
         }
         composable("printboxlabels") {
             PrintBoxLabelsScreen(
+                navController = navController,
+                sharedViewModel
+            )
+        }
+        composable("settings") {
+            SettingsScreen(
                 navController = navController,
                 sharedViewModel
             )

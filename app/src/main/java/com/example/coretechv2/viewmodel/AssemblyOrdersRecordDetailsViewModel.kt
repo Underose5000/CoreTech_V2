@@ -1,12 +1,7 @@
 package com.example.coretechv2.viewmodel
 
-import android.util.Log
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckBox
-import androidx.compose.material.icons.filled.CheckBoxOutlineBlank
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
@@ -14,19 +9,14 @@ import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.coretechv2.dataclasses.APICallTables
-import com.example.coretechv2.dataclasses.ItemDescriptorItem
-import com.example.coretechv2.dataclasses.MenuItem
 import com.example.coretechv2.dataclasses.PopupItems
-import com.example.coretechv2.dataclasses.SwitchItem
 import com.example.coretechv2.dataclasses.assemblydataclasses.AssemblyLinesItem
 import com.example.coretechv2.repository.APICall
 import com.example.coretechv2.repository.DataStoreManager
-import com.example.coretechv2.repository.testAndAdjustmentLookup
 import com.example.coretechv2.repository.testAndAdjustmentLookupCall
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 
 
 /**

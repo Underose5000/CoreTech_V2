@@ -34,6 +34,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
@@ -65,6 +66,7 @@ import com.example.coretechv2.dataclasses.APICallTypes
 import com.example.coretechv2.dataclasses.LabelStyles
 import com.example.coretechv2.dataclasses.assemblydataclasses.AssemblyLinesItem
 import com.example.coretechv2.factory.AssemblyOrderDetailsViewModelFactory
+import com.example.coretechv2.ui.component.BarcodeScanEffect
 import com.example.coretechv2.ui.component.AdjustmentCard
 import com.example.coretechv2.ui.component.ButtonMessage
 import com.example.coretechv2.ui.component.ElongationalBreakCard
@@ -78,7 +80,8 @@ import com.example.coretechv2.ui.component.PeakExothermCard
 import com.example.coretechv2.ui.component.PopupWindow
 import com.example.coretechv2.ui.component.ResistivityCard
 import com.example.coretechv2.ui.component.TopBar
-import com.example.coretechv2.ui.component.ViscosityCard
+import com.example.coretechv2.ui.component.ViscosityCardDoubleLine
+import com.example.coretechv2.ui.component.ViscosityCardSingleLine
 import com.example.coretechv2.ui.screen.assemblytestsandadjustments.AdjustmentsScreen
 import com.example.coretechv2.ui.screen.assemblytestsandadjustments.ElongationalBreakScreen
 import com.example.coretechv2.ui.screen.assemblytestsandadjustments.FlammabilityScreen
@@ -89,6 +92,7 @@ import com.example.coretechv2.ui.screen.assemblytestsandadjustments.ViscosityScr
 import com.example.coretechv2.viewmodel.AssemblyOrderDetailsViewModel
 import com.example.coretechv2.viewmodel.SharedViewModel
 import java.text.DecimalFormat
+import kotlin.math.abs
 
 /**
  * Displays the assembly order details screen.
@@ -145,6 +149,9 @@ fun AssemblyOrderDetails(
             snackbarHostState.showSnackbar(message)
         }
     }
+
+    // Hardware barcode scanner: a scan opens the batch and qty window for the matching line
+    BarcodeScanEffect { code -> viewModel.onBarcodeScanned(code) }
 
     LaunchedEffect(viewModel.closeDetailScreen.value) {
         if (viewModel.closeDetailScreen.value) {
@@ -208,9 +215,9 @@ fun AssemblyOrderDetails(
  * Displays the assembly order's individual assembly lines.
  *
  * In normal mode, each line displays its checked state, description, line
- * code, calculated quantity per batch, and unit. Clicking a line toggles
- * its checked state, while long-clicking allows the batch quantity to be
- * entered.
+ * code, calculated quantity per batch, and unit. Clicking a line opens
+ * the batch and qty window, while long-clicking adds the full planned
+ * quantity (see [AssemblyLinesData]).
  *
  * In edit mode, the line quantity can be modified and long-clicking a line
  * provides an option to delete it.
@@ -224,6 +231,9 @@ fun AssemblyLines(viewModel: AssemblyOrderDetailsViewModel) {
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
+            if (viewModel.fullQtyMode && viewModel.totalBatches > 1 && !viewModel.editMode) {
+                BatchesDoneBar(viewModel)
+            }
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -262,6 +272,10 @@ fun AssemblyLines(viewModel: AssemblyOrderDetailsViewModel) {
                                     .padding(16.dp), contentAlignment = Alignment.CenterEnd
                             ) {
                                 Row(modifier = Modifier.width(300.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = "Planned:",
+                                        fontWeight = FontWeight.Bold,
+                                    )
                                     OutlinedStyleDoubleNumberField(
                                         modifier = Modifier.weight(1f),
                                         value = order.ORDERQTY,
@@ -291,13 +305,66 @@ fun AssemblyLines(viewModel: AssemblyOrderDetailsViewModel) {
 }
 
 /**
+ * Shows how many batches of a multi-batch order are done or in process, with
+ * buttons to move to the next batch or back one.
+ *
+ * Every added line is issued its planned quantity for this many batches, so
+ * changing the count tops up (or reverses) the added lines straight away.
+ * The buttons are hidden once the order is Finished or Closed.
+ *
+ * @param viewModel The [AssemblyOrderDetailsViewModel] holding the batch counts.
+ */
+@Composable
+fun BatchesDoneBar(viewModel: AssemblyOrderDetailsViewModel) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "Batches done",
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.weight(1f)
+        )
+        if (viewModel.canIssue) {
+            OutlinedButton(
+                onClick = { viewModel.changeBatchesDone(-1) },
+                enabled = !viewModel.issuing && viewModel.batchesDone > 1
+            ) { Text("−", fontSize = 20.sp) }
+        }
+        Text(
+            text = "${viewModel.batchesDone} of ${viewModel.totalBatches}",
+            fontSize = 20.sp,
+            fontWeight = FontWeight(800),
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+        if (viewModel.canIssue) {
+            OutlinedButton(
+                onClick = { viewModel.changeBatchesDone(1) },
+                enabled = !viewModel.issuing && viewModel.batchesDone < viewModel.totalBatches
+            ) { Text("+", fontSize = 20.sp) }
+        }
+    }
+    HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
+}
+
+/**
  * Displays an individual assembly line in normal, non-edit mode.
  *
- * The line displays its checked state, description, line code, and quantity
- * calculated from the line quantity divided by the number of batches.
+ * On multi-batch orders, an added line shows how many batches its issues
+ * cover (e.g. "Batches: 2 of 4") instead of its actual quantity.
  *
- * Clicking the line toggles its checked state. Long-clicking the line opens
- * the batch quantity entry action.
+ * The line displays its added state, description, line code, batch numbers
+ * and its quantities divided by the number of batches, each labelled:
+ *      Lines with material issued (and every line once the order is
+ *      Finished/Closed) show both the Planned and Actual (issued) quantities.
+ *      Other lines show only the Planned quantity.
+ *
+ * Clicking the line opens the batch and qty window (the same window a
+ * barcode scan opens). Long-clicking the line adds its full remaining planned
+ * quantity straight away, with no batch number.
  *
  * @param viewModel The [AssemblyOrderDetailsViewModel] containing the
  * assembly order and batch information.
@@ -310,10 +377,10 @@ fun AssemblyLinesData(viewModel: AssemblyOrderDetailsViewModel, order: AssemblyL
             .fillMaxWidth()
             .combinedClickable(
                 onClick = {
-                    viewModel.lineChecked(order)
+                    viewModel.lineEntryPressed(order)
                 },
                 onLongClick = {
-                    viewModel.batchEntered(order)
+                    viewModel.lineAddFull(order)
                 }
             ),
         verticalAlignment = Alignment.CenterVertically
@@ -345,6 +412,13 @@ fun AssemblyLinesData(viewModel: AssemblyOrderDetailsViewModel, order: AssemblyL
                 Text(
                     text = order.LINECODE,
                 )
+                if (order.ADDITIONALFIELD_2.isNotBlank()) {
+                    Text(
+                        text = "Batch: ${order.ADDITIONALFIELD_2}",
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
             }
         }
         Box(
@@ -353,24 +427,83 @@ fun AssemblyLinesData(viewModel: AssemblyOrderDetailsViewModel, order: AssemblyL
                 .fillMaxHeight()
                 .padding(16.dp), contentAlignment = Alignment.CenterEnd
         ) {
-            var fontColor: Color
-            var formatter: DecimalFormat
-            if (order.ORDERQTY.toDouble() < 0.004) {
-                formatter = DecimalFormat("0.0000")
-                fontColor = MaterialTheme.colorScheme.primary
-            } else {
-                formatter = DecimalFormat("0.000")
-                fontColor = MaterialTheme.colorScheme.onBackground
+            val plannedQty = order.ORDERQTY.toDouble()
+            val actualQty = order.ACTUALQTY.toDoubleOrNull() ?: 0.0
+            val showActual = viewModel.showActualQty || actualQty != 0.0
+            // Planned is shown per batch; actual is everything issued so far across all batches
+            val multiBatch = viewModel.totalBatches > 1
+            val plannedLabel = if (multiBatch) "Per Batch" else "Planned"
+            val actualLabel = if (multiBatch) "Actual (total)" else "Actual"
+            Column(horizontalAlignment = Alignment.End) {
+                if (showActual) {
+                    Text(
+                        text = "$plannedLabel: ${lineQtyText(plannedQty, viewModel.numberOfBatches.value, order.LINEUNIT)}",
+                        fontSize = 16.sp,
+                        color = lineQtyColor(plannedQty),
+                    )
+                    val batchesDone = if (viewModel.fullQtyMode) viewModel.lineBatchesDone(order) else null
+                    if (batchesDone != null) {
+                        // Multi-batch orders: how many batches the line's issues cover
+                        Text(
+                            text = "Batches: ${batchCountText(batchesDone)} of ${viewModel.totalBatches}",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight(800),
+                        )
+                    } else {
+                        Text(
+                            text = "$actualLabel: ${lineQtyText(actualQty, "1", order.LINEUNIT)}",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight(800),
+                            color = lineQtyColor(actualQty),
+                        )
+                    }
+                } else {
+                    Text(
+                        text = "$plannedLabel: ${lineQtyText(plannedQty, viewModel.numberOfBatches.value, order.LINEUNIT)}",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight(800),
+                        color = lineQtyColor(plannedQty),
+                    )
+                }
             }
-            Text(
-                text = "${formatter.format((order.ORDERQTY.toDouble() / viewModel.numberOfBatches.value.toDouble()))} ${order.LINEUNIT}",
-                fontSize = 20.sp,
-                fontWeight = FontWeight(800),
-                color = fontColor,
-            )
         }
     }
     HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
+}
+
+/**
+ * Formats a number of batches, e.g. "2", or "1.5" if a line's issues don't
+ * cover a whole number of batches.
+ */
+fun batchCountText(batches: Double): String {
+    val rounded = kotlin.math.round(batches * 10) / 10
+    return if (rounded % 1.0 == 0.0) rounded.toInt().toString() else rounded.toString()
+}
+
+/**
+ * Formats an assembly line quantity as the amount per batch.
+ *
+ * Quantities below 0.004 are shown to four decimal places, otherwise three.
+ *
+ * @param qty The total line quantity.
+ * @param numberOfBatches The number of batches the order is split into.
+ * @param unit The line unit.
+ * @return The formatted per batch quantity with its unit.
+ */
+fun lineQtyText(qty: Double, numberOfBatches: String, unit: String): String {
+    val formatter = if (abs(qty) < 0.004) DecimalFormat("0.0000") else DecimalFormat("0.000")
+    return "${formatter.format(qty / (numberOfBatches.toDoubleOrNull() ?: 1.0))} $unit"
+}
+
+/**
+ * Returns the colour used for an assembly line quantity, highlighting very
+ * small quantities.
+ *
+ * @param qty The total line quantity.
+ */
+@Composable
+fun lineQtyColor(qty: Double): Color {
+    return if (qty < 0.004) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground
 }
 
 
@@ -517,7 +650,7 @@ fun AssemblyDetails(viewModel: AssemblyOrderDetailsViewModel) {
                         },
                         modifier = Modifier.weight(2f)
                     )
-                    if (viewModel.editMode) {
+                    if (viewModel.editMode && viewModel.multiBatchAllowed) {
                         Row(
                             modifier = Modifier
                                 .width(300.dp)
@@ -543,6 +676,7 @@ fun AssemblyDetails(viewModel: AssemblyOrderDetailsViewModel) {
                                     append("Number of Batches: ")
                                 }
                                 append(viewModel.numberOfBatches.value)
+                                if (!viewModel.multiBatchAllowed) append(" (multi batch disabled)")
                             },
                             modifier = Modifier.weight(2f)
                         )
@@ -737,7 +871,7 @@ fun AssemblyTestData(viewModel: AssemblyOrderDetailsViewModel, sharedViewModel: 
                 .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.primaryContainer)
         ) {
-            Text("Test " + (testNumber + 1), Modifier.padding(vertical = 2.dp, horizontal = 5.dp), style = MaterialTheme.typography.titleSmall)
+            Text("Test $testNumber", Modifier.padding(vertical = 2.dp, horizontal = 5.dp), style = MaterialTheme.typography.titleSmall)
         }
         Spacer(modifier = Modifier.height(1.dp))
         for (test in tests) {
@@ -816,7 +950,11 @@ fun AssemblyTestData(viewModel: AssemblyOrderDetailsViewModel, sharedViewModel: 
             {
                 when (test) {
                     is APICallTables.viscosityTest -> {
-                        ViscosityCard(test)
+                        if (sharedViewModel.isTablet) {
+                            ViscosityCardSingleLine(test)
+                        } else {
+                            ViscosityCardDoubleLine(test)
+                        }
                     }
 
                     is APICallTables.gelTimeTest -> {
@@ -848,7 +986,7 @@ fun AssemblyTestData(viewModel: AssemblyOrderDetailsViewModel, sharedViewModel: 
                 .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.primary)
         ) {
-            Text("Adjustment " + (testNumber + 1), Modifier.padding(vertical = 2.dp, horizontal = 5.dp), style = MaterialTheme.typography.titleSmall)
+            Text("Adjustment $testNumber", Modifier.padding(vertical = 2.dp, horizontal = 5.dp), style = MaterialTheme.typography.titleSmall)
         }
         Spacer(modifier = Modifier.height(5.dp))
         for (adjust in adjustments) {
